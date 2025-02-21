@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+    app:
+        build:
+            context: ./
+            dockerfile: Dockerfile
+        image: ${COMPOSE_PROJECT_NAME:?err}
+        tty: true
+        restart: unless-stopped
+        container_name: ${COMPOSE_PROJECT_NAME:?err}
+        working_dir: /app/
+        volumes:
+            - ./:/app
+        ports:
+            - "${PORT}:3000"
+        networks:
+            - ${COMPOSE_PROJECT_NAME:?err}_network
+networks:
+    ecommerce-client_network:
+        driver: bridge

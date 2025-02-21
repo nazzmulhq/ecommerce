@@ -1,0 +1,340 @@
+/*----------------genealogy-scroll----------*/
+.rootTree {
+    font-family: "Arial", sans-serif;
+    background-color: #f5f5f5;
+    color: #a0a0a0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.genealogy-scroll {
+    /* Hide scrollbar for Webkit browsers */
+    ::-webkit-scrollbar {
+        display: none;
+    }
+    /* Hide scrollbar for IE, Edge, and Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+/*----------------genealogy-tree----------*/
+.tree-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0px 20px;
+}
+
+.tree-header h1 {
+    color: #1677ff;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0px 10px;
+}
+
+.tree-header button {
+    padding: 6px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0px 2px;
+    font-size: 12px;
+    font-weight: bold;
+    background-color: #f3f3f3;
+    color: rgb(0, 0, 0);
+    border: 1px solid #1677ff;
+}
+.tree-header button:hover {
+    background-color: #1677ff;
+    color: white;
+}
+.genealogy-body {
+    white-space: nowrap;
+    overflow-y: hidden;
+    text-align: center;
+    height: 90vh;
+    width: 90vw;
+    background-color: #1d1d1d;
+    border-radius: 20px;
+}
+.genealogy-tree {
+    display: inline-block;
+}
+.genealogy-tree ul {
+    padding-top: 40px;
+    position: relative;
+    padding-left: 0px;
+    display: flex;
+    justify-content: center;
+}
+.genealogy-tree li {
+    float: left;
+    text-align: center;
+    list-style-type: none;
+    position: relative;
+    padding: 40px 5px 0 5px;
+}
+.genealogy-tree li::before,
+.genealogy-tree li::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 50%;
+    border-top: 3px solid white;
+    width: 50%;
+    height: 40px;
+}
+.genealogy-tree li::after {
+    right: auto;
+    left: 50%;
+    border-left: 3px solid white;
+}
+.genealogy-tree li:only-child::after,
+.genealogy-tree li:only-child::before {
+    display: none;
+}
+.genealogy-tree li:only-child {
+    padding-top: 0;
+}
+.genealogy-tree li:first-child::before,
+.genealogy-tree li:last-child::after {
+    border: 0 none;
+}
+.genealogy-tree li:last-child::before {
+    border-right: 3px solid white;
+    border-radius: 0 15px 0 0;
+    -webkit-border-radius: 0 15px 0 0;
+    -moz-border-radius: 0 15px 0 0;
+}
+.genealogy-tree li:first-child::after {
+    border-radius: 15px 0 0 0;
+    -webkit-border-radius: 15px 0 0 0;
+    -moz-border-radius: 15px 0 0 0;
+}
+.genealogy-tree ul ul::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border-left: 3px solid white;
+    width: 0;
+    height: 40px;
+}
+.genealogy-tree li div.member-view-box {
+    text-decoration: none;
+    color: #666;
+    font-family: arial, verdana, tahoma;
+    font-size: 11px;
+    display: inline-block;
+    border-radius: 15px;
+    -webkit-border-radius: 15px;
+    -moz-border-radius: 15px;
+}
+
+/* .genealogy-tree li div.member-view-box:hover,
+.genealogy-tree li div.member-view-box:hover + ul li div.member-view-box {
+    background: #f3f3f3;
+    color: #000;
+} */
+
+.genealogy-tree li div.member-view-box:hover + ul li::after,
+.genealogy-tree li div.member-view-box:hover + ul li::before,
+.genealogy-tree li div.member-view-box:hover + ul::before,
+.genealogy-tree li div.member-view-box:hover + ul ul::before {
+    border-color: #1677ff;
+}
+
+/*--------------member-card-design----------*/
+
+.member-view-box {
+    position: relative;
+    display: inline-block;
+    width: 250px;
+    background-color: #f3f3f3;
+}
+
+.member-view-box .head {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #d8d8d8;
+    color: white;
+    padding: 10px;
+    border-radius: 15px 15px 0 0;
+}
+
+.member-view-box .head input {
+    width: 100%;
+    padding: 2px 5px;
+    border: none;
+    border-radius: 5px;
+    margin-right: 10px;
+    color: black;
+    border: 1px solid transparent;
+    font-weight: bold;
+    font-size: 14px;
+    background-color: transparent;
+}
+
+.member-view-box .head input:hover {
+    background-color: white;
+}
+.member-view-box .head input:focus {
+    outline: none;
+    border: 1px solid #1677ff;
+    background-color: white;
+}
+
+.member-view-box .head div button {
+    background-color: transparent;
+    border: none;
+    border: 1px solid #1677ff;
+    color: #1677ff;
+    padding: 2px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0px 2px;
+    font-size: 12px;
+}
+
+.member-view-box .head div button:hover {
+    background-color: #1677ff;
+    color: white;
+}
+.member-view-box .head div button:last-child {
+    background-color: transparent;
+    border: 1px solid rgb(184, 24, 24);
+    color: rgb(184, 24, 24);
+}
+.member-view-box .head div button:last-child:hover {
+    background-color: rgb(184, 24, 24);
+    border: 1px solid rgb(184, 24, 24);
+    color: rgb(255, 255, 255);
+}
+.member-view-box .body {
+    padding: 10px;
+}
+
+.member-view-box .body .link {
+    font-weight: bold;
+    font-size: 14px;
+    color: black;
+    margin-right: 4px;
+}
+.member-view-box .head input {
+    background-color: white;
+}
+.member-view-box .body input[type="text"] {
+    width: 80%;
+    padding: 2px 4px;
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    color: black;
+    border: 1px solid transparent;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.member-view-box .body input[type="text"]:hover {
+    outline: none;
+    border: 1px solid #1677ff;
+    background-color: white;
+}
+
+.member-view-box .body input[type="text"]:focus {
+    outline: none;
+    border: 1px solid #1677ff;
+    background-color: white;
+}
+
+.member-view-box .body button {
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    padding: 8px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0px 2px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.member-view-box .body button {
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    padding: 8px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0px 2px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.member-view-box .body button {
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    padding: 5px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0px 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.member-view-box .body button:hover {
+    background-color: #1677ff;
+    color: white;
+}
+.member-view-box .body button.clicked {
+    background-color: #1677ff;
+    color: white;
+}
+
+.member-view-box .footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding-bottom: 10px;
+    border-radius: 0 0 15px 15px;
+}
+
+.member-view-box .footer button {
+    padding: 2px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0px 2px;
+    font-size: 12px;
+    border: 1px solid #1677ff;
+    color: #1677ff;
+}
+.member-view-box .footer button:hover {
+    background-color: #1677ff;
+    color: white;
+}
+
+.member-view-box button[disabled] {
+    cursor: not-allowed;
+}
+.member-view-box button[disabled]:hover {
+    cursor: not-allowed;
+}
+
+.is-component {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: small;
+    margin-left: 40px;
+}
+
+.is-component label {
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+}
