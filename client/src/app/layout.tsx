@@ -1,4 +1,5 @@
 import "@ant-design/v5-patch-for-react-19";
+import Layouts from "@ui/Layouts";
 import Providers from "@ui/providers";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -18,7 +19,9 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={inter.className}>
-                <Providers>{children}</Providers>
+                <Providers>
+                    <Layouts>{children}</Layouts>
+                </Providers>
             </body>
         </html>
     );
