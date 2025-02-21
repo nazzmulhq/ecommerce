@@ -23,10 +23,25 @@ const siderStyle: React.CSSProperties = {
     height: "100vh",
     position: "sticky",
     insetInlineStart: 0,
-    top: 0,
+    top: 65,
     bottom: 0,
     scrollbarWidth: "thin",
     scrollbarGutter: "stable",
+};
+
+const headerStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "white",
+    position: "sticky",
+    insetInlineStart: 0,
+    top: 0,
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+    zIndex: 10,
+    width: "100%",
+    padding: "0 24px",
+    height: 65,
 };
 
 const items: MenuProps["items"] = [
@@ -81,14 +96,7 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
 
     return (
         <Layout>
-            <Header
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    backgroundColor: "white",
-                }}
-            >
+            <Header style={headerStyle}>
                 <Typography.Title level={3} style={{ color: "black", margin: 0 }}>
                     MyApp
                 </Typography.Title>
@@ -96,7 +104,6 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
             </Header>
             <Layout hasSider>
                 <Sider style={siderStyle}>
-                    <div className="demo-logo-vertical bg-accent" />
                     <Menu defaultSelectedKeys={["4"]} items={items} mode="inline" theme="dark" />
                 </Sider>
                 <Layout>
@@ -114,6 +121,7 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
                                 textAlign: "center",
                                 background: colorBgContainer,
                                 borderRadius: borderRadiusLG,
+                                minHeight: "100%",
                             }}
                         >
                             {children}
