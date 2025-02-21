@@ -33,10 +33,10 @@ async function bootstrap() {
     }),
   );
   const config = new DocumentBuilder()
-    .setTitle('QuickUI API')
-    .setDescription('The QuickUI API description')
+    .setTitle('Ecommerce API')
+    .setDescription('The Ecommerce API description')
     .setVersion('1.0')
-    .addTag('QuickUI')
+    .addTag('Ecommerce')
     .addBearerAuth()
     .build();
 
