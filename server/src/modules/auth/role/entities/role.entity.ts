@@ -25,7 +25,7 @@ export class Role extends BaseEntity {
   @Column({ nullable: false, unique: true })
   slug: string;
 
-  @OneToMany(() => User, (user) => user.role)
+  @OneToMany(() => User, (user) => user.roles)
   users: User[];
 
   @ManyToMany(() => Permission, (permission) => permission.roles)

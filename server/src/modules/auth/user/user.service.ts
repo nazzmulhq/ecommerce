@@ -15,7 +15,7 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const role = await this.roleRepository.findOne({
+    const role = await this.roleRepository.find({
       where: {
         id: createUserDto.roleId,
       },
@@ -25,7 +25,7 @@ export class UsersService {
     user.name = createUserDto.name;
     user.email = createUserDto.email;
     user.password = createUserDto.password;
-    user.role = role;
+    user.roles = role;
     return this.userRepository.save(user);
   }
 
@@ -46,7 +46,7 @@ export class UsersService {
         email: email,
       },
       relations: ['role', 'role.permissions'],
-      select: ['id', 'name', 'email', 'isSuperAdmin', 'role'],
+      select: ['id', 'name', 'email', 'isSuperAdmin', 'roles'],
     });
 
     return user;
