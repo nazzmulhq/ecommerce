@@ -10,9 +10,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'auth/jwt-auth.guard';
-import { AccessRoles } from 'auth/role/role.decorator';
-import { RoleGuard } from 'auth/role/role.guard';
+import { JwtAuthGuard } from 'modules/auth/jwt-auth.guard';
+import { AccessRoles } from 'modules/auth/role/role.decorator';
+import { RoleGuard } from 'modules/auth/role/role.guard';
 import { UserAndRequest } from 'types';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';

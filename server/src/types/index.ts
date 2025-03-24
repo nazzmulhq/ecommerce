@@ -1,6 +1,6 @@
 import { Cache as NestCache } from '@nestjs/cache-manager';
-import { Permission } from 'auth/permission/entities/permission.entity';
-import { Role } from 'auth/role/entities/role.entity';
+import { Permission } from 'modules/auth/permission/entities/permission.entity';
+import { Role } from 'modules/auth/role/entities/role.entity';
 export interface IUser {
   id: number;
   name: string;

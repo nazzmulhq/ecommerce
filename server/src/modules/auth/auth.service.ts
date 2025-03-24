@@ -2,8 +2,8 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { CreateUserDto } from 'auth/user/dto';
-import { UsersService } from 'auth/user/user.service';
+import { CreateUserDto } from 'modules/auth/user/dto';
+import { UsersService } from 'modules/auth/user/user.service';
 import { ExtendedCache, UserAndRequest } from 'types';
 import { AuthLoginDto } from './dto/auth-login.dto';
 import { User } from './user/entities/user.entity';
@@ -17,10 +17,18 @@ export class AuthService {
   ) {}
 
   async signup(authRegisterDto: CreateUserDto) {
-    const cachedUser =
-      await this.cacheService.get<UserAndRequest['user']>('user');
-    if (cachedUser) await this.cacheService.del('user');
-    return await this.usersService.create(authRegisterDto);
+    try {
+      const cachedUser =
+        await this.cacheService.get<UserAndRequest['user']>('user');
+      if (cachedUser) await this.cacheService.del('user');
+      const user = await this.usersService.findByEmail(authRegisterDto.email);
+      if (user) {
+        throw new UnauthorizedException('User already exists');
+      }
+      return await this.usersService.create(authRegisterDto);
+    } catch (error) {
+      throw new UnauthorizedException(error.message);
+    }
   }
 
   async login(authLoginDto: AuthLoginDto) {

@@ -18,10 +18,11 @@ export class JwtExpiredFilter implements ExceptionFilter {
     // const request = ctx.getRequest<Request>();
 
     await this.cacheManager.del('user');
-
+    console.log('exception', exception);
     response.status(401).json({
       statusCode: 401,
-      message: 'JWT expired',
+      message: exception.message || 'JWT expired',
+      error: exception.name || 'Unauthorized',
     });
   }
 }

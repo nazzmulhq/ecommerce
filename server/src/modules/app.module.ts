@@ -1,8 +1,8 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigurationModule } from 'configuration/configuration.module';
-import { DemoModule } from 'demo/demo.module';
-import { RouteModule } from 'routes/routes.module';
+import { ConfigurationModule } from 'modules/configuration/configuration.module';
+import { DemoModule } from 'modules/demo/demo.module';
+import { RouteModule } from 'modules/routes/routes.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';

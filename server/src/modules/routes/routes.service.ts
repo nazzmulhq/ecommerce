@@ -1,7 +1,7 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Permission } from 'auth/permission/entities/permission.entity';
+import { Permission } from 'modules/auth/permission/entities/permission.entity';
 import { In, Repository } from 'typeorm';
 import { ExtendedCache } from 'types';
 import { CreateRouteDto } from './dto/create-route.dto';

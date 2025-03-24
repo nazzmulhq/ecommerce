@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Permission } from 'auth/permission/entities/permission.entity';
+import { Permission } from 'modules/auth/permission/entities/permission.entity';
 
-import { User } from 'auth/user/entities/user.entity';
+import { User } from 'modules/auth/user/entities/user.entity';
 import { Route } from './entities/route.entity';
 
 import { RouteController } from './routes.controller';

@@ -1,5 +1,5 @@
-import { Permission } from 'auth/permission/entities/permission.entity';
-import { User } from 'auth/user/entities/user.entity';
+import { Role } from 'modules/auth/role/entities/role.entity';
+import { Route } from 'modules/routes/entities/route.entity';
 
 import {
   BaseEntity,
@@ -7,15 +7,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinTable,
   ManyToMany,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class Role extends BaseEntity {
+export class Permission extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -25,22 +23,11 @@ export class Role extends BaseEntity {
   @Column({ nullable: false, unique: true })
   slug: string;
 
-  @OneToMany(() => User, (user) => user.role)
-  users: User[];
+  @ManyToMany(() => Role, (role) => role.permissions)
+  roles: Role[];
 
-  @ManyToMany(() => Permission, (permission) => permission.roles)
-  @JoinTable({
-    name: 'role_permissions',
-    joinColumn: {
-      name: 'role_id',
-      referencedColumnName: 'id',
-    },
-    inverseJoinColumn: {
-      name: 'permission_id',
-      referencedColumnName: 'id',
-    },
-  })
-  permissions: Permission[];
+  @ManyToMany(() => Route, (route) => route.permissions)
+  routes: Route[];
 
   @Column()
   @CreateDateColumn()

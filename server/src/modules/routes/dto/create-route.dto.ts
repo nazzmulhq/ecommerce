@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Route } from 'routes/entities/route.entity';
+import { Route } from 'modules/routes/entities/route.entity';
 
 export class CreateRouteDto {
   @ApiProperty({ example: 1 })

@@ -2,12 +2,12 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { JwtExpiredFilter } from 'auth/jwt-auth.filter';
 import basicAuth from 'express-basic-auth';
 import * as hbs from 'express-handlebars';
+import { JwtExpiredFilter } from 'modules/auth/jwt-auth.filter';
 import { join } from 'path';
 import { ExtendedCache } from 'types';
-import { AppModule } from './app.module';
+import { AppModule } from './modules/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);

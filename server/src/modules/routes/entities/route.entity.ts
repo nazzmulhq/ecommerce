@@ -1,4 +1,4 @@
-import { Permission } from 'auth/permission/entities/permission.entity';
+import { Permission } from 'modules/auth/permission/entities/permission.entity';
 import {
   BeforeInsert,
   Column,

@@ -1,5 +1,5 @@
-import { Role } from 'auth/role/entities/role.entity';
 import * as bcrypt from 'bcryptjs';
+import { Role } from 'modules/auth/role/entities/role.entity';
 import {
   BaseEntity,
   BeforeInsert,
