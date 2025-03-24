@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserAndRequest } from 'types';
 
@@ -27,16 +32,18 @@ export class RoleGuard implements CanActivate {
 
     if (user.isSuperAdmin === 1) return true;
 
-    if (!user.role) return false;
+    if (!user.role) throw new ForbiddenException('Permission Denied');
 
     const hasRole = this.matchRoles(roles, user.role.name);
-    if (!hasRole) return false;
+    if (!hasRole) throw new ForbiddenException('Permission Denied');
 
     const hasPermission = this.matchPermissions(
       permission,
       user.role.permissions.map((permission) => permission.name),
     );
 
-    return hasPermission;
+    if (!hasPermission) throw new ForbiddenException('Permission Denied');
+
+    return true;
   }
 }

@@ -44,6 +44,7 @@ export class AuthController {
   })
   @UseGuards(JwtAuthGuard, RoleGuard)
   async test(@Req() req: UserAndRequest) {
+    console.log('req.user', req.user);
     return req.user;
   }
 }

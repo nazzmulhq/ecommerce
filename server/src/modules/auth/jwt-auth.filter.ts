@@ -2,6 +2,7 @@ import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
+  HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -19,8 +20,8 @@ export class JwtExpiredFilter implements ExceptionFilter {
 
     await this.cacheManager.del('user');
     console.log('exception', exception);
-    response.status(401).json({
-      statusCode: 401,
+    response.status(HttpStatus.UNAUTHORIZED).json({
+      statusCode: HttpStatus.UNAUTHORIZED,
       message: exception.message || 'JWT expired',
       error: exception.name || 'Unauthorized',
     });
