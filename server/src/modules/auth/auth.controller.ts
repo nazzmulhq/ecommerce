@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Inject,
   Post,
   Req,
   UseGuards,
@@ -9,9 +10,14 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import {
+  CACHE_MANAGER,
+  CacheInterceptor,
+  CacheKey,
+  CacheTTL,
+} from '@nestjs/cache-manager';
 import { CreateUserDto } from 'modules/auth/user/dto';
-import { UserAndRequest } from 'types';
+import { ExtendedCache, UserAndRequest } from 'types';
 import { AuthService } from './auth.service';
 import { AuthLoginDto } from './dto/auth-login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -21,7 +27,10 @@ import { RoleGuard } from './role/role.guard';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    @Inject(CACHE_MANAGER) private cacheService: ExtendedCache,
+  ) {}
 
   @Post('signup')
   async signup(@Body() authLoginDto: CreateUserDto) {
@@ -30,6 +39,8 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() authLoginDto: AuthLoginDto) {
+    // Clear the cache
+    await this.cacheService.del('custom-key');
     return this.authService.login(authLoginDto);
   }
 
@@ -44,7 +55,8 @@ export class AuthController {
   })
   @UseGuards(JwtAuthGuard, RoleGuard)
   async test(@Req() req: UserAndRequest) {
-    console.log('req.user', req.user);
+    console.log('req.users', req.user);
+
     return req.user;
   }
 }
