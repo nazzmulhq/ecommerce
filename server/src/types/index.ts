@@ -1,12 +1,11 @@
 import { Cache as NestCache } from '@nestjs/cache-manager';
-import { Permission } from 'modules/auth/permission/entities/permission.entity';
 import { Role } from 'modules/auth/role/entities/role.entity';
 export interface IUser {
   id: number;
   name: string;
   email: string;
   isSuperAdmin: number;
-  role: Role & { permissions: Permission[] };
+  roles: Role[];
 }
 
 export interface UserAndRequest extends Request {

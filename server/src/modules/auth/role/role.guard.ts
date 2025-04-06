@@ -11,8 +11,8 @@ import { UserAndRequest } from 'types';
 export class RoleGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
-  matchRoles(roles: string[], userRole: string) {
-    return roles.some((role) => role === userRole);
+  matchRoles(roles: string[], userRoles: string[]) {
+    return roles.some((role) => userRoles.includes(role));
   }
 
   matchPermissions(permissions: string[], userPermissions: string[]) {
@@ -32,15 +32,17 @@ export class RoleGuard implements CanActivate {
 
     if (user.isSuperAdmin === 1) return true;
 
-    if (!user.role) throw new ForbiddenException('Permission Denied');
+    if (!user.roles || user.roles.length === 0)
+      throw new ForbiddenException('Permission Denied');
 
-    const hasRole = this.matchRoles(roles, user.role.name);
+    const userRoles = user.roles.map((role) => role.name);
+    const hasRole = this.matchRoles(roles, userRoles);
     if (!hasRole) throw new ForbiddenException('Permission Denied');
 
-    const hasPermission = this.matchPermissions(
-      permission,
-      user.role.permissions.map((permission) => permission.name),
+    const userPermissions = user.roles.flatMap((role) =>
+      role.permissions.map((permission) => permission.name),
     );
+    const hasPermission = this.matchPermissions(permission, userPermissions);
 
     if (!hasPermission) throw new ForbiddenException('Permission Denied');
 
