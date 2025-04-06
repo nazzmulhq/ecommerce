@@ -11,10 +11,16 @@ export class LoggingMiddleware implements NestMiddleware {
     const { method, originalUrl } = req;
     res.on('finish', () => {
       const { statusCode, statusMessage } = res;
-
-      this.loggingService.log(
-        `${method} ${originalUrl} ${statusCode} - ${statusMessage}`,
-      );
+      if (statusCode >= 100 && statusCode < 300) {
+        this.loggingService.log(
+          `${method} ${originalUrl} ${statusCode} ${statusMessage}`,
+        );
+      }
+      if (statusCode >= 400) {
+        this.loggingService.error(
+          `${method} ${originalUrl} ${statusCode} ${statusMessage}`,
+        );
+      }
     });
     next();
   }

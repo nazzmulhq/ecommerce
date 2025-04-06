@@ -6,51 +6,103 @@ import { CustomWritableStream } from './custom-writable-stream';
 
 @Injectable()
 export class LoggingService implements LoggerService {
-  private readonly logger;
+  private readonly successLogger;
+  private readonly errorLogger;
+  private readonly logDirectory = path.join(process.cwd(), 'logs'); // Use process.cwd() instead of __dirname
 
   constructor() {
-    const logFilePath = path.join(__dirname, '../../logs/application.log');
+    // Ensure log directory exists
 
-    const customWritableStream = new CustomWritableStream(logFilePath);
+    const successLogFilePath = path.join(this.logDirectory, 'success.log');
+    const errorLogFilePath = path.join(this.logDirectory, 'error.log');
+    const applicationLogFilePath = path.join(
+      this.logDirectory,
+      'application.log',
+    );
 
-    const customFormat = format.printf(({ message, timestamp }) => {
-      return `${timestamp} :: ${message}`;
+    const successStream = new CustomWritableStream(successLogFilePath);
+    const errorStream = new CustomWritableStream(errorLogFilePath);
+    const combinedStream = new CustomWritableStream(applicationLogFilePath);
+
+    const errorFormat = format.printf(
+      ({ timestamp, level, message, stack }) => {
+        let logMessage = `${timestamp} ${level}: ${message}`;
+        if (stack) {
+          logMessage += `\n${stack}`;
+        }
+        return logMessage;
+      },
+    );
+
+    const successFormat = format.printf(({ timestamp, level, message }) => {
+      return `${timestamp} ${level}: ${message}`;
     });
 
-    this.logger = createLogger({
-      level: 'info',
+    const commonOptions = {
       format: format.combine(
-        format.timestamp({ format: 'MM/DD/YYYY, hh:mm:ss A' }),
-        customFormat,
+        format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        format.errors({ stack: true }),
       ),
+    };
+
+    this.successLogger = createLogger({
+      ...commonOptions,
+      level: 'info',
+      format: format.combine(commonOptions.format, successFormat),
       transports: [
         new transports.Console({
-          format: format.combine(format.colorize(), customFormat),
+          format: format.combine(format.colorize(), successFormat),
         }),
-        new transports.Stream({
-          stream: customWritableStream,
+        new transports.Stream({ stream: successStream }),
+        new transports.Stream({ stream: combinedStream }), // Also write to combined log
+      ],
+    });
+
+    this.errorLogger = createLogger({
+      ...commonOptions,
+      level: 'error',
+      format: format.combine(commonOptions.format, errorFormat),
+      transports: [
+        new transports.Console({
+          format: format.combine(format.colorize(), errorFormat),
         }),
+        new transports.Stream({ stream: errorStream }),
+        new transports.Stream({ stream: combinedStream }), // Also write to combined log
       ],
     });
   }
 
-  log(message: string) {
-    this.logger.info(message);
+  log(message: string, context?: string) {
+    this.successLogger.info(message, { context });
   }
 
-  error(message: string, trace: string) {
-    this.logger.error(`${message} - ${trace}`);
+  error(message: string | Error, trace?: string, context?: string) {
+    if (message instanceof Error) {
+      this.errorLogger.error(message.message, {
+        stack: message.stack,
+        context,
+      });
+    } else {
+      this.errorLogger.error(message, {
+        stack: trace,
+        context,
+      });
+    }
   }
 
-  warn(message: string) {
-    this.logger.warn(message);
+  warn(message: string, context?: string) {
+    this.successLogger.warn(message, { context });
   }
 
-  debug(message: string) {
-    this.logger.debug(message);
+  debug(message: string, context?: string) {
+    this.successLogger.debug(message, { context });
   }
 
-  verbose(message: string) {
-    this.logger.verbose(message);
+  verbose(message: string, context?: string) {
+    this.successLogger.verbose(message, { context });
+  }
+
+  getLoggerFilePath(): string {
+    return path.join(this.logDirectory, 'application.log');
   }
 }
