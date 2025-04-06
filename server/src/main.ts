@@ -4,7 +4,8 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import basicAuth from 'express-basic-auth';
 import * as hbs from 'express-handlebars';
-import { JwtExpiredFilter } from 'modules/auth/jwt-auth.filter';
+import { ExpiredFilter } from 'modules/auth/jwt-auth.filter';
+import { LoggingService } from 'modules/log/logging.service';
 import { join } from 'path';
 import { ExtendedCache } from 'types';
 import { AppModule } from './modules/app.module';
@@ -49,7 +50,9 @@ async function bootstrap() {
   );
 
   const cacheManager = app.get<ExtendedCache>(CACHE_MANAGER);
-  app.useGlobalFilters(new JwtExpiredFilter(cacheManager));
+  const loggingService = app.get<LoggingService>(LoggingService);
+
+  app.useGlobalFilters(new ExpiredFilter(cacheManager, loggingService));
 
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.engine(
