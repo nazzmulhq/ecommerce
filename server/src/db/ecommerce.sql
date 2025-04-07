@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Generation Time: Nov 18, 2024 at 05:04 PM
--- Server version: 8.0.40
--- PHP Version: 8.2.8
+-- Generation Time: Apr 07, 2025 at 03:14 AM
+-- Server version: 8.0.41
+-- PHP Version: 8.2.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `Ecommerce`
+-- Database: `ecommerce`
 --
 
 -- --------------------------------------------------------
@@ -82,8 +82,8 @@ CREATE TABLE `role` (
 --
 
 INSERT INTO `role` (`id`, `name`, `slug`, `createdAt`, `updatedAt`, `createBy`, `updateBy`, `status`) VALUES
-(1, 'admin', 'admin', '2024-11-17 23:18:03.358817', '2024-11-17 23:18:03.358817', 0, 0, 1),
-(3, 'customer', 'customer', '2024-11-17 23:22:21.721056', '2024-11-17 23:47:14.096233', 0, 0, 1);
+(4, 'admin', 'admin', '2025-04-07 08:50:01.607464', '2025-04-07 08:50:01.607464', 0, 0, 1),
+(5, 'user', 'user', '2025-04-07 08:51:23.818797', '2025-04-07 08:51:23.818797', 0, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -101,23 +101,23 @@ CREATE TABLE `role_permissions` (
 --
 
 INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
-(1, 1),
-(1, 2),
-(1, 3),
-(1, 5),
-(1, 6),
-(1, 7),
-(1, 9),
-(1, 10),
-(1, 11),
-(1, 12),
-(1, 13),
-(1, 14),
-(1, 15),
-(1, 16),
-(1, 17),
-(3, 1),
-(3, 2);
+(4, 1),
+(4, 2),
+(4, 3),
+(4, 5),
+(4, 6),
+(4, 7),
+(4, 9),
+(4, 10),
+(4, 11),
+(4, 12),
+(4, 13),
+(4, 14),
+(4, 15),
+(4, 16),
+(4, 17),
+(4, 18),
+(5, 18);
 
 -- --------------------------------------------------------
 
@@ -140,13 +140,6 @@ CREATE TABLE `route` (
   `nsright` int NOT NULL DEFAULT '2'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Dumping data for table `route`
---
-
-INSERT INTO `route` (`id`, `slug`, `type`, `parentId`, `name`, `path`, `isComponent`, `createdAt`, `updatedAt`, `status`, `nsleft`, `nsright`) VALUES
-('7ac38576-7275-4bc9-9ddd-6efd2fd4edab', 'home', 'guest', NULL, 'Home', 'home', 0, '2024-11-18 22:29:28.526152', '2024-11-18 22:29:28.526152', 1, 1, 2);
-
 -- --------------------------------------------------------
 
 --
@@ -157,14 +150,6 @@ CREATE TABLE `route_has_permissions` (
   `route_id` varchar(36) NOT NULL,
   `permission_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `route_has_permissions`
---
-
-INSERT INTO `route_has_permissions` (`route_id`, `permission_id`) VALUES
-('7ac38576-7275-4bc9-9ddd-6efd2fd4edab', 1),
-('7ac38576-7275-4bc9-9ddd-6efd2fd4edab', 2);
 
 -- --------------------------------------------------------
 
@@ -182,17 +167,34 @@ CREATE TABLE `user` (
   `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `createBy` int NOT NULL DEFAULT '0',
   `updateBy` int NOT NULL DEFAULT '0',
-  `status` int NOT NULL DEFAULT '1',
-  `role_id` int DEFAULT NULL
+  `status` int NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user`
 --
 
-INSERT INTO `user` (`id`, `name`, `email`, `password`, `isSuperAdmin`, `createdAt`, `updatedAt`, `createBy`, `updateBy`, `status`, `role_id`) VALUES
-(1, 'John Doe', 'john.doe@gmail.com', '$2a$08$wJJd7ArBsW7Lw3PeFCZrpO1XQ7za4zMlnyw3zn7/YfmPpFzJFJRGq', 0, '2024-11-17 21:35:56.004998', '2024-11-18 06:12:32.485617', 0, 0, 1, 1),
-(3, 'John Doe 2', 'john.doe2@gmail.com', '$2a$08$QIIfHZjpuh4Vo2/S3l.ISu7AA9jWpB0ASK3Zgv4drrGEMXJ6ufmTi', 0, '2024-11-17 22:47:36.115719', '2024-11-17 23:34:55.573875', 0, 0, 1, 3);
+INSERT INTO `user` (`id`, `name`, `email`, `password`, `isSuperAdmin`, `createdAt`, `updatedAt`, `createBy`, `updateBy`, `status`) VALUES
+(5, 'John Doe', 'john.doe@gmail.com', '$2a$08$WesmMpzeo0ZgvAjmTXItaug6JB26MBNpMrrV3Ka9ax3kLA2H3B.Da', 0, '2025-04-07 09:07:37.567233', '2025-04-07 09:07:37.567233', 0, 0, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_roles`
+--
+
+CREATE TABLE `user_roles` (
+  `user_id` int NOT NULL,
+  `role_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `user_roles`
+--
+
+INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
+(5, 4),
+(5, 5);
 
 --
 -- Indexes for dumped tables
@@ -245,8 +247,15 @@ ALTER TABLE `route_has_permissions`
 --
 ALTER TABLE `user`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `IDX_e12875dfb3b1d92d7d7c5377e2` (`email`),
-  ADD KEY `FK_fb2e442d14add3cefbdf33c4561` (`role_id`);
+  ADD UNIQUE KEY `IDX_e12875dfb3b1d92d7d7c5377e2` (`email`);
+
+--
+-- Indexes for table `user_roles`
+--
+ALTER TABLE `user_roles`
+  ADD PRIMARY KEY (`user_id`,`role_id`),
+  ADD KEY `IDX_87b8888186ca9769c960e92687` (`user_id`),
+  ADD KEY `IDX_b23c65e50a758245a33ee35fda` (`role_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -262,13 +271,13 @@ ALTER TABLE `permission`
 -- AUTO_INCREMENT for table `role`
 --
 ALTER TABLE `role`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
@@ -295,10 +304,11 @@ ALTER TABLE `route_has_permissions`
   ADD CONSTRAINT `FK_ea46e0b428cc56bc70eeb00978f` FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`);
 
 --
--- Constraints for table `user`
+-- Constraints for table `user_roles`
 --
-ALTER TABLE `user`
-  ADD CONSTRAINT `FK_fb2e442d14add3cefbdf33c4561` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`);
+ALTER TABLE `user_roles`
+  ADD CONSTRAINT `FK_87b8888186ca9769c960e926870` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `FK_b23c65e50a758245a33ee35fda1` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

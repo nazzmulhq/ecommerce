@@ -21,11 +21,17 @@ export class UsersService {
       },
     });
 
+    console.log('roles', roles);
+    if (roles.length === 0) {
+      throw new Error('Role not found');
+    }
+
     const user = new User();
     user.name = createUserDto.name;
     user.email = createUserDto.email;
     user.password = createUserDto.password;
     user.roles = roles;
+
     return this.userRepository.save(user);
   }
 

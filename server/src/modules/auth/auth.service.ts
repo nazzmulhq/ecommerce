@@ -27,7 +27,7 @@ export class AuthService {
       }
       return await this.usersService.create(authRegisterDto);
     } catch (error) {
-      throw new UnauthorizedException(error.message);
+      throw new Error(error.message);
     }
   }
 
