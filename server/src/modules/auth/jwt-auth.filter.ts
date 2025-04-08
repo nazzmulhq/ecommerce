@@ -51,17 +51,9 @@ export class ExpiredFilter extends BaseExceptionFilter {
 
     // Log the exception
     if (exception instanceof Error) {
-      this.loggingService.error(
-        exception,
-        exception.stack,
-        'GlobalExceptionFilter',
-      );
+      this.loggingService.error(exception, request);
     } else {
-      this.loggingService.error(
-        'Non-Error exception thrown',
-        undefined,
-        'GlobalExceptionFilter',
-      );
+      this.loggingService.error(new Error('Unknown error type'), request);
     }
 
     // Handle specific exceptions

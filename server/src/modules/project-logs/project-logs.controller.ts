@@ -1,5 +1,6 @@
 import { Controller, Get, Res } from '@nestjs/common';
 import { Response } from 'express';
+import * as fs from 'fs';
 import { LoggingService } from 'modules/log/logging.service';
 
 @Controller('project-logs')
@@ -8,13 +9,13 @@ export class ProjectLogsController {
 
   @Get()
   getHello(@Res() res: Response) {
-    console.log(
-      'Project log controller called',
-      this.loggingService.getLoggerFilePath(),
-    );
+    const logFilePath = this.loggingService.getLoggerFilePath();
+    let errorLogs = fs.readFileSync(logFilePath, 'utf-8');
+    errorLogs = JSON.parse(errorLogs);
     res.render('project-logs/index', {
       title: 'Project Logs',
       message: this.loggingService.getLoggerFilePath(),
+      errorLogs: errorLogs,
     });
   }
 }

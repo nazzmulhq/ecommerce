@@ -16,11 +16,6 @@ export class LoggingMiddleware implements NestMiddleware {
           `${method} ${originalUrl} ${statusCode} ${statusMessage}`,
         );
       }
-      if (statusCode >= 400) {
-        this.loggingService.error(
-          `${method} ${originalUrl} ${statusCode} ${statusMessage}`,
-        );
-      }
     });
     next();
   }

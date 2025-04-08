@@ -1,7 +1,8 @@
 // logging.service.ts
-import { Injectable, LoggerService } from '@nestjs/common';
+import { HttpException, Injectable, LoggerService } from '@nestjs/common';
 import * as path from 'path';
 import { createLogger, format, transports } from 'winston';
+import { SafeArrayTransport } from './custom-array.transport';
 import { CustomWritableStream } from './custom-writable-stream';
 
 @Injectable()
@@ -32,7 +33,7 @@ export class LoggingService implements LoggerService {
     const successStream = new CustomWritableStream(successLogFilePath);
     const errorStream = new CustomWritableStream(errorLogFilePath);
     const combinedStream = new CustomWritableStream(applicationLogFilePath);
-    const jsonStream = new CustomWritableStream(logsFilePath);
+    const jsonStream = new SafeArrayTransport(logsFilePath);
 
     const successFormat = format.printf(({ timestamp, level, message }) => {
       return `${timestamp} ${level}: ${message}`;
@@ -48,18 +49,12 @@ export class LoggingService implements LoggerService {
       },
     );
 
-    const jsonFormat = format.printf(({ timestamp, level, message, stack }) => {
-      const logMessage = {
-        timestamp,
-        level,
-        message,
-      };
-      if (stack) {
-        logMessage['stack'] = stack;
-      }
-      return JSON.stringify(logMessage);
-    });
+    const jsonFormat = format.combine(
+      format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      format.errors({ stack: true }),
 
+      format.json(),
+    );
     const commonOptions = {
       format: format.combine(
         format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -89,108 +84,75 @@ export class LoggingService implements LoggerService {
           format: format.combine(format.colorize(), errorFormat),
         }),
         new transports.Stream({ stream: errorStream }),
-        new transports.Stream({ stream: combinedStream }), // Also write to combined log
+        new transports.Stream({ stream: combinedStream }),
       ],
     });
 
     this.jsonLogger = createLogger({
-      ...commonOptions,
       level: 'error',
       format: jsonFormat,
       transports: [
         new transports.Console({
-          format: format.combine(format.colorize(), jsonFormat),
+          format: format.combine(
+            format.colorize(),
+            format.printf((info) => {
+              return `${info.timestamp} ${info.level}: ${info.message}`;
+            }),
+          ),
         }),
-        new transports.Stream({ stream: jsonStream }),
+        new transports.Stream({
+          stream: jsonStream,
+        }),
       ],
-    });
-
-    // get error.json file ant set logEntries
-    this.jsonLogger.query({}, (err, results) => {
-      if (err) {
-        this.errorLogger.error('Error reading error.json file', { err });
-      } else {
-        this.logEntries = results.map((log) => ({
-          timestamp: log.timestamp,
-          level: log.level,
-          message: log.message,
-          context: log.context,
-          stack: log.stack,
-        }));
-      }
-    });
-  }
-
-  private addLogEntry(
-    level: string,
-    message: string,
-    context?: string,
-    stack?: string,
-  ) {
-    this.logEntries.push({
-      timestamp: new Date().toISOString(),
-      level,
-      message,
-      context,
-      stack,
     });
   }
 
   log(message: string, context?: string) {
     this.successLogger.info(message, { context });
-    this.addLogEntry('info', message, context);
   }
 
-  error(message: string | Error, trace?: string, context?: string) {
-    if (message instanceof Error) {
-      this.errorLogger.error(message.message, {
-        stack: message.stack,
-        context,
+  error(error: Error | HttpException | string, request?: Request) {
+    if (typeof error === 'string') {
+      this.errorLogger.error({
+        level: 'error',
+        message: error,
+        stack: null,
+        timestamp: new Date().toISOString(),
       });
-      this.jsonLogger.error(message.message, {
-        stack: message.stack,
-        context,
-      });
-      this.addLogEntry('error', message.message, context, message.stack);
-    } else {
-      this.errorLogger.error(message, {
-        stack: trace,
-        context,
-      });
-      this.jsonLogger.error(message, {
-        stack: trace,
-        context,
-      });
-      this.addLogEntry('error', message, context, trace);
+      return;
     }
+
+    const logPayload = {
+      level: 'error',
+      statusCode: error instanceof HttpException ? error.getStatus() : 500,
+      message: error.message,
+      error: error.name,
+      stack: error.stack,
+      path: request?.url,
+      method: request?.method,
+      ip: request['ip'],
+      userAgent: request?.headers['user-agent'],
+      timestamp: new Date().toISOString(),
+    };
+
+    this.errorLogger.error(logPayload);
+
+    this.jsonLogger.error(logPayload);
   }
 
   warn(message: string, context?: string) {
     this.successLogger.warn(message, { context });
-    this.addLogEntry('warn', message, context);
   }
 
   debug(message: string, context?: string) {
     this.successLogger.debug(message, { context });
-    this.addLogEntry('debug', message, context);
   }
 
   verbose(message: string, context?: string) {
     this.successLogger.verbose(message, { context });
-    this.addLogEntry('verbose', message, context);
   }
 
   getLoggerFilePath(): string {
-    return path.join(this.logDirectory, 'application.log');
-  }
-
-  getLogEntries(): Array<{
-    timestamp: string;
-    level: string;
-    message: string;
-    context?: string;
-    stack?: string;
-  }> {
-    return this.logEntries;
+    return path.join(this.logDirectory, 'error.json');
   }
 }

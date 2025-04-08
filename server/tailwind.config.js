@@ -7,6 +7,9 @@ module.exports = {
         secondary: '#ffed4a',
         danger: '#e3342f',
       },
+      transitionProperty: {
+        shadow: 'box-shadow',
+      },
     },
   },
   plugins: [],
