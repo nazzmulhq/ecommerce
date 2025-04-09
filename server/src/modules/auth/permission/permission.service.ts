@@ -11,7 +11,21 @@ export class PermissionService {
     private readonly userRepository: Repository<Permission>,
   ) {}
 
-  async create(createPermissionDto: CreatePermissionDto): Promise<Permission> {
+  async create(
+    createPermissionDto: CreatePermissionDto,
+    id: number,
+  ): Promise<Permission> {
+    const existingPermission = await this.userRepository.findOne({
+      where: {
+        name: createPermissionDto.name,
+        status: 1,
+      },
+    });
+    if (existingPermission) {
+      throw new Error('Permission already exists');
+    }
+    createPermissionDto.createBy = id;
+    createPermissionDto.createdAt = new Date();
     const permission = this.userRepository.create(createPermissionDto);
     return this.userRepository.save(permission);
   }
@@ -39,6 +53,7 @@ export class PermissionService {
   async update(
     id: number,
     updateData: Partial<Permission>,
+    userId: number,
   ): Promise<Permission> {
     const existingPermission = await this.userRepository.findOne({
       where: {
@@ -50,6 +65,9 @@ export class PermissionService {
       throw new Error('Permission not found');
     }
 
+    updateData.updatedAt = new Date();
+    updateData.updateBy = userId;
+
     const permission = this.userRepository.merge(
       existingPermission,
       updateData,
@@ -57,7 +75,7 @@ export class PermissionService {
     return this.userRepository.save(permission);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number, userId: number): Promise<void> {
     const existingPermission = await this.userRepository.findOne({
       where: {
         id,
@@ -66,9 +84,16 @@ export class PermissionService {
     if (!existingPermission) {
       throw new Error('Permission not found');
     }
-    const permission = this.userRepository.merge(existingPermission, {
+    const updateData = {
       status: 0,
-    });
+      updatedAt: new Date(),
+      updateBy: userId,
+    };
+
+    const permission = this.userRepository.merge(
+      existingPermission,
+      updateData,
+    );
 
     this.userRepository.save(permission);
   }

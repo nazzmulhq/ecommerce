@@ -38,7 +38,7 @@ export class PermissionController {
     @Body() createPermissionDto: CreatePermissionDto,
   ) {
     try {
-      await this.permissionService.create(createPermissionDto);
+      await this.permissionService.create(createPermissionDto, req.user.id);
       return {
         success: true,
         message: 'Permission Created Successfully',
@@ -112,7 +112,11 @@ export class PermissionController {
   ) {
     try {
       updatePermissionDto.updateBy = req.user.id || 0;
-      await this.permissionService.update(+id, updatePermissionDto);
+      await this.permissionService.update(
+        +id,
+        updatePermissionDto,
+        req.user.id,
+      );
       return {
         success: true,
         message: 'Permission Updated Successfully',
@@ -133,9 +137,9 @@ export class PermissionController {
     permission: ['permission.delete'],
   })
   @UseGuards(JwtAuthGuard, RoleGuard)
-  async remove(@Param('id') id: number) {
+  async remove(@Param('id') id: number, @Req() req: UserAndRequest) {
     try {
-      await this.permissionService.remove(+id);
+      await this.permissionService.remove(+id, req.user.id);
       return {
         success: true,
         message: 'Permission Deleted Successfully',

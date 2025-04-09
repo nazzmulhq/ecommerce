@@ -12,6 +12,7 @@ import {
   TreeParent,
   UpdateDateColumn,
 } from 'typeorm';
+import { IMetaData } from 'types';
 
 @Entity()
 @Tree('nested-set')
@@ -60,6 +61,9 @@ export class Route {
 
   @TreeChildren()
   children: Route[];
+
+  @Column({ type: 'json', nullable: true })
+  metadata: IMetaData;
 
   @Column()
   @CreateDateColumn()
