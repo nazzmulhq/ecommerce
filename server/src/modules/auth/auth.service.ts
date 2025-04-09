@@ -41,9 +41,7 @@ export class AuthService {
       email: user.email,
     };
 
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    return this.jwtService.sign(payload);
   }
 
   async validateUser(authLoginDto: AuthLoginDto): Promise<User> {

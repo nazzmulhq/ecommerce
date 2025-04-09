@@ -27,6 +27,11 @@ export class CreateRouteDto {
   @IsString()
   path: string;
 
+  @ApiProperty({ example: 'guest' })
+  @IsString()
+  @IsOptional()
+  type: string;
+
   @ApiProperty({ example: [1, 2] })
   @IsArray()
   @IsOptional()
@@ -157,24 +162,15 @@ export class CreateRouteDto {
   @IsOptional()
   metadata: IMetaData;
 
-  @ApiProperty({
-    example: 1,
-  })
   @IsOptional()
   @IsNumber()
   createBy: number;
 
   @IsOptional()
-  @ApiProperty({
-    example: 1,
-  })
   @IsNumber()
   updateBy: number;
 
   @IsOptional()
-  @ApiProperty({
-    example: 1,
-  })
   @IsNumber()
   status: number;
 }

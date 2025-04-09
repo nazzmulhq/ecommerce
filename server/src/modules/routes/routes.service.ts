@@ -18,10 +18,11 @@ export class RouteService {
     private readonly permissionRepository: Repository<Permission>,
   ) {}
 
-  async create(createRouteDto: CreateRouteDto): Promise<Route> {
+  async create(createRouteDto: CreateRouteDto, userId: number): Promise<Route> {
     const route = new Route();
     route.name = createRouteDto.name;
     route.path = createRouteDto.path;
+    route.metadata = createRouteDto.metadata;
 
     if (createRouteDto.parent && createRouteDto.parent.id) {
       const parent = await this.routeRepository.findOne({
@@ -30,12 +31,24 @@ export class RouteService {
       if (parent) {
         route.parent = parent;
       }
+    } else {
+      // Ensure no other root entity exists
+      const existingRoot = await this.routeRepository.findOne({
+        where: { parent: null },
+      });
+      if (existingRoot) {
+        throw new Error('Nested sets do not support multiple root entities.');
+      }
     }
+
     route.permissions = await this.permissionRepository.find({
       where: {
         id: In(createRouteDto.permissions),
       },
     });
+
+    route.createdAt = new Date();
+    route.createBy = userId;
 
     return this.routeRepository.save(route);
   }
@@ -54,29 +67,60 @@ export class RouteService {
     });
   }
 
-  async update(id: string, updateRouteDto: UpdateRouteDto) {
-    const Route = await this.routeRepository.findOne({
+  async update(id: string, updateRouteDto: UpdateRouteDto, userId: number) {
+    const route = await this.routeRepository.findOne({
       where: { id },
       relations: ['permissions'],
     });
-    Route.name = updateRouteDto.name;
-    if (updateRouteDto.parent.id) {
-      const parent = await this.routeRepository.findOne({
-        where: { id: updateRouteDto.parent.id },
-      });
-      if (parent) {
-        Route.parent = parent;
-      }
-    }
-    Route.permissions = await this.permissionRepository.find({
+    route.name = updateRouteDto.name;
+
+    route.permissions = await this.permissionRepository.find({
       where: {
         id: In(updateRouteDto.permissions),
       },
     });
-    return this.routeRepository.save(Route);
+
+    if (updateRouteDto.parent && updateRouteDto.parent.id) {
+      const parent = await this.routeRepository.findOne({
+        where: { id: updateRouteDto.parent.id },
+      });
+      if (parent) {
+        route.parent = parent;
+      }
+    }
+
+    route.updatedAt = new Date();
+    route.updateBy = userId;
+    route.path = updateRouteDto.path;
+    route.type = updateRouteDto.type;
+    route.metadata = updateRouteDto.metadata;
+    return this.routeRepository.save(route);
   }
 
-  remove(id: string) {
-    return this.routeRepository.delete(id);
+  async remove(id: string, userId: number): Promise<number> {
+    const route = await this.routeRepository.findOne({
+      where: { id },
+      relations: ['permissions', 'children'],
+    });
+
+    if (!route) {
+      throw new Error('Route not found');
+    }
+
+    // Remove all child routes recursively
+    if (route.children && route.children.length > 0) {
+      for (const child of route.children) {
+        await this.remove(child.id, userId);
+      }
+    }
+
+    // Remove many-to-many relations
+    route.permissions = [];
+    await this.routeRepository.save(route);
+
+    // Delete the route
+    await this.routeRepository.delete(id);
+
+    return +id;
   }
 }

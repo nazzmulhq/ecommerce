@@ -20,10 +20,18 @@ export class UsersService {
         id: In(createUserDto.roleId),
       },
     });
-
-    console.log('roles', roles);
-    if (roles.length === 0) {
+    if (!roles || roles.length === 0) {
       throw new Error('Role not found');
+    }
+
+    const existingUser = await this.userRepository.findOne({
+      where: {
+        email: createUserDto.email,
+      },
+    });
+
+    if (existingUser) {
+      throw new Error('Email already exists');
     }
 
     const user = new User();
@@ -31,6 +39,8 @@ export class UsersService {
     user.email = createUserDto.email;
     user.password = createUserDto.password;
     user.roles = roles;
+    user.createBy = 0;
+    user.createdAt = new Date();
 
     return this.userRepository.save(user);
   }
@@ -40,7 +50,7 @@ export class UsersService {
       where: {
         id: id,
       },
-      relations: ['role', 'role.permissions'],
+      relations: ['roles', 'roles.permissions'],
     });
     delete user.password;
     return user;
@@ -70,5 +80,65 @@ export class UsersService {
       relations: ['roles', 'roles.permissions'],
     });
     return user;
+  }
+
+  async findAll() {
+    return await this.userRepository.find({
+      relations: ['roles'],
+    });
+  }
+
+  async update(id: number, updateUserDto: CreateUserDto) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const roles = await this.roleRepository.find({
+      where: {
+        id: In(
+          Array.isArray(updateUserDto.roleId)
+            ? updateUserDto.roleId
+            : [updateUserDto.roleId],
+        ),
+      },
+    });
+
+    if (roles || roles.length > 0) {
+      user.roles = roles;
+    }
+
+    user.name = updateUserDto.name;
+    user.email = updateUserDto.email;
+    user.password = updateUserDto.password;
+    user.updatedAt = new Date();
+    user.updateBy = 0;
+
+    return this.userRepository.save(user);
+  }
+
+  async remove(id: number) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const updateData = {
+      updatedAt: new Date(),
+      updateBy: 0,
+      status: 0,
+    };
+
+    return this.userRepository.update(id, updateData);
   }
 }

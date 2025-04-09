@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { CreateRoleDto } from 'modules/auth/role/dto/create-role.dto';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -35,24 +36,25 @@ export class CreateUserDto {
   @IsNumber({}, { each: true, message: 'roleId must be an array of numbers' })
   roleId: number[];
 
-  @ApiProperty({
-    example: 1,
-  })
   @IsOptional()
   @IsNumber()
   createBy: number;
 
   @IsOptional()
-  @ApiProperty({
-    example: 1,
-  })
   @IsNumber()
   updateBy: number;
 
   @IsOptional()
-  @ApiProperty({
-    example: 1,
-  })
   @IsNumber()
   status: number;
+
+  @IsOptional()
+  @IsString()
+  createdAt: string;
+
+  @IsOptional()
+  @IsString()
+  updatedAt: string;
 }
+
+export class UpdateUserDto extends CreateRoleDto {}

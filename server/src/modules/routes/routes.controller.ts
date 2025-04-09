@@ -35,7 +35,7 @@ export class RouteController {
     @Body() createRoleDto: CreateRouteDto,
   ) {
     try {
-      await this.routeService.create(createRoleDto);
+      await this.routeService.create(createRoleDto, req.user.id);
       return {
         success: true,
         message: 'Route Created Successfully',
@@ -104,8 +104,12 @@ export class RouteController {
   })
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRouteDto: UpdateRouteDto) {
-    return this.routeService.update(id, updateRouteDto);
+  update(
+    @Req() req: UserAndRequest,
+    @Param('id') id: string,
+    @Body() updateRouteDto: UpdateRouteDto,
+  ) {
+    return this.routeService.update(id, updateRouteDto, req.user.id);
   }
 
   @ApiBearerAuth()
@@ -115,7 +119,7 @@ export class RouteController {
   })
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.routeService.remove(id);
+  remove(@Req() req: UserAndRequest, @Param('id') id: string) {
+    return this.routeService.remove(id, req.user.id);
   }
 }

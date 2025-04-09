@@ -17,7 +17,7 @@ import { IMetaData } from 'types';
 @Entity()
 @Tree('nested-set')
 export class Route {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn()
   id: string;
 
   @Column({ unique: true })
@@ -31,7 +31,7 @@ export class Route {
   type: string;
 
   @Column({ nullable: true })
-  parentId: string;
+  parentId: null | string;
 
   @Column({ unique: true })
   name: string;
@@ -75,6 +75,12 @@ export class Route {
 
   @Column({ default: 1 })
   status: number;
+
+  @Column({ default: 0 })
+  createBy: number;
+
+  @Column({ default: 0 })
+  updateBy: number;
 
   @BeforeInsert()
   async generateSlug() {
