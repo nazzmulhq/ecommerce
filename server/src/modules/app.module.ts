@@ -1,18 +1,14 @@
-import { Database, Resource } from '@adminjs/typeorm';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import AdminJS from 'adminjs';
 import { ConfigurationModule } from 'modules/configuration/configuration.module';
 import { ProjectLogsModule } from 'modules/project-logs/project-logs.module';
 import { RouteModule } from 'modules/routes/routes.module';
-import { AdminPanelModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { LoggingMiddleware } from './log/logging.middleware';
 import { LoggingService } from './log/logging.service';
 
-AdminJS.registerAdapter({ Database, Resource });
 @Module({
   imports: [
     ConfigurationModule,
@@ -30,7 +26,6 @@ AdminJS.registerAdapter({ Database, Resource });
     AuthModule,
     RouteModule,
     ProjectLogsModule,
-    AdminPanelModule,
   ],
   controllers: [AppController],
   providers: [AppService, LoggingService],

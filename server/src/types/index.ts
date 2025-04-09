@@ -13,5 +13,5 @@ export interface UserAndRequest extends Request {
 }
 
 export interface ExtendedCache extends NestCache {
-  set<T>(key: string, value: T, options?: any): Promise<void>;
+  set<T>(key: string, value: T, options?: any): Promise<T>;
 }

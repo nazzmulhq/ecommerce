@@ -1,6 +1,8 @@
 import { AdminModule } from '@adminjs/nestjs';
+import { Database, Resource } from '@adminjs/typeorm';
 import { Module } from '@nestjs/common';
-
+import AdminJS from 'adminjs';
+AdminJS.registerAdapter({ Database, Resource });
 const DEFAULT_ADMIN = {
   email: 'admin@example.com',
   password: 'password',
