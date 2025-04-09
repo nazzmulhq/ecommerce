@@ -24,24 +24,23 @@ export class CreateRoleDto {
   @ArrayUnique()
   permissions: number[];
 
-  @ApiProperty({
-    example: 1,
-  })
   @IsOptional()
   @IsNumber()
   createBy: number;
 
   @IsOptional()
-  @ApiProperty({
-    example: 1,
-  })
   @IsNumber()
   updateBy: number;
 
   @IsOptional()
-  @ApiProperty({
-    example: 1,
-  })
+  @IsString()
+  createdAt: string;
+
+  @IsOptional()
+  @IsString()
+  updatedAt: string;
+
+  @IsOptional()
   @IsNumber()
   status: number;
 }

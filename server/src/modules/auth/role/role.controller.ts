@@ -28,13 +28,23 @@ export class RoleController {
     roles: ['admin'],
     permission: ['role.create'],
   })
+  @UseGuards(JwtAuthGuard, RoleGuard)
   @Post()
   async create(
     @Req() req: UserAndRequest,
     @Body() createRoleDto: CreateRoleDto,
   ) {
     try {
-      await this.roleService.create(createRoleDto);
+      const existingRole = await this.roleService.findByName(
+        createRoleDto.name,
+      );
+      if (existingRole) {
+        return {
+          success: false,
+          message: 'Role already exists',
+        };
+      }
+      await this.roleService.create(createRoleDto, req.user.id);
       return {
         success: true,
         message: 'Role Created Successfully',
@@ -101,9 +111,22 @@ export class RoleController {
   })
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Put(':id')
-  async update(@Param('id') id: number, @Body() updateRoleDto: UpdateRoleDto) {
+  async update(
+    @Param('id') id: number,
+    @Body() updateRoleDto: UpdateRoleDto,
+    @Req() req: UserAndRequest,
+  ) {
     try {
-      await this.roleService.update(+id, updateRoleDto);
+      const existingRole = await this.roleService.findByName(
+        updateRoleDto.name,
+      );
+      if (existingRole && existingRole.id !== +id) {
+        return {
+          success: false,
+          message: 'Role already exists',
+        };
+      }
+      await this.roleService.update(+id, updateRoleDto, req.user.id);
       return {
         success: true,
         message: 'Role Updated Successfully',
@@ -124,9 +147,16 @@ export class RoleController {
   })
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Delete(':id')
-  async remove(@Param('id') id: number) {
+  async remove(@Param('id') id: number, @Req() req: UserAndRequest) {
     try {
-      await this.roleService.remove(+id);
+      const existingRole = await this.roleService.findOne(+id);
+      if (!existingRole) {
+        return {
+          success: false,
+          message: 'Role not found',
+        };
+      }
+      await this.roleService.remove(+id, req.user.id);
       return {
         success: true,
         message: 'Role Deleted Successfully',
