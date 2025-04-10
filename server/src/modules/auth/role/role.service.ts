@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Permission } from 'modules/auth/permission/entities/permission.entity';
 
-import { User } from 'modules/auth/user/entities/user.entity';
+import { User } from 'modules/user/entities/user.entity';
 import { In, Repository } from 'typeorm';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';

@@ -1,5 +1,5 @@
 import { Permission } from 'modules/auth/permission/entities/permission.entity';
-import { User } from 'modules/auth/user/entities/user.entity';
+import { User } from 'modules/user/entities/user.entity';
 
 import {
   BaseEntity,

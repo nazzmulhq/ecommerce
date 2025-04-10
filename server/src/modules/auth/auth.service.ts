@@ -2,11 +2,11 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { CreateUserDto } from 'modules/auth/user/dto';
-import { UsersService } from 'modules/auth/user/user.service';
+import { CreateUserDto } from 'modules/user/dto';
+import { UsersService } from 'modules/user/user.service';
 import { ExtendedCache, UserAndRequest } from 'types';
+import { User } from '../user/entities/user.entity';
 import { AuthLoginDto } from './dto/auth-login.dto';
-import { User } from './user/entities/user.entity';
 
 @Injectable()
 export class AuthService {

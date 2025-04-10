@@ -1,7 +1,7 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { UsersService } from 'modules/auth/user/user.service';
+import { UsersService } from 'modules/user/user.service';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ExtendedCache } from 'types';
 

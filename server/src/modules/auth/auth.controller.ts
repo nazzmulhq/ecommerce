@@ -16,7 +16,7 @@ import {
   CacheKey,
   CacheTTL,
 } from '@nestjs/cache-manager';
-import { CreateUserDto } from 'modules/auth/user/dto';
+import { CreateUserDto } from 'modules/user/dto';
 import { ExtendedCache, UserAndRequest } from 'types';
 import { AuthService } from './auth.service';
 import { AuthLoginDto } from './dto/auth-login.dto';
