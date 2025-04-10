@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggingService } from 'modules/log/logging.service';
-import { ProjectLogsController } from './project-logs.controller';
+import { ProjectLogsController } from './logging.controller';
 
 @Module({
   imports: [],

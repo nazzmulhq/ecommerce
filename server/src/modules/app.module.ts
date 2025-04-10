@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigurationModule } from 'modules/configuration/configuration.module';
-import { ProjectLogsModule } from 'modules/project-logs/project-logs.module';
+import { ProjectLogsModule } from 'modules/log/logging.module';
 import { RouteModule } from 'modules/routes/routes.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
