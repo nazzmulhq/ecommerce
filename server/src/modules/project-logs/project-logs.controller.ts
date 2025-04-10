@@ -13,7 +13,7 @@ export class ProjectLogsController {
     let errorLogs = fs.readFileSync(logFilePath, 'utf-8');
     errorLogs = JSON.parse(errorLogs);
     res.render('project-logs/index', {
-      title: 'Project Logs',
+      title: 'Error Logs',
       message: this.loggingService.getLoggerFilePath(),
       errorLogs: errorLogs,
     });

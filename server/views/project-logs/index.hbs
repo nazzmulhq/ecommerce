@@ -1,314 +1,115 @@
 {{#extend 'body'}}
 
-  <section class='error-logs-container'>
+  <section class='max-w-7xl mx-auto p-8 min-h-screen bg-gray-50'>
 
-    <div class='error-logs-list'>
-      <h2 class='error-logs-title'>{{title}}</h2>
+    <div class='flex flex-col gap-4'>
+      <h2
+        class='text-3xl font-semibold text-gray-800 text-center mb-8 pb-4 border-b-2 border-gray-300'
+      >{{title}}</h2>
 
       {{#if errorLogs}}
         {{#each errorLogs}}
-          <div class='error-log-item'>
-            <button class='error-log-header' onclick='toggleCollapse(this)'>
-              <div class='error-log-meta'>
-                <span class='error-level-badge {{this.level}}'>
-                  {{this.level}}
-                </span>
+          <div
+            class='bg-white rounded-lg shadow hover:shadow-md transition-shadow'
+          >
+            <button
+              class='w-full p-4 flex justify-between items-center gap-4 cursor-pointer bg-transparent border-none'
+              onclick='toggleCollapse(this)'
+            >
+              <div class='flex items-center gap-3 flex-1 min-w-0'>
+                <span
+                  class='px-3 py-1 rounded-md text-sm font-medium capitalize bg-red-200 text-red-600'
+                >{{this.level}}</span>
 
                 {{#if this.method}}
-                  <span class='error-level-badge info'>{{this.method}}</span>
+                  <span
+                    class='px-3 py-1 rounded-md text-sm font-medium bg-blue-200 text-blue-600'
+                  >{{this.method}}</span>
                 {{/if}}
 
                 {{#if this.timestamp}}
-                  <span class='error-level-badge info'>{{this.timestamp}}</span>
+                  <span
+                    class='px-3 py-1 rounded-md text-sm font-medium bg-blue-200 text-blue-600'
+                  >{{this.timestamp}}</span>
                 {{/if}}
 
                 {{#if this.path}}
-                  <span class='error-level-badge info'>{{this.path}}</span>
+                  <span
+                    class='px-3 py-1 rounded-md text-sm font-medium bg-blue-200 text-blue-600'
+                  >{{this.path}}</span>
                 {{/if}}
 
                 {{#if this.statusCode}}
                   <span
-                    class='error-level-badge info'
+                    class='px-3 py-1 rounded-md text-sm font-medium bg-blue-200 text-blue-600'
                   >{{this.statusCode}}</span>
                 {{/if}}
 
                 {{#if this.ip}}
-                  <span class='error-level-badge info'>{{this.ip}}</span>
+                  <span
+                    class='px-3 py-1 rounded-md text-sm font-medium bg-blue-200 text-blue-600'
+                  >{{this.ip}}</span>
                 {{/if}}
 
                 {{#if this.requestId}}
-                  <span class='error-level-badge info'>{{this.requestId}}</span>
+                  <span
+                    class='px-3 py-1 rounded-md text-sm font-medium bg-blue-200 text-blue-600'
+                  >{{this.requestId}}</span>
                 {{/if}}
-
               </div>
               <svg
-                class='collapse-icon'
-                width='16'
-                height='16'
-                viewBox='0 0 16 16'
-                fill='none'
+                class='w-4 h-4 text-gray-600'
                 xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 16 16'
+                stroke='currentColor'
+                stroke-width='2'
+                stroke-linecap='round'
+                stroke-linejoin='round'
               >
-                <path
-                  d='M4 6L8 10L12 6'
-                  stroke='currentColor'
-                  stroke-width='2'
-                  stroke-linecap='round'
-                  stroke-linejoin='round'
-                />
-
+                <path d='M4 6L8 10L12 6' />
               </svg>
             </button>
 
-            <div class='error-log-content'>
+            <div class='hidden p-6 border-t border-gray-300'>
               {{#if this.userAgent}}
-                <span class='error-level-badge info'>{{this.userAgent}}</span>
+                <span
+                  class='px-3 py-1 rounded-md text-sm font-medium bg-blue-200 text-blue-600'
+                >{{this.userAgent}}</span>
               {{/if}}
-              {{#if this.userAgent}}
+              {{#if this.error}}
                 <div
-                  class='error-level-badge info'
-                  style='margin-top: 5px;'
+                  class='px-3 py-1 rounded-md text-sm font-medium bg-blue-200 text-blue-600 mt-1'
                 >{{this.error}}</div>
               {{/if}}
-              {{#if this.userAgent}}
+              {{#if this.message}}
                 <div
-                  class='error-level-badge warn'
+                  class='px-3 py-1 rounded-md text-sm font-medium bg-yellow-200 text-yellow-700 mt-1'
                   title='{{this.message}}'
-                  style='margin-top: 5px;'
-                >{{this.message}}
-
-                </div>
+                >{{this.message}}</div>
               {{/if}}
 
-              <div class='stack-trace-header'>
-                <h3>Stack Trace</h3>
-                <button class='copy-button' onclick='copyStackTrace(event)'>
+              <div class='flex justify-between items-center mt-2 mb-1'>
+                <h3 class='text-lg font-semibold'>Stack Trace</h3>
+                <button
+                  class='flex items-center gap-2 cursor-pointer text-gray-500 hover:text-blue-600 transition-colors'
+                  onclick='copyStackTrace(event)'
+                >
                   <span>Copy</span>
                 </button>
               </div>
-              <pre class='stack-trace'>{{this.stack}}</pre>
+              <pre
+                class='bg-gray-100 p-4 rounded-md font-mono text-sm whitespace-pre-wrap overflow-x-auto border border-gray-300 text-gray-700'
+              >{{this.stack}}</pre>
             </div>
           </div>
         {{/each}}
       {{else}}
-        <p class='no-logs-message'>No error logs available.</p>
+        <p class='text-center text-lg text-gray-500 mt-8'>No error logs
+          available.</p>
       {{/if}}
     </div>
   </section>
-
-  <style>
-    /* Base Styles */
-    .error-logs-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-      min-height: 100vh;
-      background: #f8fafc;
-    }
-
-    .error-logs-header {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    .main-title {
-      font-size: 2.25rem;
-      font-weight: 700;
-      color: #1e293b;
-      margin-bottom: 1rem;
-      animation: fadeInDown 0.5s ease-out;
-    }
-
-    .main-description {
-      font-size: 1.125rem;
-      color: #64748b;
-      line-height: 1.6;
-    }
-
-    /* Error Log List */
-    .error-logs-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .error-logs-title {
-      font-size: 1.875rem;
-      font-weight: 600;
-      color: #1e293b;
-      text-align: center;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid #cbd5e1;
-    }
-
-    /* Error Log Item */
-    .error-log-item {
-      background: white;
-      border-radius: 0.75rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.3s ease;
-    }
-
-    .error-log-item:hover {
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Error Log Header */
-    .error-log-header {
-      width: 100%;
-      padding: 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      cursor: pointer;
-      background: transparent;
-      border: none;
-    }
-
-    .error-log-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex: 1;
-      min-width: 0;
-    }
-
-    /* Error Level Badges */
-    .error-level-badge {
-      padding: 0.375rem 0.75rem;
-      border-radius: 0.5rem;
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
-
-    .error-level-badge.error {
-      background: #fee2e2;
-      color: #dc2626;
-      text-transform: capitalize;
-    }
-
-    .error-level-badge.warn {
-      background: #fef3c7;
-      color: #d97706;
-    }
-
-    .error-level-badge.info {
-      background: #dbeafe;
-      color: #2563eb;
-    }
-
-    /* Error Details */
-    .error-log-details {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      font-size: 0.875rem;
-    }
-
-    .error-detail {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: #64748b;
-      max-width: 200px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .detail-icon {
-      width: 1rem;
-      height: 1rem;
-      flex-shrink: 0;
-    }
-
-    /* Stack Trace */
-    .error-log-content {
-      display: none;
-      padding: 1.5rem;
-      border-top: 1px solid #e2e8f0;
-    }
-
-    .stack-trace-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 5px;
-      margin-top: 10px;
-    }
-
-    .stack-trace {
-      background: #f1f5f9;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      font-family: Monaco, Consolas, monospace;
-      font-size: 0.875rem;
-      white-space: pre-wrap;
-      overflow-x: auto;
-      border: 1px solid #e2e8f0;
-      color: #334155;
-    }
-
-    /* Copy Button */
-    .copy-button {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: none;
-      border: none;
-      color: #64748b;
-      cursor: pointer;
-      transition: color 0.2s ease;
-    }
-
-    .copy-button:hover {
-      color: #2563eb;
-    }
-
-    .error-message {
-      max-width: 350px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .no-logs-message {
-      text-align: center;
-      font-size: 1.125rem;
-      color: #64748b;
-      margin-top: 2rem;
-    }
-
-    /* Animations */
-    @keyframes fadeInDown {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .error-log-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .error-log-details {
-        flex-wrap: wrap;
-        width: 100%;
-      }
-
-      .error-detail {
-        max-width: 100%;
-      }
-    }
-  </style>
 
   <script>
     function toggleCollapse(button) { const content = button.nextElementSibling;
@@ -316,10 +117,6 @@
     content.style.display = 'none'; } content.style.display =
     content.style.display === 'none' ? 'block' : 'none';
     button.querySelector('.collapse-icon').classList.toggle('rotated'); }
-
-  </script>
-  <script>
-
     function copyStackTrace(event) { const button = event.currentTarget; if
     (button.disabled) return; button.disabled = true; const stackTrace =
     button.parentElement.nextElementSibling.textContent;
@@ -328,5 +125,4 @@
     button.innerHTML = originalText; button.disabled = false; }, 2000);
     }).catch(() => { button.disabled = false; }); }
   </script>
-
 {{/extend}}
