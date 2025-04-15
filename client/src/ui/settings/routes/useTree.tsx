@@ -185,7 +185,7 @@ const useTree = () => {
                 if (response.data) {
                     console.log(response);
                     if (isMounted) {
-                        setNodes(response.data);
+                        // setNodes(response.data);
                     }
                 } else {
                     alert("An error occurred while getting the route.");

@@ -36,17 +36,11 @@ const Nodes: FC<INodes> = ({
     return (
         <li key={node.id}>
             <div className="member-view-box">
-                <div
-                    className={`head ${
-                        node.isComponent ? " !bg-gray-400" : ""
-                    }`}
-                >
+                <div className={`head ${node.isComponent ? " !bg-gray-400" : ""}`}>
                     <input
                         className="mx-2"
                         disabled={node.id === "1"}
-                        onChange={e =>
-                            onHandleChangeForName(node.id, e.target.value)
-                        }
+                        onChange={e => onHandleChangeForName(node.id, e.target.value)}
                         style={{
                             cursor: node.id === "1" ? "not-allowed" : "text",
                         }}
@@ -61,8 +55,7 @@ const Nodes: FC<INodes> = ({
                             disabled={node.id === "1"}
                             onClick={() => deleteNode(node.id)}
                             style={{
-                                cursor:
-                                    node.id === "1" ? "not-allowed" : "pointer",
+                                cursor: node.id === "1" ? "not-allowed" : "pointer",
                             }}
                             type="button"
                         >
@@ -75,12 +68,9 @@ const Nodes: FC<INodes> = ({
                         <label className="link">Link:</label>
                         <input
                             disabled={node.id === "1"}
-                            onChange={e =>
-                                onHandleChangeForPath(node.id, e.target.value)
-                            }
+                            onChange={e => onHandleChangeForPath(node.id, e.target.value)}
                             style={{
-                                cursor:
-                                    node.id === "1" ? "not-allowed" : "text",
+                                cursor: node.id === "1" ? "not-allowed" : "text",
                             }}
                             type="text"
                             value={node.id === "1" ? "/" : node.path}
@@ -93,14 +83,9 @@ const Nodes: FC<INodes> = ({
                                 checked={node.isComponent}
                                 disabled={node.id === "1"}
                                 id={node.id}
-                                onChange={() =>
-                                    onHandleChangeForIsComponent(node.id)
-                                }
+                                onChange={() => onHandleChangeForIsComponent(node.id)}
                                 style={{
-                                    cursor:
-                                        node.id === "1"
-                                            ? "not-allowed"
-                                            : "pointer",
+                                    cursor: node.id === "1" ? "not-allowed" : "pointer",
                                 }}
                                 type="checkbox"
                             />
@@ -108,11 +93,7 @@ const Nodes: FC<INodes> = ({
                     )}
                 </div>
                 <div className="footer">
-                    <button
-                        disabled={node.children.length === 0}
-                        onClick={handleClick}
-                        type="button"
-                    >
+                    <button disabled={node.children.length === 0} onClick={handleClick} type="button">
                         {node.children.length}
                     </button>
                 </div>
@@ -127,9 +108,7 @@ const Nodes: FC<INodes> = ({
                             key={childId}
                             nodeId={childId}
                             nodes={nodes}
-                            onHandleChangeForIsComponent={
-                                onHandleChangeForIsComponent
-                            }
+                            onHandleChangeForIsComponent={onHandleChangeForIsComponent}
                             onHandleChangeForName={onHandleChangeForName}
                             onHandleChangeForPath={onHandleChangeForPath}
                         />
