@@ -1,6 +1,11 @@
 // theme/themeConfig.ts
 import type { ThemeConfig } from "antd";
 
-const theme: ThemeConfig = {};
+const theme: ThemeConfig = {
+    token: {},
+    components: {
+        Layout: {},
+    },
+};
 
 export default theme;
