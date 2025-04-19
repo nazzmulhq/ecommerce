@@ -1,5 +1,5 @@
-import { FileCreator } from "@lib/utils/path";
 import { INode } from "@ui/settings/routes/useTree";
+import { FileCreator } from "../../../lib/utils/path";
 
 export async function GET() {
     try {

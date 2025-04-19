@@ -21,7 +21,7 @@
         "paths": {
             "@app/*": ["./src/app/*"],
             "@ui/*": ["./src/ui/*"],
-            "@lib/*": ["./src/_lib/*"],
+            "@lib/*": ["./src/lib/*"],
             "@types/*": ["./src/types/*"]
         }
     },

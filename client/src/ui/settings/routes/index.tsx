@@ -2,7 +2,8 @@
 
 import { Typography } from "antd";
 import { FC } from "react";
-import useTranslation from "../../../_lib/i18n";
+
+import useTranslation from "@lib/i18n";
 import "./index.css";
 import { default as Nodes } from "./Node";
 import useTree from "./useTree";

@@ -1,6 +1,6 @@
+import API from "@lib/apiCall";
 import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import API from "../../../_lib/apiCall";
 
 // Define the Type enum
 enum Type {

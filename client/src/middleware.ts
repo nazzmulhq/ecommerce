@@ -1,8 +1,8 @@
-import DEV_ONLY_ROUTES from "@lib/routes/DEV_ONLY_ROUTES";
-import GUEST_ROUTES from "@lib/routes/GUEST_ROUTES";
-import { PROTECTED_ROUTES } from "@lib/routes/PROTECTED_ROUTES";
-import SHARED_ROUTES from "@lib/routes/SHARED_ROUTES";
 import { NextRequest, NextResponse } from "next/server";
+import DEV_ONLY_ROUTES from "./lib/routes/DEV_ONLY_ROUTES";
+import GUEST_ROUTES from "./lib/routes/GUEST_ROUTES";
+import { PROTECTED_ROUTES } from "./lib/routes/PROTECTED_ROUTES";
+import SHARED_ROUTES from "./lib/routes/SHARED_ROUTES";
 
 export async function middleware(req: NextRequest) {
     const token = req.cookies.get("token");

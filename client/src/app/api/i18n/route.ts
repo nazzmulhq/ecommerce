@@ -1,4 +1,4 @@
-import File from "@lib/utils/file";
+import File from "../../../lib/utils/file";
 
 export async function GET() {
     try {
