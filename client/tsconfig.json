@@ -20,6 +20,7 @@
         ],
         "paths": {
             "@app/*": ["./src/app/*"],
+            "@public/*": ["./src/public/*"],
             "@ui/*": ["./src/ui/*"],
             "@lib/*": ["./src/lib/*"],
             "@types/*": ["./src/types/*"]
