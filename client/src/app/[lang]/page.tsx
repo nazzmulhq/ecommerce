@@ -1,18 +1,5 @@
+import { getI18n } from "@lib/actions/settings/i18n";
 import React, { FC } from "react";
-
-import { readFileSync } from "fs";
-import { join } from "path";
-
-const getI18n = (lang: string) => {
-    try {
-        const filePath = join(process.cwd(), "public", "locales", `${lang}.json`);
-        const fileContents = readFileSync(filePath, "utf8");
-        return JSON.parse(fileContents);
-    } catch (error) {
-        console.error(`Error loading ${lang} translations:`, error);
-        return {};
-    }
-};
 
 export interface IComponent {
     params: Promise<{

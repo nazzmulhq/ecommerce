@@ -108,6 +108,14 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
                     defaultSelectedKeys={["2"]}
                     items={[
                         {
+                            key: "4",
+                            label: <Link href={`/${lang}/routes`}>Routes</Link>,
+                        },
+                        {
+                            key: "3",
+                            label: <Link href={`/${lang}/i18n`}>i18n</Link>,
+                        },
+                        {
                             key: "2",
                             label: (
                                 <Select

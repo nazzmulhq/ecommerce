@@ -1,5 +1,4 @@
-import API from "@lib/apiCall";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 // Define the Type enum
@@ -65,8 +64,14 @@ const useTree = () => {
         );
         if (isConfirmed) {
             try {
-                const response = await API.post<INode>("/routes", nodes);
-                if (response.data) {
+                const response = await fetch("/routes", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(nodes),
+                });
+                if (response.ok) {
                     alert("Route created successfully.");
                 } else {
                     alert("An error occurred while creating the route.");
@@ -162,44 +167,6 @@ const useTree = () => {
             },
         }));
     };
-
-    useEffect(() => {
-        let isMounted = false;
-        const initialGetNodes = async () => {
-            try {
-                const response = await API.get<INode>("/routes", {}, data => {
-                    return data?.data.reduce((acc: INode, node: any) => {
-                        acc[node.id] = {
-                            id: node.id,
-                            type: node.type,
-                            children: node.children ? node.children.map((child: any) => child.id) : [],
-                            parentId: node.parentId,
-                            name: node.name,
-                            path: node.path || "",
-                            isComponent: node.isComponent,
-                            permissions: node.PermissionRoute.map((permission: any) => permission.Permission.id),
-                        };
-                        return acc;
-                    }, {} as INode);
-                });
-                if (response.data) {
-                    console.log(response);
-                    if (isMounted) {
-                        // setNodes(response.data);
-                    }
-                } else {
-                    alert("An error occurred while getting the route.");
-                }
-            } catch (error) {
-                console.log("Error getting route:", error);
-                // alert("An error occurred while getting the route.");
-            }
-        };
-        initialGetNodes();
-        return () => {
-            isMounted = true;
-        };
-    }, []);
 
     return {
         nodes,

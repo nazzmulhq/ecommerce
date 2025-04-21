@@ -3,7 +3,6 @@
 import { Typography } from "antd";
 import { FC } from "react";
 
-import useTranslation from "@lib/i18n";
 import "./index.css";
 import { default as Nodes } from "./Node";
 import useTree from "./useTree";
@@ -26,15 +25,11 @@ const Tree: FC<ITree> = () => {
         onSubmit,
     } = useTree();
 
-    const { locale, onClickChangeLanguage, translation } = useTranslation();
-
     return (
         <>
             <div className="tree-header">
-                <Typography.Title level={4}>Visualize React App {translation.title}</Typography.Title>
-                <button onClick={onClickChangeLanguage} type="button">
-                    {locale === "en" ? "BN" : "EN"}
-                </button>
+                <Typography.Title level={4}>Visualize React App </Typography.Title>
+
                 <button onClick={onSubmit} type="button">
                     Create Route
                 </button>

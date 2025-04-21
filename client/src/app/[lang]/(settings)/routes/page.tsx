@@ -5,10 +5,8 @@ export interface IVisualizeReactApp {}
 
 const VisualizeReactApp: FC<IVisualizeReactApp> = () => {
     return (
-        <main className="rootTree">
-            <div>
-                <Tree />
-            </div>
+        <main>
+            <Tree />
         </main>
     );
 };
