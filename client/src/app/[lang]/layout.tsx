@@ -2,6 +2,7 @@ import Layouts from "@ui/Layouts";
 import Providers from "@ui/providers";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import NextTopLoader from "nextjs-toploader";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,19 @@ export default async function LangLayout({ children, params }: Readonly<LangLayo
     return (
         <html lang={lang}>
             <body className={inter.className}>
+                <NextTopLoader
+                    color="#2299DD"
+                    crawl={true}
+                    crawlSpeed={200}
+                    easing="ease"
+                    height={2}
+                    initialPosition={0.08}
+                    shadow="0 0 10px #2299DD,0 0 5px #2299DD"
+                    showAtBottom={false}
+                    showSpinner={false}
+                    speed={200}
+                    zIndex={1600}
+                />
                 <Providers>
                     <Layouts>{children}</Layouts>
                 </Providers>

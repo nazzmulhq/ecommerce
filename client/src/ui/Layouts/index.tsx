@@ -41,7 +41,7 @@ const headerStyle: React.CSSProperties = {
     zIndex: 10,
     width: "100%",
     padding: "0 24px",
-    height: 65,
+    height: 64,
 };
 
 const items: MenuProps["items"] = [
