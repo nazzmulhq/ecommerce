@@ -11,9 +11,9 @@ import {
     VideoCameraOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import { Breadcrumb, Button, Layout, Menu, theme, Typography } from "antd";
+import { Avatar, Breadcrumb, Button, Layout, Menu, Select, theme, Typography } from "antd";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import React from "react";
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -69,7 +69,11 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
     } = theme.useToken();
 
     const pathname = usePathname();
-    const pathSnippets = pathname.split("/");
+    const param = useParams();
+    const router = useRouter();
+    const { lang } = param;
+    let pathSnippets = pathname.split("/");
+    pathSnippets = pathSnippets.filter(path => path !== lang);
     const breadcrumbItems = pathSnippets.map((path, index, total) => {
         const url = `${pathSnippets.slice(0, index + 1).join("/")}`;
         let title: string | React.ReactNode = path;
@@ -100,7 +104,41 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
                 <Typography.Title level={3} style={{ color: "black", margin: 0 }}>
                     MyApp
                 </Typography.Title>
-                <Menu defaultSelectedKeys={["2"]} items={items} mode="horizontal" theme="light" />
+                <Menu
+                    defaultSelectedKeys={["2"]}
+                    items={[
+                        {
+                            key: "2",
+                            label: (
+                                <Select
+                                    defaultValue={lang}
+                                    onChange={value => {
+                                        const url = pathname.replace(`/${lang}`, `/${value}`);
+                                        router.push(url);
+                                        router.refresh();
+                                    }}
+                                    options={[
+                                        { value: "en", label: "English" },
+                                        { value: "bn", label: "Bangla" },
+                                    ]}
+                                    style={{ width: 90 }}
+                                    value={lang}
+                                />
+                            ),
+                        },
+
+                        {
+                            key: "1",
+                            label: (
+                                <Link href={`/${lang}/`}>
+                                    <Avatar icon={<UserOutlined />} />
+                                </Link>
+                            ),
+                        },
+                    ]}
+                    mode="horizontal"
+                    theme="light"
+                />
             </Header>
             <Layout hasSider>
                 <Sider style={siderStyle}>

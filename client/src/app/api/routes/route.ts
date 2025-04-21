@@ -50,51 +50,6 @@ export async function POST(req: Request) {
 
         const routes = Object.values(body);
 
-        // const routeData = routes.map(route =>
-        //     RouteSchema.parse({
-        //         id: route.id,
-        //         type: route.type,
-        //         name: route.name,
-        //         path: route.path,
-        //         slug: route.name.toLowerCase().replace(/\s/g, "-"),
-        //         isComponent: route.isComponent,
-        //         parentId: route.parentId,
-        //         permissions: route.permissions,
-        //     }),
-        // );
-        // // Begin transaction
-        // await prisma.$transaction(async (prisma: any) => {
-        //     // 1. Insert route data
-        //     await prisma.route.createMany({
-        //         data: routeData.map(route => ({
-        //             id: route.id,
-        //             type: route.type,
-        //             name: route.name,
-        //             slug: route.slug,
-        //             path: route.path,
-        //             isComponent: route.isComponent,
-        //             parentId: route.parentId,
-        //         })),
-        //         skipDuplicates: true, // Avoid duplicate inserts
-        //     });
-
-        //     // 2. Insert Route Permission data
-        //     const routePermission: TPermissionRoute[] = [];
-        //     routeData.forEach(route => {
-        //         route.permissions.forEach(permissionId => {
-        //             routePermission.push({
-        //                 permissionId,
-        //                 routeId: route.id,
-        //             });
-        //         });
-        //     });
-        //     // Insert RolePermission records
-        //     await prisma.permissionRoute.createMany({
-        //         data: routePermission,
-        //         skipDuplicates: true, // Avoid duplicate inserts
-        //     });
-        // });
-
         const app = new FileCreator("src/app", routes);
         const ui = new FileCreator("src/ui", routes);
 

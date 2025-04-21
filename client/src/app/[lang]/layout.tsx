@@ -11,13 +11,14 @@ export const metadata: Metadata = {
 };
 
 interface LangLayoutProps {
-    params: {
+    params: Promise<{
         lang: string;
-    };
+    }>;
     children: React.ReactNode;
 }
 
-export default function LangLayout({ children, params: { lang } }: Readonly<LangLayoutProps>) {
+export default async function LangLayout({ children, params }: Readonly<LangLayoutProps>) {
+    const { lang } = await params;
     return (
         <html lang={lang}>
             <body className={inter.className}>

@@ -1,8 +1,6 @@
 "use client";
 
-import API from "@lib/apiCall";
-import ENDPOINT from "@lib/apiCall/endpoint";
-import { Button, Col, Input, Row, Table } from "antd";
+import { Button, Col, Input, message, Row, Space, Table } from "antd";
 import { ChangeEvent, FC, useEffect, useState } from "react";
 
 export interface II18n {
@@ -23,6 +21,7 @@ interface Locales {
 
 const I18n: FC = () => {
     const [i18nData, setI18nData] = useState<II18n[]>([]);
+    const [refetch, setFetch] = useState(0);
 
     const onChange = (e: ChangeEvent<HTMLInputElement>, record: II18n) => {
         const isDuplicate = i18nData.some(i18n => i18n.title === e.target.value);
@@ -47,11 +46,33 @@ const I18n: FC = () => {
             data.en[i18n.title] = i18n.en;
             data.bn[i18n.title] = i18n.bn;
         });
-        const response = await API.post(ENDPOINT.SETTINGS.I18N, {
-            languages: Object.keys(data),
-            data,
+        // const response = await API.post(ENDPOINT.SETTINGS.I18N, {
+        //     languages: Object.keys(data),
+        //     data,
+        // });
+        const response = await fetch("/api/i18n", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                languages: Object.keys(data),
+                data,
+            }),
         });
-        console.log(response);
+        if (!response.ok) {
+            console.error("Failed to save i18n data");
+            return;
+        }
+
+        message.success("I18n data saved successfully");
+    };
+
+    const onFilterReset = (e: any, clearFilters: any) => {
+        if (clearFilters) {
+            clearFilters();
+        }
+        setFetch(prev => prev + 1);
     };
 
     const columns = [
@@ -59,6 +80,28 @@ const I18n: FC = () => {
             title: "Key",
             dataIndex: "title",
             key: "title",
+            filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+                <div style={{ padding: 8 }}>
+                    <Input
+                        allowClear
+                        onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                        onClear={() => confirm()}
+                        onPressEnter={() => confirm()}
+                        placeholder="Search Key"
+                        style={{ marginBottom: 8, display: "block" }}
+                        value={selectedKeys[0]}
+                    />
+                    <Space>
+                        <Button onClick={() => confirm()} size="small" style={{ width: 90 }} type="primary">
+                            Search
+                        </Button>
+                        <Button onClick={e => onFilterReset(e, clearFilters)} size="small" style={{ width: 90 }}>
+                            Reset
+                        </Button>
+                    </Space>
+                </div>
+            ),
+            onFilter: (value: any, record: any) => record.title.toLowerCase().includes(value.toLowerCase()),
             render: (text: string, record: II18n) => (
                 <Input
                     allowClear
@@ -81,6 +124,30 @@ const I18n: FC = () => {
                     title: "English",
                     dataIndex: "en",
                     key: "en",
+                    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+                        <div style={{ padding: 8 }}>
+                            <Input
+                                onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                onPressEnter={() => confirm()}
+                                placeholder="Search English"
+                                style={{ marginBottom: 8, display: "block" }}
+                                value={selectedKeys[0]}
+                            />
+                            <Space>
+                                <Button onClick={() => confirm()} size="small" style={{ width: 90 }} type="primary">
+                                    Search
+                                </Button>
+                                <Button
+                                    onClick={e => onFilterReset(e, clearFilters)}
+                                    size="small"
+                                    style={{ width: 90 }}
+                                >
+                                    Reset
+                                </Button>
+                            </Space>
+                        </div>
+                    ),
+                    onFilter: (value: any, record: any) => record.en.toLowerCase().includes(value.toLowerCase()),
                     render: (text: string, record: II18n) => (
                         <Input
                             allowClear
@@ -98,6 +165,30 @@ const I18n: FC = () => {
                     title: "বাংলা",
                     dataIndex: "bn",
                     key: "bn",
+                    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+                        <div style={{ padding: 8 }}>
+                            <Input
+                                onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                                onPressEnter={() => confirm()}
+                                placeholder="Search বাংলা"
+                                style={{ marginBottom: 8, display: "block" }}
+                                value={selectedKeys[0]}
+                            />
+                            <Space>
+                                <Button onClick={() => confirm()} size="small" style={{ width: 90 }} type="primary">
+                                    Search
+                                </Button>
+                                <Button
+                                    onClick={e => onFilterReset(e, clearFilters)}
+                                    size="small"
+                                    style={{ width: 90 }}
+                                >
+                                    Reset
+                                </Button>
+                            </Space>
+                        </div>
+                    ),
+                    onFilter: (value: any, record: any) => record.bn.toLowerCase().includes(value.toLowerCase()),
                     render: (text: string, record: II18n) => (
                         <Input
                             allowClear
@@ -151,59 +242,62 @@ const I18n: FC = () => {
     useEffect(() => {
         // Fetch i18n data from the server
         const fetchData = async () => {
-            const response = await API.get<II18n[]>(ENDPOINT.SETTINGS.I18N, {}, formatData);
-            setI18nData(response);
+            const response = await fetch("/api/i18n", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            if (!response.ok) {
+                console.error("Failed to fetch i18n data");
+                return;
+            }
+            const data = await response.json();
+            const formattedData = formatData(data);
+            setI18nData(formattedData);
         };
         fetchData();
-    }, []);
+    }, [refetch]);
 
     return (
-        <div
-            style={{
-                padding: "20px",
-            }}
-        >
-            <Row gutter={24}>
-                <Col span={24}>
-                    <Button
-                        htmlType="submit"
-                        onClick={onSave}
-                        style={{
-                            marginRight: "10px",
-                        }}
-                        type="primary"
-                    >
-                        Save
+        <Row gutter={24} justify="end">
+            <Col span={4}>
+                <Space>
+                    <Button htmlType="submit" onClick={onSave} type="primary">
+                        Save I18n
                     </Button>
                     <Button
                         htmlType="button"
                         onClick={() => {
-                            const newI18nData = [...i18nData];
-                            newI18nData.push({
-                                id: `${Date.now()}-${Math.random()}`,
-                                title: "",
-                                en: "",
-                                bn: "",
-                            });
+                            const newI18nData = [
+                                {
+                                    id: `${Date.now()}-${Math.random()}`,
+                                    title: "",
+                                    en: "",
+                                    bn: "",
+                                },
+                                ...i18nData,
+                            ];
                             setI18nData(newI18nData);
                         }}
                         type="primary"
                     >
-                        Add
+                        Add New
                     </Button>
-                    <Table
-                        bordered
-                        columns={columns}
-                        dataSource={i18nData}
-                        pagination={false}
-                        size="small"
-                        style={{
-                            marginTop: "10px",
-                        }}
-                    />
-                </Col>
-            </Row>
-        </div>
+                </Space>
+            </Col>
+            <Col span={24}>
+                <Table
+                    bordered
+                    columns={columns}
+                    dataSource={i18nData}
+                    size="small"
+                    style={{
+                        marginTop: "10px",
+                    }}
+                />
+            </Col>
+        </Row>
     );
 };
 

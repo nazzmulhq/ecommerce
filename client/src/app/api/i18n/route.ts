@@ -2,8 +2,7 @@ import File from "../../../lib/utils/file";
 
 export async function GET() {
     try {
-        const projectRoot = process.cwd();
-        const path = `${projectRoot}/src/_lib/i18n/locales`;
+        const path = `${process.cwd()}/public/locales`;
 
         const folder = await File.readFilesInFolder(path);
 
@@ -45,8 +44,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
-        const projectRoot = process.cwd();
-        const path = `${projectRoot}/src/_lib/i18n/locales`;
+        const path = `${process.cwd()}/public/locales`;
 
         const { languages, data } = await request.json();
 
