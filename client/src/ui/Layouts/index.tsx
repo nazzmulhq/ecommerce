@@ -102,7 +102,7 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
         <Layout>
             <Header style={headerStyle}>
                 <Typography.Title level={3} style={{ color: "black", margin: 0 }}>
-                    MyApp
+                    <Link href={`/${lang}/`}>Logo</Link>
                 </Typography.Title>
                 <Menu
                     defaultSelectedKeys={["2"]}
