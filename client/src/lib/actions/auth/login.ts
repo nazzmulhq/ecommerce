@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 export async function handleLogin(formData: FormData) {
     const email = formData.get("email");
     const password = formData.get("password");
-    const lang = formData.get("lang");
 
     // Mock user data - replace with real database lookup
     const mockUser = {
@@ -36,15 +35,15 @@ export async function handleLogin(formData: FormData) {
             maxAge: 60 * 60, // 1 hour
             path: "/",
         });
-        // (await cookies()).set({
-        //     name: "permissions",
-        //     value: JSON.stringify(["read", "write"]), // Replace with actual permissions
-        //     httpOnly: true,
-        //     secure: process.env.NODE_ENV === "production",
-        //     sameSite: "strict",
-        //     maxAge: 60 * 60, // 1 hour
-        //     path: "/",
-        // });
+        (await cookies()).set({
+            name: "permissions",
+            value: JSON.stringify(["read", "write"]), // Replace with actual permissions
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 60 * 60, // 1 hour
+            path: "/",
+        });
         redirect("/");
     }
 }
