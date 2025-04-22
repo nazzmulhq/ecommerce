@@ -72,8 +72,18 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
     const param = useParams();
     const router = useRouter();
     const { lang } = param;
+
+    // Remove the language code from the pathname
     let pathSnippets = pathname.split("/");
     pathSnippets = pathSnippets.filter(path => path !== lang);
+
+    // without layout routes
+    const withoutLayoutRoutes = ["login", "register"];
+    const isWithoutLayoutRoute = withoutLayoutRoutes.some(route => pathname.includes(route));
+    if (isWithoutLayoutRoute) {
+        return <>{children}</>;
+    }
+    // breadcrumb items
     const breadcrumbItems = pathSnippets.map((path, index, total) => {
         const url = `${pathSnippets.slice(0, index + 1).join("/")}`;
         let title: string | React.ReactNode = path;
