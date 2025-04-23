@@ -2,6 +2,7 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { RouteService } from 'modules/routes/routes.service';
 import { CreateUserDto } from 'modules/user/dto';
 import { UsersService } from 'modules/user/user.service';
 import { ExtendedCache, UserAndRequest } from 'types';
@@ -14,6 +15,7 @@ export class AuthService {
         @Inject(CACHE_MANAGER) private cacheService: ExtendedCache,
         private usersService: UsersService,
         private jwtService: JwtService,
+        private routeService: RouteService,
     ) {}
 
     async signup(authRegisterDto: CreateUserDto) {
@@ -39,13 +41,22 @@ export class AuthService {
         if (cachedUser) await this.cacheService.del('user');
         const user = await this.validateUser(authLoginDto);
 
+        const permissionsIds = user.roles
+            .map((role) => {
+                return role.permissions.map((permission) => permission.id);
+            })
+            .flat();
+
+        const getRouteByPermissionIds =
+            await this.routeService.findAllByPermissionIds(permissionsIds);
+
         const payload = {
             email: user.email,
         };
 
         return {
-            user,
             token: this.jwtService.sign(payload),
+            getRouteByPermissionIds,
         };
     }
 

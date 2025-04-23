@@ -120,4 +120,14 @@ export class RouteService {
 
         return +id;
     }
+
+    async findAllByPermissionIds(permissionIds: number[]): Promise<Route[]> {
+        const routes = await this.routeRepository
+            .createQueryBuilder('route')
+            .leftJoinAndSelect('route.permissions', 'permission')
+            .where('permission.id IN (:...permissionIds)', { permissionIds })
+            .getMany();
+
+        return routes;
+    }
 }

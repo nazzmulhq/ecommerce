@@ -9,8 +9,9 @@ import { RouteController } from './routes.controller';
 import { RouteService } from './routes.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Route, User, Permission])],
-  controllers: [RouteController],
-  providers: [RouteService],
+    imports: [TypeOrmModule.forFeature([Route, User, Permission])],
+    controllers: [RouteController],
+    providers: [RouteService],
+    exports: [RouteService],
 })
 export class RouteModule {}
