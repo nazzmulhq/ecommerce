@@ -16,6 +16,9 @@ COPY . .
 # Expose the port the app runs in
 EXPOSE 3000
 
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
 # Command to run the server in development mode
 CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0", "--port", "3000"]
 

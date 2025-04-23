@@ -6,7 +6,6 @@ export const metadata: Metadata = {
     description: "Login to your account",
 };
 
-export default async function LoginPage({ params }: { params: { lang: string } }) {
-    const { lang } = await params;
-    return <Login lang={lang} />;
+export default async function LoginPage() {
+    return <Login />;
 }
