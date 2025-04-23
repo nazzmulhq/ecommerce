@@ -6,6 +6,7 @@ export const metadata: Metadata = {
     description: "Login to your account",
 };
 
-export default async function LoginPage() {
-    return <Login />;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+    const searchParam = await searchParams;
+    return <Login searchParams={searchParam} />;
 }

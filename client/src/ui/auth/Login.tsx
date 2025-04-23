@@ -1,85 +1,122 @@
-"use client";
+import { cookies } from "next/headers";
+import { redirect, RedirectType } from "next/navigation";
 
-import { Button, Checkbox, Form, Input, message, Typography } from "antd";
-import { useState } from "react";
+export default function Login({ searchParams }: { searchParams: { error?: string } }) {
+    async function handleLogin(formData: FormData) {
+        "use server";
 
-const { Title } = Typography;
+        const email = formData.get("email")?.toString();
+        const password = formData.get("password")?.toString();
 
-export default function LoginPage() {
-    const [loading, setLoading] = useState(false);
-
-    const onFinish = async (values: any) => {
-        const { email, password } = values;
-        setLoading(true);
-
-        try {
-            const response = await fetch("/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, password }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Invalid credentials. Status: ${response.status}`);
-            }
-
-            const { message: successMessage } = await response.json();
-            message.success(successMessage);
-            window.location.href = "/";
-        } catch (error: any) {
-            message.error(error.message || "An error occurred. Please try again.");
-            console.error("Login error:", error);
-        } finally {
-            setLoading(false);
+        if (!email || !password) {
+            redirect("/login?error=missing_credentials");
         }
-    };
+
+        // Authentication API call
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+        });
+
+        const { user, token } = await response.json();
+
+        // Set cookies correctly
+        (await cookies()).set({
+            name: "token2",
+            value: token,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60,
+            path: "/",
+        });
+
+        (await cookies()).set({
+            name: "user",
+            value: user,
+            httpOnly: false,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60,
+            path: "/",
+        });
+        redirect("/", RedirectType.push);
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
                 <div>
-                    <Title className="text-center" level={3}>
-                        Sign in to your account
-                    </Title>
+                    <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Sign in to your account</h2>
                 </div>
 
-                <Form className="mt-8 space-y-6" layout="vertical" onFinish={onFinish}>
-                    <Form.Item
-                        label="Email address"
-                        name="email"
-                        rules={[
-                            { required: true, message: "Please input your email!" },
-                            { type: "email", message: "Please enter a valid email!" },
-                        ]}
-                    >
-                        <Input defaultValue="john.doe@gmail.com" placeholder="Email address" />
-                    </Form.Item>
+                <form action={handleLogin} className="mt-8 space-y-6">
+                    <div className="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <label className="sr-only" htmlFor="email">
+                                Email address
+                            </label>
+                            <input
+                                autoComplete="email"
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                defaultValue={"john.doe@gmail.com"}
+                                id="email"
+                                name="email"
+                                placeholder="Email address"
+                                required
+                                type="email"
+                            />
+                        </div>
+                        <div>
+                            <label className="sr-only" htmlFor="password">
+                                Password
+                            </label>
+                            <input
+                                autoComplete="current-password"
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                defaultValue={"password"}
+                                id="password"
+                                name="password"
+                                placeholder="Password"
+                                required
+                                type="password"
+                            />
+                        </div>
+                    </div>
 
-                    <Form.Item
-                        label="Password"
-                        name="password"
-                        rules={[{ required: true, message: "Please input your password!" }]}
-                    >
-                        <Input.Password defaultValue="password" placeholder="Password" />
-                    </Form.Item>
+                    {searchParams.error === "invalid_credentials" && (
+                        <p className="text-red-500 text-sm text-center">Invalid email or password</p>
+                    )}
 
-                    <Form.Item>
-                        <div className="flex items-center justify-between">
-                            <Checkbox name="remember-me">Remember me</Checkbox>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <input
+                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                id="remember-me"
+                                name="remember-me"
+                                type="checkbox"
+                            />
+                            <label className="ml-2 block text-sm text-gray-900" htmlFor="remember-me">
+                                Remember me
+                            </label>
+                        </div>
+                        <div className="text-sm">
                             <a className="font-medium text-indigo-600 hover:text-indigo-500" href="#">
                                 Forgot your password?
                             </a>
                         </div>
-                    </Form.Item>
+                    </div>
 
-                    <Form.Item>
-                        <Button className="w-full" htmlType="submit" loading={loading} type="primary">
+                    <div>
+                        <button
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                            type="submit"
+                        >
                             Sign in
-                        </Button>
-                    </Form.Item>
-                </Form>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );
