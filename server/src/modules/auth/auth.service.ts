@@ -41,22 +41,37 @@ export class AuthService {
         if (cachedUser) await this.cacheService.del('user');
         const user = await this.validateUser(authLoginDto);
 
-        const permissionsIds = user.roles
+        const permissions = user.roles
             .map((role) => {
-                return role.permissions.map((permission) => permission.id);
+                return role.permissions.map((permission) => permission);
             })
             .flat();
 
-        const getRouteByPermissionIds =
-            await this.routeService.findAllByPermissionIds(permissionsIds);
+        const uniquePermissions = permissions.filter(
+            (permission, index, self) =>
+                index === self.findIndex((t) => t.id === permission.id),
+        );
+
+        const permissionsIds = [
+            ...new Set(uniquePermissions.map((permission) => permission.id)),
+        ];
+
+        const routes =
+            await this.routeService.findRoutesByPermissionIds(permissionsIds);
 
         const payload = {
             email: user.email,
         };
 
+        delete user.password;
+        delete user.isSuperAdmin;
+        delete user.status;
+
         return {
             token: this.jwtService.sign(payload),
-            getRouteByPermissionIds,
+            permissions: uniquePermissions,
+            routes,
+            user,
         };
     }
 

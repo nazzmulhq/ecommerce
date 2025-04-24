@@ -121,7 +121,11 @@ export class RouteService {
         return +id;
     }
 
-    async findAllByPermissionIds(permissionIds: number[]): Promise<Route[]> {
+    async findRoutesByPermissionIds(permissionIds: number[]): Promise<Route[]> {
+        if (!permissionIds || permissionIds.length === 0) {
+            return []; // Return an empty array if no permission IDs are provided
+        }
+
         const routes = await this.routeRepository
             .createQueryBuilder('route')
             .leftJoinAndSelect('route.permissions', 'permission')
