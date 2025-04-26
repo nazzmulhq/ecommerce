@@ -59,6 +59,23 @@ export class AuthService {
         const routes =
             await this.routeService.findRoutesByPermissionIds(permissionsIds);
 
+        const mapPermissions = uniquePermissions.map((permission) => ({
+            id: permission.id,
+            name: permission.name,
+            slug: permission.slug,
+        }));
+
+        const mapRoutes = routes.map((route) => ({
+            id: route.id,
+            name: route.name,
+            slug: route.slug,
+            permissions: route.permissions.map((permission) => ({
+                id: permission.id,
+                name: permission.name,
+                slug: permission.slug,
+            })),
+        }));
+
         const payload = {
             email: user.email,
         };
@@ -66,15 +83,19 @@ export class AuthService {
         delete user.password;
         delete user.isSuperAdmin;
         delete user.status;
+        delete user.roles;
+        delete user.createBy;
+        delete user.updateBy;
+        delete user.createdAt;
+        delete user.updatedAt;
 
         return {
             token: this.jwtService.sign(payload),
-            permissions: uniquePermissions,
-            routes,
+            permissions: mapPermissions,
+            routes: mapRoutes,
             user,
         };
     }
-
     async validateUser(authLoginDto: AuthLoginDto): Promise<User> {
         const { email, password } = authLoginDto;
 
@@ -83,5 +104,44 @@ export class AuthService {
             throw new UnauthorizedException();
         }
         return user;
+    }
+
+    async getRoutesAndPermissionsByUserId(user: UserAndRequest['user']) {
+        const permissions = user.roles
+            .map((role) => {
+                return role.permissions.map((permission) => permission);
+            })
+            .flat();
+
+        const uniquePermissions = permissions.filter(
+            (permission, index, self) =>
+                index === self.findIndex((t) => t.id === permission.id),
+        );
+
+        const permissionsIds = [
+            ...new Set(uniquePermissions.map((permission) => permission.id)),
+        ];
+
+        const routes =
+            await this.routeService.findRoutesByPermissionIds(permissionsIds);
+
+        const mapPermissions = uniquePermissions.map((permission) => ({
+            id: permission.id,
+            name: permission.name,
+            slug: permission.slug,
+        }));
+
+        const mapRoutes = routes.map((route) => ({
+            id: route.id,
+            name: route.name,
+            slug: route.slug,
+            permissions: route.permissions.map((permission) => ({
+                id: permission.id,
+                name: permission.name,
+                slug: permission.slug,
+            })),
+        }));
+
+        return { routes: mapRoutes, permissions: mapPermissions, user };
     }
 }

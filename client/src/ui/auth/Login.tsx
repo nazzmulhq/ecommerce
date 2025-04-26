@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect, RedirectType } from "next/navigation";
 
-export default function Login({ searchParams }: { searchParams: { error?: string } }) {
+export default function Login({ searchParams, lang }: { searchParams: { error?: string }; lang: string }) {
     async function handleLogin(formData: FormData) {
         "use server";
 
@@ -19,11 +19,11 @@ export default function Login({ searchParams }: { searchParams: { error?: string
             body: JSON.stringify({ email, password }),
         });
 
-        const { user, token } = await response.json();
+        const { token, user, routes, permissions } = await response.json();
 
         // Set cookies correctly
         (await cookies()).set({
-            name: "token2",
+            name: "token",
             value: token,
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -31,17 +31,35 @@ export default function Login({ searchParams }: { searchParams: { error?: string
             maxAge: 60 * 60,
             path: "/",
         });
-
         (await cookies()).set({
             name: "user",
-            value: user,
-            httpOnly: false,
+            value: JSON.stringify(user),
+            httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             maxAge: 60 * 60,
             path: "/",
         });
-        redirect("/", RedirectType.push);
+        (await cookies()).set({
+            name: "routes",
+            value: JSON.stringify(routes),
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60,
+            path: "/",
+        });
+        (await cookies()).set({
+            name: "permissions",
+            value: JSON.stringify(permissions),
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60,
+            path: "/",
+        });
+
+        redirect(`/${lang}/`, RedirectType.push);
     }
 
     return (
