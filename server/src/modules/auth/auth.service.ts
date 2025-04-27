@@ -67,8 +67,10 @@ export class AuthService {
 
         const mapRoutes = routes.map((route) => ({
             id: route.id,
+            type: route.type,
             name: route.name,
             slug: route.slug,
+            path: route.path,
             permissions: route.permissions.map((permission) => ({
                 id: permission.id,
                 name: permission.name,

@@ -9,15 +9,10 @@ export interface IMenuItem {
     subMenuItems?: ISubMenuItem[];
 }
 
-export interface Permission {
+export interface IPermission {
     id: number;
     name: string;
     slug: string;
-    createdAt: string;
-    updatedAt: string;
-    createBy: number;
-    updateBy: number;
-    status: number;
 }
 
 export interface Role {
@@ -29,7 +24,7 @@ export interface Role {
     createBy: number;
     updateBy: number;
     status: number;
-    permissions: Permission[];
+    permissions: IPermission[];
 }
 
 export interface User {
@@ -40,19 +35,11 @@ export interface User {
     roles: Role[];
 }
 
-export interface Route {
+export interface IRoute {
     id: number;
+    type: "guest" | "shared" | "protected" | "devOnly";
     name: string;
     slug: string;
-    createdAt: string;
-    updatedAt: string;
-    createBy: number;
-    updateBy: number;
-    status: number;
-}
-
-export interface IUserInfo {
-    routes: Route[];
-    permissions: Permission[];
-    user: User;
+    path: string;
+    permissions: IPermission[];
 }

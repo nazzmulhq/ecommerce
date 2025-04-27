@@ -1,12 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
-// Add this import
-
-import DEV_ONLY_ROUTES from "./routes/DEV_ONLY_ROUTES";
-import GUEST_ROUTES from "./routes/GUEST_ROUTES";
-import { PROTECTED_ROUTES } from "./routes/PROTECTED_ROUTES";
-import SHARED_ROUTES from "./routes/SHARED_ROUTES";
+import { IPermission, IRoute } from "./types/index";
 
 const PUBLIC_FILE = /\.(.*)$/;
 
@@ -35,9 +29,18 @@ export async function middleware(req: NextRequest) {
     const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "") || "/";
 
     // 2. Now proceed with your existing auth logic
-    const token = req.cookies.get("token");
-    const permissions = req.cookies.get("permissions");
+    const token = req.cookies.get("token")?.value;
+    const permissionsString = req.cookies.get("permissions")?.value;
+    const routesString = req.cookies.get("routes")?.value;
+    const routes: IRoute[] = JSON.parse(routesString || "[]");
+    const permissions: IPermission[] = JSON.parse(permissionsString || "[]");
+
     const isUserLoggedIn = !!token;
+
+    const GUEST_ROUTES = routes.filter((route: { type: string }) => route.type === "guest");
+    const SHARED_ROUTES = routes.filter((route: { type: string }) => route.type === "shared");
+    const PROTECTED_ROUTES = routes.filter((route: { type: string }) => route.type === "protected");
+    const DEV_ONLY_ROUTES = routes.filter((route: { type: string }) => route.type === "dev");
 
     const isGuestRoute = GUEST_ROUTES.some(route => pathWithoutLocale.endsWith(route.path));
     const isSharedRoute = SHARED_ROUTES.some(route => pathWithoutLocale.includes(route.path));
@@ -66,7 +69,7 @@ export async function middleware(req: NextRequest) {
 
     // Permission checks
     if (isUserLoggedIn && permissions) {
-        const userPermissions = permissions?.value ? JSON.parse(permissions.value) : [];
+        const userPermissions: string[] = permissions ? permissions.map(p => p.slug) : [];
 
         const hasPermission = (permission: string[]) => {
             return permission.some(p => userPermissions.includes(p));
@@ -76,7 +79,7 @@ export async function middleware(req: NextRequest) {
             pathWithoutLocale.startsWith(route.path),
         );
 
-        if (matchedRoute && matchedRoute.permissions && !hasPermission(matchedRoute.permissions)) {
+        if (matchedRoute && matchedRoute.permissions && !hasPermission(matchedRoute.permissions.map(p => p.slug))) {
             return NextResponse.redirect(new URL(`/${pathLocale}/403`, req.url));
         }
     }
