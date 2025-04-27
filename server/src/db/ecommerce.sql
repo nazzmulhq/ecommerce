@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Generation Time: Apr 07, 2025 at 03:14 AM
+-- Generation Time: Apr 27, 2025 at 11:50 AM
 -- Server version: 8.0.41
 -- PHP Version: 8.2.27
 
@@ -58,7 +58,8 @@ INSERT INTO `permission` (`id`, `name`, `slug`, `createdAt`, `updatedAt`, `creat
 (15, 'route.get-one', 'route.get-one', '2024-11-18 06:32:36.866947', '2024-11-18 06:32:36.866947', 1, 1, 1),
 (16, 'route.update', 'route.update', '2024-11-18 06:32:53.339721', '2024-11-18 06:32:53.339721', 1, 1, 1),
 (17, 'route.delete', 'route.delete', '2024-11-18 06:33:10.055451', '2024-11-18 06:33:10.055451', 1, 1, 1),
-(18, 'user.get-profile', 'user.get-profile', '2024-11-18 21:05:00.731448', '2024-11-18 21:05:00.731448', 1, 1, 1);
+(18, 'user.get-profile', 'user.get-profile', '2024-11-18 21:05:00.731448', '2024-11-18 21:05:00.731448', 1, 1, 1),
+(20, 'no-permission', 'no-permission', '2025-04-23 09:52:37.346000', '2025-04-23 15:52:37.355865', 5, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -82,8 +83,9 @@ CREATE TABLE `role` (
 --
 
 INSERT INTO `role` (`id`, `name`, `slug`, `createdAt`, `updatedAt`, `createBy`, `updateBy`, `status`) VALUES
-(4, 'admin', 'admin', '2025-04-07 08:50:01.607464', '2025-04-07 08:50:01.607464', 0, 0, 1),
-(5, 'user', 'user', '2025-04-07 08:51:23.818797', '2025-04-07 08:51:23.818797', 0, 0, 1);
+(4, 'admin', 'admin', '2025-04-07 08:50:01.607464', '2025-04-23 10:37:00.312000', 0, 5, 1),
+(5, 'user', 'user', '2025-04-07 08:51:23.818797', '2025-04-07 08:51:23.818797', 0, 0, 1),
+(6, 'admin2', 'admin2', '2025-04-09 10:03:47.013000', '2025-04-23 10:47:43.421000', 5, 5, 1);
 
 -- --------------------------------------------------------
 
@@ -117,7 +119,9 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (4, 16),
 (4, 17),
 (4, 18),
-(5, 18);
+(4, 20),
+(5, 18),
+(6, 18);
 
 -- --------------------------------------------------------
 
@@ -126,10 +130,8 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 --
 
 CREATE TABLE `route` (
-  `id` varchar(36) NOT NULL,
   `slug` varchar(255) NOT NULL,
   `type` enum('guest','shared','protected','devOnly') NOT NULL DEFAULT 'guest',
-  `parentId` varchar(255) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `path` varchar(255) NOT NULL,
   `isComponent` tinyint NOT NULL DEFAULT '0',
@@ -137,8 +139,24 @@ CREATE TABLE `route` (
   `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `status` int NOT NULL DEFAULT '1',
   `nsleft` int NOT NULL DEFAULT '1',
-  `nsright` int NOT NULL DEFAULT '2'
+  `nsright` int NOT NULL DEFAULT '2',
+  `metadata` json DEFAULT NULL,
+  `createBy` int NOT NULL DEFAULT '0',
+  `updateBy` int NOT NULL DEFAULT '0',
+  `id` int NOT NULL,
+  `parentId` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `route`
+--
+
+INSERT INTO `route` (`slug`, `type`, `name`, `path`, `isComponent`, `createdAt`, `updatedAt`, `status`, `nsleft`, `nsright`, `metadata`, `createBy`, `updateBy`, `id`, `parentId`) VALUES
+('root', 'guest', 'root', '', 0, '2025-04-10 09:42:02.112000', '2025-04-23 16:20:29.040415', 1, 1, 10, '{\"icons\": {\"icon\": [{\"url\": \"/icon.png\"}], \"apple\": [{\"url\": \"/apple-icon.png\", \"type\": \"image/png\", \"sizes\": \"192x192\"}, {\"url\": \"/apple-icon2.png\", \"type\": \"image/png\", \"sizes\": \"512x512\"}], \"other\": [{\"rel\": \"apple-touch-icon\", \"url\": \"/apple-icon.png\"}], \"shortcut\": [\"/shortcut-icon.png\"]}, \"title\": {\"default\": \"Home\", \"absolute\": \"https://example.com\", \"template\": \"Home - {{title}}\"}, \"assets\": [\"https://example.com/asset1\", \"https://example.com/asset2\"], \"itunes\": {\"appId\": \"123456789\", \"appArgument\": \"my-app-argument\"}, \"robots\": {\"index\": true, \"follow\": true, \"nocache\": false, \"googleBot\": {\"index\": true, \"follow\": true, \"noimageindex\": false}}, \"authors\": [{\"url\": \"https://example.com\", \"name\": \"John Doe\"}], \"creator\": \"John Doe\", \"twitter\": {\"card\": \"summary_large_image\", \"title\": \"Home\", \"images\": [\"https://example.com/twitter-image.png\"], \"siteId\": \"123456789\", \"creator\": \"@johndoe\", \"creatorId\": \"123456789\", \"description\": \"This is the home page\"}, \"abstract\": \"This is an abstract\", \"appLinks\": {\"ios\": {\"url\": \"https://example.com\", \"app_store_id\": \"123456789\"}, \"web\": {\"url\": \"https://example.com\", \"should_fallback\": true}, \"other\": [{\"url\": \"https://example.com\", \"app_id\": \"123456789\"}, {\"url\": \"https://example.com\", \"app_store_id\": \"123456789\"}, {\"url\": \"https://example.com\", \"package\": \"com.example.app\"}, {\"url\": \"https://example.com\", \"app_id\": \"123456789\"}, {\"url\": \"https://example.com\", \"app_store_id\": \"123456789\"}, {\"url\": \"https://example.com\", \"package\": \"com.example.app\"}, {\"url\": \"https://example.com\", \"app_id\": \"123456789\"}, {\"url\": \"https://example.com\", \"app_store_id\": \"123456789\"}], \"webApp\": {\"url\": \"https://example.com\", \"should_fallback\": true}, \"android\": {\"url\": \"https://example.com\", \"package\": \"com.example.app\"}, \"windows\": {\"url\": \"https://example.com\", \"app_id\": \"123456789\"}, \"universal\": {\"url\": \"https://example.com\", \"app_id\": \"123456789\"}}, \"archives\": [\"https://example.com/archive1\", \"https://example.com/archive2\"], \"category\": \"category\", \"keywords\": [\"home\", \"page\"], \"manifest\": \"/manifest.json\", \"referrer\": \"no-referrer\", \"bookmarks\": [\"https://example.com/bookmark1\", \"https://example.com/bookmark2\"], \"generator\": \"My Generator\", \"openGraph\": {\"url\": \"https://example.com\", \"type\": \"website\", \"title\": \"Home\", \"images\": [{\"alt\": \"An image\", \"url\": \"https://example.com/image.png\", \"type\": \"image/png\", \"width\": 800, \"height\": 600}], \"locale\": \"en_US\", \"authors\": [\"John Doe\"], \"siteName\": \"My Site\", \"description\": \"This is the home page\", \"publishedTime\": \"2023-01-01T00:00:00Z\"}, \"publisher\": \"My Company\", \"alternates\": {\"en\": \"/en\"}, \"themeColor\": [{\"color\": \"#000\", \"media\": \"(prefers-color-scheme: dark)\"}], \"appleWebApp\": {\"title\": \"My App\", \"capable\": true}, \"colorScheme\": \"dark light\", \"description\": \"This is the home page\", \"metadataBase\": \"https://example.com\", \"verification\": {\"other\": [{\"id\": \"other-verification-code\", \"type\": \"other\"}], \"google\": \"google-site-verification-code\", \"yandex\": \"yandex-verification-code\"}, \"classification\": \"This is a classification\", \"applicationName\": \"My App\", \"formatDetection\": {\"email\": false, \"address\": false, \"telephone\": false}}', 5, 0, 1, NULL),
+('routes', 'guest', 'Routes', '/routes', 0, '2025-04-23 10:12:24.197000', '2025-04-23 16:14:55.417984', 1, 2, 3, '{\"title\": {\"default\": \"Routes\", \"absolute\": \"https://example.com\", \"template\": \"Routes - {{title}}\"}, \"robots\": {\"index\": true, \"follow\": true, \"nocache\": false, \"googleBot\": {\"index\": true, \"follow\": true, \"noimageindex\": false}}, \"authors\": [{\"url\": \"\", \"name\": \"\"}], \"creator\": \"\", \"keywords\": [\"\"], \"manifest\": \"/manifest.json\", \"referrer\": \"no-referrer\", \"generator\": \"\", \"publisher\": \"\", \"themeColor\": [{\"color\": \"#000\", \"media\": \"(prefers-color-scheme: dark)\"}], \"colorScheme\": \"dark light\", \"description\": \"This is the Routes page\", \"metadataBase\": \"https://example.com\", \"applicationName\": \"\", \"formatDetection\": {\"email\": false, \"address\": false, \"telephone\": false}}', 5, 0, 2, 1),
+('home', 'guest', 'Home', '/', 0, '2025-04-23 10:13:56.918000', '2025-04-23 16:18:10.043917', 1, 4, 5, '{\"title\": {\"default\": \"Home\", \"absolute\": \"https://example.com\", \"template\": \"Home - {{title}}\"}, \"robots\": {\"index\": true, \"follow\": true, \"nocache\": false, \"googleBot\": {\"index\": true, \"follow\": true, \"noimageindex\": false}}, \"authors\": [{\"url\": \"\", \"name\": \"\"}], \"creator\": \"\", \"keywords\": [\"\"], \"manifest\": \"/manifest.json\", \"referrer\": \"no-referrer\", \"generator\": \"\", \"publisher\": \"\", \"themeColor\": [{\"color\": \"#000\", \"media\": \"(prefers-color-scheme: dark)\"}], \"colorScheme\": \"dark light\", \"description\": \"This is the Home page\", \"metadataBase\": \"https://example.com\", \"applicationName\": \"\", \"formatDetection\": {\"email\": false, \"address\": false, \"telephone\": false}}', 5, 0, 3, 1),
+('i18n', 'guest', 'i18n', '/i18n', 0, '2025-04-23 10:16:56.234000', '2025-04-23 16:17:11.319269', 1, 6, 7, '{\"title\": {\"default\": \"i18n\", \"absolute\": \"https://example.com\", \"template\": \"i18n - {{title}}\"}, \"robots\": {\"index\": true, \"follow\": true, \"nocache\": false, \"googleBot\": {\"index\": true, \"follow\": true, \"noimageindex\": false}}, \"authors\": [{\"url\": \"\", \"name\": \"\"}], \"creator\": \"\", \"keywords\": [\"\"], \"manifest\": \"/manifest.json\", \"referrer\": \"no-referrer\", \"generator\": \"\", \"publisher\": \"\", \"themeColor\": [{\"color\": \"#000\", \"media\": \"(prefers-color-scheme: dark)\"}], \"colorScheme\": \"dark light\", \"description\": \"This is the i18n page\", \"metadataBase\": \"https://example.com\", \"applicationName\": \"\", \"formatDetection\": {\"email\": false, \"address\": false, \"telephone\": false}}', 5, 0, 4, 1),
+('login', 'guest', 'Login', '/login', 0, '2025-04-23 10:20:29.036000', '2025-04-23 17:19:33.461610', 1, 8, 9, '{\"title\": {\"default\": \"login\", \"absolute\": \"https://example.com\", \"template\": \"login - {{title}}\"}, \"robots\": {\"index\": true, \"follow\": true, \"nocache\": false, \"googleBot\": {\"index\": true, \"follow\": true, \"noimageindex\": false}}, \"authors\": [{\"url\": \"\", \"name\": \"\"}], \"creator\": \"\", \"keywords\": [\"\"], \"manifest\": \"/manifest.json\", \"referrer\": \"no-referrer\", \"generator\": \"\", \"publisher\": \"\", \"themeColor\": [{\"color\": \"#000\", \"media\": \"(prefers-color-scheme: dark)\"}], \"colorScheme\": \"dark light\", \"description\": \"This is the login page\", \"metadataBase\": \"https://example.com\", \"applicationName\": \"\", \"formatDetection\": {\"email\": false, \"address\": false, \"telephone\": false}}', 5, 0, 5, 1);
 
 -- --------------------------------------------------------
 
@@ -147,9 +165,21 @@ CREATE TABLE `route` (
 --
 
 CREATE TABLE `route_has_permissions` (
-  `route_id` varchar(36) NOT NULL,
-  `permission_id` int NOT NULL
+  `permission_id` int NOT NULL,
+  `route_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `route_has_permissions`
+--
+
+INSERT INTO `route_has_permissions` (`permission_id`, `route_id`) VALUES
+(1, 1),
+(2, 1),
+(20, 2),
+(20, 3),
+(20, 4),
+(20, 5);
 
 -- --------------------------------------------------------
 
@@ -238,9 +268,9 @@ ALTER TABLE `route`
 -- Indexes for table `route_has_permissions`
 --
 ALTER TABLE `route_has_permissions`
-  ADD PRIMARY KEY (`route_id`,`permission_id`),
-  ADD KEY `IDX_66ff4403037962ee3ec1105dc6` (`route_id`),
-  ADD KEY `IDX_ea46e0b428cc56bc70eeb00978` (`permission_id`);
+  ADD PRIMARY KEY (`permission_id`,`route_id`),
+  ADD KEY `IDX_ea46e0b428cc56bc70eeb00978` (`permission_id`),
+  ADD KEY `IDX_66ff4403037962ee3ec1105dc6` (`route_id`);
 
 --
 -- Indexes for table `user`
@@ -265,12 +295,18 @@ ALTER TABLE `user_roles`
 -- AUTO_INCREMENT for table `permission`
 --
 ALTER TABLE `permission`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `role`
 --
 ALTER TABLE `role`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `route`
+--
+ALTER TABLE `route`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
