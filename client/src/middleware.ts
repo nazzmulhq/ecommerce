@@ -22,13 +22,15 @@ export async function middleware(req: NextRequest) {
     // If no locale in path, redirect to default locale while preserving the requested path
     if (!locales.some(locale => pathname.startsWith(`/${locale}`))) {
         const newUrl = new URL(`/${pathLocale}${pathname}`, req.url);
+        if (req.nextUrl.pathname === newUrl.pathname) {
+            return NextResponse.next(); // Prevent redirection loop
+        }
         return NextResponse.redirect(newUrl);
     }
 
-    // Rest of your middleware logic remains the same...
     const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "") || "/";
 
-    // 2. Now proceed with your existing auth logic
+    // Authentication and route checks
     const token = req.cookies.get("token")?.value;
     const permissionsString = req.cookies.get("permissions")?.value;
     const routesString = req.cookies.get("routes")?.value;
@@ -37,50 +39,51 @@ export async function middleware(req: NextRequest) {
 
     const isUserLoggedIn = !!token;
 
-    const GUEST_ROUTES = routes.filter((route: { type: string }) => route.type === "guest");
-    const SHARED_ROUTES = routes.filter((route: { type: string }) => route.type === "shared");
-    const PROTECTED_ROUTES = routes.filter((route: { type: string }) => route.type === "protected");
-    const DEV_ONLY_ROUTES = routes.filter((route: { type: string }) => route.type === "dev");
-
-    const isGuestRoute = GUEST_ROUTES.some(route => pathWithoutLocale.endsWith(route.path));
-    const isSharedRoute = SHARED_ROUTES.some(route => pathWithoutLocale.includes(route.path));
-    const isPrivateRoute = !isGuestRoute && !isSharedRoute;
-
-    // Development routes
-    if (
-        process.env.NODE_ENV === "development" &&
-        DEV_ONLY_ROUTES.some(route => pathWithoutLocale.includes(route.path))
-    ) {
-        return NextResponse.next();
-    }
-
-    // Auth checks
-    if (!isUserLoggedIn && isPrivateRoute) {
-        const redirectUrl =
-            process.env.NODE_ENV === "development"
-                ? new URL(`/${pathLocale}`, req.url)
-                : new URL(`/${pathLocale}/login`, req.url);
+    if (routes.length === 0) {
+        const redirectUrl = new URL(`/${pathLocale}/login`, req.url);
+        if (req.nextUrl.pathname === redirectUrl.pathname) {
+            return NextResponse.next(); // Prevent redirection loop
+        }
         return NextResponse.redirect(redirectUrl);
     }
 
-    if (isUserLoggedIn && isGuestRoute) {
-        return NextResponse.redirect(new URL(`/${pathLocale}`, req.url));
+    const GUEST_ROUTES = routes.filter(route => route.type === "guest");
+    const PROTECTED_ROUTES = routes.filter(route => route.type === "protected");
+
+    const isGuestRoute = GUEST_ROUTES.some(route => pathWithoutLocale === route.path);
+    const isPrivateRoute = PROTECTED_ROUTES.some(route => pathWithoutLocale.startsWith(route.path));
+
+    // User not logged in but trying to access a private route
+    if (!isUserLoggedIn && isPrivateRoute) {
+        const redirectUrl = new URL(`/${pathLocale}/login`, req.url);
+        if (req.nextUrl.pathname === redirectUrl.pathname) {
+            return NextResponse.next(); // Prevent redirection loop
+        }
+        return NextResponse.redirect(redirectUrl);
     }
 
-    // Permission checks
-    if (isUserLoggedIn && permissions) {
-        const userPermissions: string[] = permissions ? permissions.map(p => p.slug) : [];
+    // User logged in but trying to access a guest route
+    if (isUserLoggedIn && isGuestRoute) {
+        const redirectUrl = new URL(`/${pathLocale}`, req.url);
+        if (req.nextUrl.pathname === redirectUrl.pathname) {
+            return NextResponse.next(); // Prevent redirection loop
+        }
+        return NextResponse.redirect(redirectUrl);
+    }
 
-        const hasPermission = (permission: string[]) => {
-            return permission.some(p => userPermissions.includes(p));
-        };
+    // Permission checks for private routes
+    if (isUserLoggedIn && isPrivateRoute) {
+        const userPermissions = permissions.map(p => p.slug);
+        const hasPermission = (required: string[]) => required.some(p => userPermissions.includes(p));
 
-        const matchedRoute = PROTECTED_ROUTES.find((route: { path: string }) =>
-            pathWithoutLocale.startsWith(route.path),
-        );
+        const matchedRoute = PROTECTED_ROUTES.find(route => pathWithoutLocale.startsWith(route.path));
 
-        if (matchedRoute && matchedRoute.permissions && !hasPermission(matchedRoute.permissions.map(p => p.slug))) {
-            return NextResponse.redirect(new URL(`/${pathLocale}/403`, req.url));
+        if (matchedRoute?.permissions?.length && !hasPermission(matchedRoute.permissions.map(p => p.slug))) {
+            const redirectUrl = new URL(`/${pathLocale}/403`, req.url);
+            if (req.nextUrl.pathname === redirectUrl.pathname) {
+                return NextResponse.next(); // Prevent redirection loop
+            }
+            return NextResponse.redirect(redirectUrl);
         }
     }
 
