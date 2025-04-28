@@ -76,8 +76,23 @@ services:
         networks:
             - ${COMPOSE_PROJECT_NAME:?err}_network
 
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: ${COMPOSE_PROJECT_NAME:?err}_rabbitmq
+        ports:
+            - "5672:5672" # AMQP protocol port
+            - "15672:15672" # Management UI port
+        environment:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+        volumes:
+            - rabbitmq_data:/var/lib/rabbitmq
+        networks:
+            - ${COMPOSE_PROJECT_NAME:?err}_network
+
 networks:
     ecommerce_network:
         driver: bridge
 volumes:
     mysql-data:
+    rabbitmq_data:
