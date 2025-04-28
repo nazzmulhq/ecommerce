@@ -4,33 +4,29 @@ import { IPermission, IRoute } from "./types/index";
 
 const PUBLIC_FILE = /\.(.*)$/;
 
-const locales = ["en", "bn", "fr"]; // Add your supported locales here
-const defaultLocale = "en"; // Set your default locale here
+const locales = ["en", "bn", "fr"];
+const defaultLocale = "en";
 
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // Skip public files and API routes
     if (pathname.startsWith("/_next") || pathname.startsWith("/api") || PUBLIC_FILE.test(pathname)) {
         return NextResponse.next();
     }
 
-    // Extract locale from path
     const pathLocale =
         locales.find(locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`) || defaultLocale;
 
-    // If no locale in path, redirect to default locale while preserving the requested path
     if (!locales.some(locale => pathname.startsWith(`/${locale}`))) {
         const newUrl = new URL(`/${pathLocale}${pathname}`, req.url);
         if (req.nextUrl.pathname === newUrl.pathname) {
-            return NextResponse.next(); // Prevent redirection loop
+            return NextResponse.next();
         }
         return NextResponse.redirect(newUrl);
     }
 
     const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "") || "/";
 
-    // Authentication and route checks
     const token = req.cookies.get("token")?.value;
     const permissionsString = req.cookies.get("permissions")?.value;
     const routesString = req.cookies.get("routes")?.value;
@@ -42,36 +38,68 @@ export async function middleware(req: NextRequest) {
     if (routes.length === 0) {
         const redirectUrl = new URL(`/${pathLocale}/login`, req.url);
         if (req.nextUrl.pathname === redirectUrl.pathname) {
-            return NextResponse.next(); // Prevent redirection loop
+            return NextResponse.next();
         }
         return NextResponse.redirect(redirectUrl);
     }
 
     const GUEST_ROUTES = routes.filter(route => route.type === "guest");
+    const SHARED_ROUTES = routes.filter(route => route.type === "shared");
+    const DEV_ONLY_ROUTES = routes.filter(route => route.type === "devOnly");
     const PROTECTED_ROUTES = routes.filter(route => route.type === "protected");
 
     const isGuestRoute = GUEST_ROUTES.some(route => pathWithoutLocale === route.path);
+    const isSharedRoute = SHARED_ROUTES.some(route => pathWithoutLocale === route.path);
+    const isDevOnlyRoute = DEV_ONLY_ROUTES.some(route => pathWithoutLocale === route.path);
     const isPrivateRoute = PROTECTED_ROUTES.some(route => pathWithoutLocale.startsWith(route.path));
 
-    // User not logged in but trying to access a private route
-    if (!isUserLoggedIn && isPrivateRoute) {
+    // console.log("---------------1---------------");
+    // console.log("pathWithoutLocale", pathWithoutLocale);
+    // console.log("isGuestRoute", isGuestRoute);
+    // console.log("isSharedRoute", isSharedRoute);
+    // console.log("isDevOnlyRoute", isDevOnlyRoute);
+    // console.log("isPrivateRoute", isPrivateRoute);
+    // console.log("isUserLoggedIn", isUserLoggedIn);
+
+    if (isUserLoggedIn && isDevOnlyRoute) {
+        return NextResponse.next();
+    }
+    if (!isUserLoggedIn && isDevOnlyRoute) {
         const redirectUrl = new URL(`/${pathLocale}/login`, req.url);
         if (req.nextUrl.pathname === redirectUrl.pathname) {
-            return NextResponse.next(); // Prevent redirection loop
+            return NextResponse.next();
         }
         return NextResponse.redirect(redirectUrl);
     }
 
-    // User logged in but trying to access a guest route
+    if (!isUserLoggedIn && isPrivateRoute) {
+        // console.log("Unauthenticated user attempting to access private route:", pathWithoutLocale);
+        const redirectUrl = new URL(`/${pathLocale}/login`, req.url);
+        if (req.nextUrl.pathname === redirectUrl.pathname) {
+            // console.log("Preventing redirection loop to login page");
+            return NextResponse.next();
+        }
+        // console.log("Redirecting unauthenticated user to login page:", redirectUrl.toString());
+        return NextResponse.redirect(redirectUrl);
+    }
+
+    // Corrected condition: Only redirect authenticated users from guest routes
     if (isUserLoggedIn && isGuestRoute) {
+        // console.log("Authenticated user attempting to access guest route:", pathWithoutLocale);
         const redirectUrl = new URL(`/${pathLocale}`, req.url);
         if (req.nextUrl.pathname === redirectUrl.pathname) {
-            return NextResponse.next(); // Prevent redirection loop
+            // console.log("Preventing redirection loop to home page");
+            return NextResponse.next();
         }
+        // console.log("Redirecting authenticated user to home page:", redirectUrl.toString());
         return NextResponse.redirect(redirectUrl);
     }
 
-    // Permission checks for private routes
+    if (isSharedRoute) {
+        // console.log("Accessing shared route:", pathWithoutLocale);
+        return NextResponse.next();
+    }
+
     if (isUserLoggedIn && isPrivateRoute) {
         const userPermissions = permissions.map(p => p.slug);
         const hasPermission = (required: string[]) => required.some(p => userPermissions.includes(p));
@@ -79,10 +107,13 @@ export async function middleware(req: NextRequest) {
         const matchedRoute = PROTECTED_ROUTES.find(route => pathWithoutLocale.startsWith(route.path));
 
         if (matchedRoute?.permissions?.length && !hasPermission(matchedRoute.permissions.map(p => p.slug))) {
+            // console.log("User lacks required permissions for route:", pathWithoutLocale);
             const redirectUrl = new URL(`/${pathLocale}/403`, req.url);
             if (req.nextUrl.pathname === redirectUrl.pathname) {
-                return NextResponse.next(); // Prevent redirection loop
+                // console.log("Preventing redirection loop to 403 page");
+                return NextResponse.next();
             }
+            // console.log("Redirecting to 403 page:", redirectUrl.toString());
             return NextResponse.redirect(redirectUrl);
         }
     }
