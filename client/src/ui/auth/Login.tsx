@@ -21,6 +21,10 @@ export default function Login({ searchParams, lang }: { searchParams: { error?: 
 
         const { token, user, routes, permissions } = await response.json();
 
+        if (!token) {
+            redirect("/login?error=invalid_credentials");
+        }
+
         // Set cookies correctly
         (await cookies()).set({
             name: "token",
