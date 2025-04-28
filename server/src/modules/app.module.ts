@@ -8,32 +8,34 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { LoggingMiddleware } from './log/logging.middleware';
 import { LoggingService } from './log/logging.service';
+import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
 
 @Module({
-  imports: [
-    ConfigurationModule,
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 3306,
-      username: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      database: process.env.DB_NAME,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
-      logging: true,
-    }),
-    AuthModule,
-    RouteModule,
-    ProjectLogsModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService, LoggingService],
+    imports: [
+        ConfigurationModule,
+        TypeOrmModule.forRoot({
+            type: 'mysql',
+            host: process.env.DB_HOST || 'localhost',
+            port: parseInt(process.env.DB_PORT) || 3306,
+            username: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: true,
+            logging: true,
+        }),
+        RabbitmqModule,
+        AuthModule,
+        RouteModule,
+        ProjectLogsModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService, LoggingService],
 })
 export class AppModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LoggingMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL });
-  }
+    configure(consumer: MiddlewareConsumer) {
+        consumer
+            .apply(LoggingMiddleware)
+            .forRoutes({ path: '*', method: RequestMethod.ALL });
+    }
 }
