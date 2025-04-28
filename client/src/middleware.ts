@@ -84,15 +84,8 @@ export async function middleware(req: NextRequest) {
     }
 
     // Corrected condition: Only redirect authenticated users from guest routes
-    if (isUserLoggedIn && isGuestRoute) {
-        // console.log("Authenticated user attempting to access guest route:", pathWithoutLocale);
-        const redirectUrl = new URL(`/${pathLocale}`, req.url);
-        if (req.nextUrl.pathname === redirectUrl.pathname) {
-            // console.log("Preventing redirection loop to home page");
-            return NextResponse.next();
-        }
-        // console.log("Redirecting authenticated user to home page:", redirectUrl.toString());
-        return NextResponse.redirect(redirectUrl);
+    if (isGuestRoute) {
+        return NextResponse.next();
     }
 
     if (isSharedRoute) {
