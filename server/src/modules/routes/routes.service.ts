@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Permission } from 'modules/auth/permission/entities/permission.entity';
 import { In, Repository } from 'typeorm';
-import { ExtendedCache } from 'types';
+import { ExtendedCache, IUser } from 'types';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
 import { Route } from './entities/route.entity';
@@ -133,5 +133,38 @@ export class RouteService {
             .getMany();
 
         return routes;
+    }
+
+    async findAllRoutesWithPermissions(user: IUser): Promise<Route[]> {
+        if (user) {
+            // if user is logged in, get all routes with permissions
+            const permissions = user.roles
+                .flatMap((role) => role.permissions)
+                .map((permission) => permission.id);
+            const routes = await this.routeRepository
+                .createQueryBuilder('route')
+                .leftJoinAndSelect('route.permissions', 'permission')
+                .where('permission.id IN (:...permissions)', { permissions })
+                .orWhere('route.type IN (:...types)', {
+                    types: ['guest', 'shared', 'devOnly'],
+                })
+                .getMany();
+            return routes.map((route) => {
+                delete route.metadata;
+                return route;
+            });
+        } else {
+            // only type gest shared and devOnly
+            const routes = await this.routeRepository
+                .createQueryBuilder('route')
+                .where('route.type IN (:...types)', {
+                    types: ['guest', 'shared', 'devOnly'],
+                })
+                .getMany();
+            return routes.map((route) => {
+                delete route.metadata;
+                return route;
+            });
+        }
     }
 }

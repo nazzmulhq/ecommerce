@@ -1,3 +1,4 @@
+import { getRoutes } from "@lib/actions/auth/login";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { IPermission, IRoute } from "./types/index";
@@ -34,6 +35,8 @@ export async function middleware(req: NextRequest) {
     const permissions: IPermission[] = JSON.parse(permissionsString || "[]");
 
     const isUserLoggedIn = !!token;
+
+    const allRoute = await getRoutes(token);
 
     if (routes.length === 0) {
         const redirectUrl = new URL(`/${pathLocale}/login`, req.url);

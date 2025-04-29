@@ -11,3 +11,15 @@ export async function getUserInfo(token: string) {
     }
     return res.json();
 }
+
+export async function getRoutes(token: string | null | undefined) {
+    const res = await fetch(`${process.env.URL}/route/all`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+    });
+
+    return res.json();
+}
