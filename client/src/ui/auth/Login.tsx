@@ -13,7 +13,7 @@ export default function Login({ searchParams, lang }: { searchParams: { error?: 
         }
 
         // Authentication API call
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        const response = await fetch(`${process.env.URL}/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),

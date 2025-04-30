@@ -2,6 +2,7 @@ import Layouts from "@ui/Layouts";
 import Providers from "@ui/providers";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { cookies } from "next/headers";
 import NextTopLoader from "nextjs-toploader";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -20,6 +21,7 @@ interface LangLayoutProps {
 
 export default async function LangLayout({ children, params }: Readonly<LangLayoutProps>) {
     const { lang } = await params;
+    const token = (await cookies()).get("token")?.value;
     return (
         <html lang={lang}>
             <body className={inter.className}>
@@ -37,7 +39,7 @@ export default async function LangLayout({ children, params }: Readonly<LangLayo
                     zIndex={1600}
                 />
                 <Providers>
-                    <Layouts>{children}</Layouts>
+                    <Layouts token={token}>{children}</Layouts>
                 </Providers>
             </body>
         </html>

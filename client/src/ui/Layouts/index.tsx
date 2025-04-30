@@ -1,20 +1,10 @@
 "use client";
-import {
-    AppstoreOutlined,
-    ArrowLeftOutlined,
-    BarChartOutlined,
-    CloudOutlined,
-    ShopOutlined,
-    TeamOutlined,
-    UploadOutlined,
-    UserOutlined,
-    VideoCameraOutlined,
-} from "@ant-design/icons";
-import type { MenuProps } from "antd";
-import { Avatar, Breadcrumb, Button, Layout, Menu, Select, theme, Typography } from "antd";
+import { ArrowLeftOutlined, UserOutlined } from "@ant-design/icons";
+import { Avatar, Breadcrumb, Button, GetProp, Layout, Menu, MenuProps, Select, theme, Typography } from "antd";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
+import { IRoute } from "../../types";
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -44,26 +34,14 @@ const headerStyle: React.CSSProperties = {
     height: 64,
 };
 
-const items: MenuProps["items"] = [
-    UserOutlined,
-    VideoCameraOutlined,
-    UploadOutlined,
-    BarChartOutlined,
-    CloudOutlined,
-    AppstoreOutlined,
-    TeamOutlined,
-    ShopOutlined,
-].map((icon, index) => ({
-    key: String(index + 1),
-    icon: React.createElement(icon),
-    label: `nav ${index + 1}`,
-}));
-
 interface ILayoutsProps {
     children: React.ReactNode;
+    token: string | undefined;
 }
+type MenuItem = GetProp<MenuProps, "items">[number];
 
-const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
+const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
+    const [routes, setRoutes] = React.useState<IRoute[]>([]);
     const {
         token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
@@ -72,6 +50,25 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
     const param = useParams();
     const router = useRouter();
     const { lang } = param;
+
+    console.log("token", token);
+
+    // Fetch routes
+    const fetchRoutes = async (token: string | undefined) => {
+        const rest = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/route/all`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+        });
+        const data = await rest.json();
+        setRoutes(data || []);
+    };
+
+    useEffect(() => {
+        fetchRoutes(token);
+    }, [token]);
 
     // Remove the language code from the pathname
     let pathSnippets = pathname.split("/");
@@ -106,6 +103,20 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
             key: String(index + 1),
             title: title,
         };
+    });
+
+    const mapRoutes: MenuItem[] = [];
+    routes.forEach(route => {
+        if (route.type === "protected") {
+            mapRoutes.push({
+                key: route.id.toString(),
+                label: (
+                    <Link className="capitalize" href={`/${lang}${route.path}`}>
+                        {route.name}
+                    </Link>
+                ),
+            });
+        }
     });
 
     return (
@@ -160,7 +171,7 @@ const Layouts: React.FC<ILayoutsProps> = ({ children }) => {
             </Header>
             <Layout hasSider>
                 <Sider style={siderStyle}>
-                    <Menu defaultSelectedKeys={["4"]} items={items} mode="inline" theme="dark" />
+                    <Menu defaultSelectedKeys={["4"]} items={mapRoutes} mode="inline" theme="dark" />
                 </Sider>
                 <Layout>
                     <Content style={{ margin: "24px 16px 0", overflow: "initial" }}>
