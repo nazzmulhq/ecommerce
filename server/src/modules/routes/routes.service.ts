@@ -27,16 +27,18 @@ export class RouteService {
         route.path = createRouteDto.path;
         route.metadata = createRouteDto.metadata;
 
+        // Allow multiple roots by making parentId optional
         if (createRouteDto.parentId) {
             const parent = await this.routeRepository.findOne({
                 where: { id: createRouteDto.parentId },
             });
             if (parent) {
-                route.parent = parent; // Set the parent to avoid multiple roots
+                route.parent = parent;
             } else {
                 throw new Error('Parent route not found');
             }
         }
+        // If no parentId is provided, this will be a root node
 
         route.permissions = await this.permissionRepository.find({
             where: {
@@ -144,23 +146,29 @@ export class RouteService {
             const routes = await this.routeRepository
                 .createQueryBuilder('route')
                 .leftJoinAndSelect('route.permissions', 'permission')
+                .leftJoinAndSelect('route.parent', 'parent')
+                .leftJoinAndSelect('route.children', 'children')
                 .where('permission.id IN (:...permissions)', { permissions })
                 .orWhere('route.type IN (:...types)', {
                     types: ['guest', 'shared', 'devOnly'],
                 })
                 .getMany();
+
             return routes.map((route) => {
                 delete route.metadata;
                 return route;
             });
         } else {
-            // only type gest shared and devOnly
+            // only type guest shared and devOnly
             const routes = await this.routeRepository
                 .createQueryBuilder('route')
+                .leftJoinAndSelect('route.parent', 'parent')
+                .leftJoinAndSelect('route.children', 'children')
                 .where('route.type IN (:...types)', {
                     types: ['guest', 'shared', 'devOnly'],
                 })
                 .getMany();
+
             return routes.map((route) => {
                 delete route.metadata;
                 return route;

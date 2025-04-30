@@ -51,8 +51,6 @@ const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
     const router = useRouter();
     const { lang } = param;
 
-    console.log("token", token);
-
     // Fetch routes
     const fetchRoutes = async (token: string | undefined) => {
         const rest = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/route/all`, {
@@ -105,19 +103,31 @@ const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
         };
     });
 
-    const mapRoutes: MenuItem[] = [];
-    routes.forEach(route => {
-        if (route.type === "protected") {
-            mapRoutes.push({
+    // Helper function to build nested menu items recursively
+    const buildNestedMenu = (routes: IRoute[], parentId: number = 1): MenuItem[] => {
+        const filteredRoutes = routes.filter(route => route.parentId === parentId);
+
+        return filteredRoutes.map(route => {
+            const childrenItems = buildNestedMenu(routes, route.id);
+
+            return {
                 key: route.id.toString(),
-                label: (
-                    <Link className="capitalize" href={`/${lang}${route.path}`}>
-                        {route.name}
-                    </Link>
-                ),
-            });
-        }
-    });
+                label:
+                    childrenItems.length === 0 ? (
+                        <Link className="capitalize" href={`/${lang}${route.path}`}>
+                            {route.name}
+                        </Link>
+                    ) : (
+                        route.name
+                    ),
+                ...(childrenItems.length > 0 ? { children: childrenItems } : {}),
+            };
+        });
+    };
+
+    const mapRoutes: MenuItem[] = buildNestedMenu(routes.filter(route => route.type === "protected"));
+
+    console.log("mapRoutes", routes);
 
     return (
         <Layout>

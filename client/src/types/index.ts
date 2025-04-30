@@ -36,6 +36,7 @@ export interface User {
 }
 
 export interface IRoute {
+    parentId: number | null;
     id: number;
     type: "guest" | "shared" | "protected" | "devOnly";
     name: string;
