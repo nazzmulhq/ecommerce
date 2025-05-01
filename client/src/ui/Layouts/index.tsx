@@ -127,8 +127,6 @@ const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
 
     const mapRoutes: MenuItem[] = buildNestedMenu(routes.filter(route => route.type === "protected"));
 
-    console.log("mapRoutes", routes);
-
     return (
         <Layout>
             <Header style={headerStyle}>

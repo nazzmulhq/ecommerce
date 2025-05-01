@@ -42,5 +42,6 @@ export interface IRoute {
     name: string;
     slug: string;
     path: string;
+    position: number;
     permissions: IPermission[];
 }

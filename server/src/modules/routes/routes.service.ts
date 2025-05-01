@@ -149,6 +149,8 @@ export class RouteService {
                 .orWhere('route.type IN (:...types)', {
                     types: ['guest', 'shared', 'devOnly'],
                 })
+                .orderBy('route.position', 'ASC')
+                .addOrderBy('children.position', 'ASC')
                 .getMany();
 
             return routes.map((route) => {
@@ -164,6 +166,8 @@ export class RouteService {
                 .where('route.type IN (:...types)', {
                     types: ['guest', 'shared', 'devOnly'],
                 })
+                .orderBy('route.position', 'ASC')
+                .addOrderBy('children.position', 'ASC')
                 .getMany();
 
             return routes.map((route) => {
