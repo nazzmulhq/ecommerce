@@ -27,10 +27,10 @@ export class RouteService {
         route.path = createRouteDto.path;
         route.metadata = createRouteDto.metadata;
 
-        // Allow multiple roots by making parentId optional
-        if (createRouteDto.parentId) {
+        // Allow multiple roots by making parent_id optional
+        if (createRouteDto.parent_id) {
             const parent = await this.routeRepository.findOne({
-                where: { id: createRouteDto.parentId },
+                where: { id: createRouteDto.parent_id },
             });
             if (parent) {
                 route.parent = parent;
@@ -38,7 +38,7 @@ export class RouteService {
                 throw new Error('Parent route not found');
             }
         }
-        // If no parentId is provided, this will be a root node
+        // If no parent_id is provided, this will be a root node
 
         route.permissions = await this.permissionRepository.find({
             where: {
@@ -46,8 +46,7 @@ export class RouteService {
             },
         });
 
-        route.createdAt = new Date();
-        route.createBy = userId;
+        route.created_by = userId;
 
         return this.routeRepository.save(route);
     }
@@ -79,17 +78,16 @@ export class RouteService {
             },
         });
 
-        if (updateRouteDto.parentId) {
+        if (updateRouteDto.parent_id) {
             const parent = await this.routeRepository.findOne({
-                where: { id: updateRouteDto.parentId },
+                where: { id: updateRouteDto.parent_id },
             });
             if (parent) {
                 route.parent = parent;
             }
         }
 
-        route.updatedAt = new Date();
-        route.updateBy = userId;
+        route.updated_by = userId;
         route.path = updateRouteDto.path;
         route.type = updateRouteDto.type;
         route.metadata = updateRouteDto.metadata;
@@ -146,7 +144,6 @@ export class RouteService {
             const routes = await this.routeRepository
                 .createQueryBuilder('route')
                 .leftJoinAndSelect('route.permissions', 'permission')
-                .leftJoinAndSelect('route.parent', 'parent')
                 .leftJoinAndSelect('route.children', 'children')
                 .where('permission.id IN (:...permissions)', { permissions })
                 .orWhere('route.type IN (:...types)', {

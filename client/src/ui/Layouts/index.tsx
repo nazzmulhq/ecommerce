@@ -104,8 +104,8 @@ const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
     });
 
     // Helper function to build nested menu items recursively
-    const buildNestedMenu = (routes: IRoute[], parentId: number = 1): MenuItem[] => {
-        const filteredRoutes = routes.filter(route => route.parentId === parentId);
+    const buildNestedMenu = (routes: IRoute[], parent_id: number = 1): MenuItem[] => {
+        const filteredRoutes = routes.filter(route => route.parent_id === parent_id);
 
         return filteredRoutes.map(route => {
             const childrenItems = buildNestedMenu(routes, route.id);

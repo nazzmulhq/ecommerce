@@ -18,9 +18,13 @@ export class CreateRouteDto {
     @IsString()
     name: string;
 
+    @ApiProperty({ example: 'Home' })
+    @IsString()
+    bn_name: string;
+
     @ApiProperty({ example: 1 })
     @IsOptional()
-    parentId: number;
+    parent_id: number;
 
     @ApiProperty({ example: 'home' })
     @IsString()
@@ -30,6 +34,11 @@ export class CreateRouteDto {
     @IsString()
     @IsOptional()
     type: string;
+
+    @ApiProperty({ example: 1 })
+    @IsNumber()
+    @IsOptional()
+    position: number;
 
     @ApiProperty({ example: [1, 2] })
     @IsArray()
@@ -79,14 +88,6 @@ export class CreateRouteDto {
     @IsJSON()
     @IsOptional()
     metadata: IMetaData;
-
-    @IsOptional()
-    @IsNumber()
-    createBy: number;
-
-    @IsOptional()
-    @IsNumber()
-    updateBy: number;
 
     @IsOptional()
     @IsNumber()
