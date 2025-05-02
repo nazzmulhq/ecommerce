@@ -6,9 +6,11 @@ import {
     Param,
     Post,
     Put,
+    Query,
     UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { PaginationDto } from 'modules/pagination/pagination.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AccessRoles } from '../auth/role/role.decorator';
 import { RoleGuard } from '../auth/role/role.guard';
@@ -38,8 +40,8 @@ export class UsersController {
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Get()
-    findAll() {
-        return this.usersService.findAll();
+    findAll(@Query() paginationDto: PaginationDto) {
+        return this.usersService.findAll(paginationDto);
     }
 
     @ApiBearerAuth()

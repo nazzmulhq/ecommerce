@@ -1,10 +1,10 @@
 "use client";
 import { ArrowLeftOutlined, UserOutlined } from "@ant-design/icons";
-import { Avatar, Breadcrumb, Button, GetProp, Layout, Menu, MenuProps, Select, theme, Typography } from "antd";
+import { Avatar, Breadcrumb, Button, GetProp, Layout, Menu, MenuProps, Select, Typography } from "antd";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import React, { useEffect } from "react";
-import { IRoute } from "../../types";
+import { IRoute } from "../../../types";
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -42,9 +42,6 @@ type MenuItem = GetProp<MenuProps, "items">[number];
 
 const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
     const [routes, setRoutes] = React.useState<IRoute[]>([]);
-    const {
-        token: { colorBgContainer, borderRadiusLG },
-    } = theme.useToken();
 
     const pathname = usePathname();
     const param = useParams();
@@ -192,10 +189,7 @@ const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
 
                         <main
                             style={{
-                                padding: 24,
-                                textAlign: "center",
-                                background: colorBgContainer,
-                                borderRadius: borderRadiusLG,
+                                padding: 12,
                                 minHeight: "100%",
                             }}
                         >

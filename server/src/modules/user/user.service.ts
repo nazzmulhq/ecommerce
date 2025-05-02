@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'modules/auth/role/entities/role.entity';
+import { PaginationDto } from 'modules/pagination/pagination.dto';
+import { PaginationResult } from 'modules/pagination/pagination.interface';
 import { FindOneOptions, In, Repository } from 'typeorm';
 import { CreateUserDto } from './dto';
 import { User } from './entities/user.entity';
@@ -81,10 +83,20 @@ export class UsersService {
         return user;
     }
 
-    async findAll() {
-        return await this.userRepository.find({
-            relations: ['roles'],
+    async findAll(
+        paginationDto: PaginationDto,
+    ): Promise<PaginationResult<User>> {
+        const [data, totalCount] = await this.userRepository.findAndCount({
+            skip: paginationDto.skip,
+            take: paginationDto.limit,
         });
+
+        return {
+            data,
+            page: paginationDto.page,
+            limit: paginationDto.limit,
+            totalCount,
+        };
     }
 
     async update(id: number, updateUserDto: CreateUserDto) {

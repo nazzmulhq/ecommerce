@@ -1,4 +1,4 @@
-import Tree from "@components/settings/routes";
+import Tree from "@components/modules/configuration/routes";
 import { FC } from "react";
 
 export interface IVisualizeReactApp {}

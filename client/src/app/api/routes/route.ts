@@ -1,4 +1,4 @@
-import { INode } from "../../../components/settings/routes/useTree";
+import { INode } from "../../../components/modules/configuration/routes/useTree";
 import { FileCreator } from "../../../lib/utils/path";
 
 export async function GET() {
