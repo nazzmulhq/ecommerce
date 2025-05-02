@@ -78,6 +78,7 @@ const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
     if (isWithoutLayoutRoute) {
         return <>{children}</>;
     }
+
     // breadcrumb items
     const breadcrumbItems = pathSnippets.map((path, index, total) => {
         const url = `${pathSnippets.slice(0, index + 1).join("/")}`;
@@ -89,7 +90,7 @@ const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
                 </Link>
             );
         } else if (index === total.length - 1) {
-            title = path.replace(/-/g, " ");
+            title = <span className="capitalize">{path.replace(/-/g, " ")}</span>;
         } else {
             title = (
                 <Link className="capitalize" href={url}>
@@ -163,7 +164,6 @@ const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
                                 />
                             ),
                         },
-
                         {
                             key: "1",
                             label: (

@@ -32,11 +32,20 @@ export abstract class BaseEntity {
     @Column({ default: 0 })
     updated_by: number;
 
+    @Column({ default: 0 })
+    deleted_by: number;
+
     @CreateDateColumn()
     created_at: Date;
 
     @UpdateDateColumn()
     updated_at: Date;
+
+    @Column({ nullable: true })
+    deleted_at: Date;
+
+    @Column({ default: 0 })
+    deleted: number;
 
     @BeforeInsert()
     async generateSlug() {
