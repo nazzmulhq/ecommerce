@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Generation Time: Apr 27, 2025 at 11:50 AM
--- Server version: 8.0.41
+-- Generation Time: May 02, 2025 at 03:11 PM
+-- Server version: 8.0.42
 -- PHP Version: 8.2.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -29,37 +29,25 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `permission` (
   `id` int NOT NULL,
-  `name` varchar(255) NOT NULL,
   `slug` varchar(255) NOT NULL,
-  `createdAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  `createBy` int NOT NULL DEFAULT '0',
-  `updateBy` int NOT NULL DEFAULT '0',
-  `status` int NOT NULL DEFAULT '1'
+  `name` varchar(255) NOT NULL,
+  `bn_name` varchar(255) DEFAULT NULL,
+  `status` int NOT NULL DEFAULT '1',
+  `created_by` int NOT NULL DEFAULT '0',
+  `updated_by` int NOT NULL DEFAULT '0',
+  `deleted_by` int NOT NULL DEFAULT '0',
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `deleted_at` datetime DEFAULT NULL,
+  `deleted` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `permission`
 --
 
-INSERT INTO `permission` (`id`, `name`, `slug`, `createdAt`, `updatedAt`, `createBy`, `updateBy`, `status`) VALUES
-(1, 'role.create', 'role.create', '2024-11-17 21:57:56.748583', '2024-11-18 06:09:10.250194', 1, 1, 1),
-(2, 'permission.get-all', 'permission.get-all', '2024-11-17 23:30:41.394835', '2024-11-17 23:30:41.394835', 1, 1, 1),
-(3, 'permission.create', 'permission.create', '2024-11-18 06:01:50.284945', '2024-11-18 06:01:50.284945', 1, 1, 1),
-(5, 'permission.get-one', 'permission.get-one', '2024-11-18 06:02:27.928855', '2024-11-18 06:02:27.928855', 1, 1, 1),
-(6, 'permission.edit', 'permission.edit', '2024-11-18 06:02:45.195722', '2024-11-18 06:02:45.195722', 1, 1, 1),
-(7, 'permission.delete', 'permission.delete', '2024-11-18 06:02:57.423859', '2024-11-18 06:02:57.423859', 1, 1, 1),
-(9, 'role.find-all', 'role.find-all', '2024-11-18 06:07:23.029783', '2024-11-18 06:07:23.029783', 1, 1, 1),
-(10, 'role.find-one', 'role.find-one', '2024-11-18 06:07:39.755621', '2024-11-18 06:07:39.755621', 1, 1, 1),
-(11, 'role.edit', 'role.edit', '2024-11-18 06:07:51.574736', '2024-11-18 06:07:51.574736', 1, 1, 1),
-(12, 'role.delete', 'role.delete', '2024-11-18 06:08:06.928947', '2024-11-18 06:08:06.928947', 1, 1, 1),
-(13, 'route.create', 'route.create', '2024-11-18 06:31:59.415416', '2024-11-18 06:31:59.415416', 1, 1, 1),
-(14, 'route.get-all', 'route.get-all', '2024-11-18 06:32:21.545382', '2024-11-18 06:32:21.545382', 1, 1, 1),
-(15, 'route.get-one', 'route.get-one', '2024-11-18 06:32:36.866947', '2024-11-18 06:32:36.866947', 1, 1, 1),
-(16, 'route.update', 'route.update', '2024-11-18 06:32:53.339721', '2024-11-18 06:32:53.339721', 1, 1, 1),
-(17, 'route.delete', 'route.delete', '2024-11-18 06:33:10.055451', '2024-11-18 06:33:10.055451', 1, 1, 1),
-(18, 'user.get-profile', 'user.get-profile', '2024-11-18 21:05:00.731448', '2024-11-18 21:05:00.731448', 1, 1, 1),
-(20, 'no-permission', 'no-permission', '2025-04-23 09:52:37.346000', '2025-04-23 15:52:37.355865', 5, 0, 1);
+INSERT INTO `permission` (`id`, `slug`, `name`, `bn_name`, `status`, `created_by`, `updated_by`, `deleted_by`, `created_at`, `updated_at`, `deleted_at`, `deleted`) VALUES
+(1, 'create', 'no-permission-required', NULL, 1, 0, 1, 0, '2025-05-02 18:22:52.489351', '2025-05-02 18:24:18.000000', NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -69,23 +57,25 @@ INSERT INTO `permission` (`id`, `name`, `slug`, `createdAt`, `updatedAt`, `creat
 
 CREATE TABLE `role` (
   `id` int NOT NULL,
-  `name` varchar(255) NOT NULL,
   `slug` varchar(255) NOT NULL,
-  `createdAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  `createBy` int NOT NULL DEFAULT '0',
-  `updateBy` int NOT NULL DEFAULT '0',
-  `status` int NOT NULL DEFAULT '1'
+  `name` varchar(255) NOT NULL,
+  `bn_name` varchar(255) DEFAULT NULL,
+  `status` int NOT NULL DEFAULT '1',
+  `created_by` int NOT NULL DEFAULT '0',
+  `updated_by` int NOT NULL DEFAULT '0',
+  `deleted_by` int NOT NULL DEFAULT '0',
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `deleted_at` datetime DEFAULT NULL,
+  `deleted` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role`
 --
 
-INSERT INTO `role` (`id`, `name`, `slug`, `createdAt`, `updatedAt`, `createBy`, `updateBy`, `status`) VALUES
-(4, 'admin', 'admin', '2025-04-07 08:50:01.607464', '2025-04-23 10:37:00.312000', 0, 5, 1),
-(5, 'user', 'user', '2025-04-07 08:51:23.818797', '2025-04-07 08:51:23.818797', 0, 0, 1),
-(6, 'admin2', 'admin2', '2025-04-09 10:03:47.013000', '2025-04-23 10:47:43.421000', 5, 5, 1);
+INSERT INTO `role` (`id`, `slug`, `name`, `bn_name`, `status`, `created_by`, `updated_by`, `deleted_by`, `created_at`, `updated_at`, `deleted_at`, `deleted`) VALUES
+(1, 'admin', 'admin', NULL, 1, 1, 0, 0, '2025-05-02 18:24:41.748512', '2025-05-02 18:24:41.748512', NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -103,25 +93,7 @@ CREATE TABLE `role_permissions` (
 --
 
 INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
-(4, 1),
-(4, 2),
-(4, 3),
-(4, 5),
-(4, 6),
-(4, 7),
-(4, 9),
-(4, 10),
-(4, 11),
-(4, 12),
-(4, 13),
-(4, 14),
-(4, 15),
-(4, 16),
-(4, 17),
-(4, 18),
-(4, 20),
-(5, 18),
-(6, 18);
+(1, 1);
 
 -- --------------------------------------------------------
 
@@ -130,20 +102,28 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 --
 
 CREATE TABLE `route` (
+  `id` int NOT NULL,
   `slug` varchar(255) NOT NULL,
-  `type` enum('guest','shared','protected','devOnly') NOT NULL DEFAULT 'guest',
   `name` varchar(255) NOT NULL,
-  `path` varchar(255) NOT NULL,
-  `isComponent` tinyint NOT NULL DEFAULT '0',
-  `createdAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `bn_name` varchar(255) DEFAULT NULL,
   `status` int NOT NULL DEFAULT '1',
+  `created_by` int NOT NULL DEFAULT '0',
+  `updated_by` int NOT NULL DEFAULT '0',
+  `deleted_by` int NOT NULL DEFAULT '0',
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `deleted_at` datetime DEFAULT NULL,
+  `deleted` int NOT NULL DEFAULT '0',
+  `type` enum('guest','shared','protected','devOnly') NOT NULL DEFAULT 'guest',
+  `parent_id` int DEFAULT NULL,
+  `path` varchar(255) NOT NULL,
+  `position` int NOT NULL DEFAULT '0',
+  `is_menu` tinyint NOT NULL DEFAULT '0',
+  `is_sub_menu` tinyint NOT NULL DEFAULT '0',
+  `is_dynamic_route` tinyint NOT NULL DEFAULT '0',
+  `metadata` json DEFAULT NULL,
   `nsleft` int NOT NULL DEFAULT '1',
   `nsright` int NOT NULL DEFAULT '2',
-  `metadata` json DEFAULT NULL,
-  `createBy` int NOT NULL DEFAULT '0',
-  `updateBy` int NOT NULL DEFAULT '0',
-  `id` int NOT NULL,
   `parentId` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -151,12 +131,16 @@ CREATE TABLE `route` (
 -- Dumping data for table `route`
 --
 
-INSERT INTO `route` (`slug`, `type`, `name`, `path`, `isComponent`, `createdAt`, `updatedAt`, `status`, `nsleft`, `nsright`, `metadata`, `createBy`, `updateBy`, `id`, `parentId`) VALUES
-('root', 'guest', 'root', '', 0, '2025-04-10 09:42:02.112000', '2025-04-23 16:20:29.040415', 1, 1, 10, '{\"icons\": {\"icon\": [{\"url\": \"/icon.png\"}], \"apple\": [{\"url\": \"/apple-icon.png\", \"type\": \"image/png\", \"sizes\": \"192x192\"}, {\"url\": \"/apple-icon2.png\", \"type\": \"image/png\", \"sizes\": \"512x512\"}], \"other\": [{\"rel\": \"apple-touch-icon\", \"url\": \"/apple-icon.png\"}], \"shortcut\": [\"/shortcut-icon.png\"]}, \"title\": {\"default\": \"Home\", \"absolute\": \"https://example.com\", \"template\": \"Home - {{title}}\"}, \"assets\": [\"https://example.com/asset1\", \"https://example.com/asset2\"], \"itunes\": {\"appId\": \"123456789\", \"appArgument\": \"my-app-argument\"}, \"robots\": {\"index\": true, \"follow\": true, \"nocache\": false, \"googleBot\": {\"index\": true, \"follow\": true, \"noimageindex\": false}}, \"authors\": [{\"url\": \"https://example.com\", \"name\": \"John Doe\"}], \"creator\": \"John Doe\", \"twitter\": {\"card\": \"summary_large_image\", \"title\": \"Home\", \"images\": [\"https://example.com/twitter-image.png\"], \"siteId\": \"123456789\", \"creator\": \"@johndoe\", \"creatorId\": \"123456789\", \"description\": \"This is the home page\"}, \"abstract\": \"This is an abstract\", \"appLinks\": {\"ios\": {\"url\": \"https://example.com\", \"app_store_id\": \"123456789\"}, \"web\": {\"url\": \"https://example.com\", \"should_fallback\": true}, \"other\": [{\"url\": \"https://example.com\", \"app_id\": \"123456789\"}, {\"url\": \"https://example.com\", \"app_store_id\": \"123456789\"}, {\"url\": \"https://example.com\", \"package\": \"com.example.app\"}, {\"url\": \"https://example.com\", \"app_id\": \"123456789\"}, {\"url\": \"https://example.com\", \"app_store_id\": \"123456789\"}, {\"url\": \"https://example.com\", \"package\": \"com.example.app\"}, {\"url\": \"https://example.com\", \"app_id\": \"123456789\"}, {\"url\": \"https://example.com\", \"app_store_id\": \"123456789\"}], \"webApp\": {\"url\": \"https://example.com\", \"should_fallback\": true}, \"android\": {\"url\": \"https://example.com\", \"package\": \"com.example.app\"}, \"windows\": {\"url\": \"https://example.com\", \"app_id\": \"123456789\"}, \"universal\": {\"url\": \"https://example.com\", \"app_id\": \"123456789\"}}, \"archives\": [\"https://example.com/archive1\", \"https://example.com/archive2\"], \"category\": \"category\", \"keywords\": [\"home\", \"page\"], \"manifest\": \"/manifest.json\", \"referrer\": \"no-referrer\", \"bookmarks\": [\"https://example.com/bookmark1\", \"https://example.com/bookmark2\"], \"generator\": \"My Generator\", \"openGraph\": {\"url\": \"https://example.com\", \"type\": \"website\", \"title\": \"Home\", \"images\": [{\"alt\": \"An image\", \"url\": \"https://example.com/image.png\", \"type\": \"image/png\", \"width\": 800, \"height\": 600}], \"locale\": \"en_US\", \"authors\": [\"John Doe\"], \"siteName\": \"My Site\", \"description\": \"This is the home page\", \"publishedTime\": \"2023-01-01T00:00:00Z\"}, \"publisher\": \"My Company\", \"alternates\": {\"en\": \"/en\"}, \"themeColor\": [{\"color\": \"#000\", \"media\": \"(prefers-color-scheme: dark)\"}], \"appleWebApp\": {\"title\": \"My App\", \"capable\": true}, \"colorScheme\": \"dark light\", \"description\": \"This is the home page\", \"metadataBase\": \"https://example.com\", \"verification\": {\"other\": [{\"id\": \"other-verification-code\", \"type\": \"other\"}], \"google\": \"google-site-verification-code\", \"yandex\": \"yandex-verification-code\"}, \"classification\": \"This is a classification\", \"applicationName\": \"My App\", \"formatDetection\": {\"email\": false, \"address\": false, \"telephone\": false}}', 5, 0, 1, NULL),
-('routes', 'guest', 'Routes', '/routes', 0, '2025-04-23 10:12:24.197000', '2025-04-23 16:14:55.417984', 1, 2, 3, '{\"title\": {\"default\": \"Routes\", \"absolute\": \"https://example.com\", \"template\": \"Routes - {{title}}\"}, \"robots\": {\"index\": true, \"follow\": true, \"nocache\": false, \"googleBot\": {\"index\": true, \"follow\": true, \"noimageindex\": false}}, \"authors\": [{\"url\": \"\", \"name\": \"\"}], \"creator\": \"\", \"keywords\": [\"\"], \"manifest\": \"/manifest.json\", \"referrer\": \"no-referrer\", \"generator\": \"\", \"publisher\": \"\", \"themeColor\": [{\"color\": \"#000\", \"media\": \"(prefers-color-scheme: dark)\"}], \"colorScheme\": \"dark light\", \"description\": \"This is the Routes page\", \"metadataBase\": \"https://example.com\", \"applicationName\": \"\", \"formatDetection\": {\"email\": false, \"address\": false, \"telephone\": false}}', 5, 0, 2, 1),
-('home', 'guest', 'Home', '/', 0, '2025-04-23 10:13:56.918000', '2025-04-23 16:18:10.043917', 1, 4, 5, '{\"title\": {\"default\": \"Home\", \"absolute\": \"https://example.com\", \"template\": \"Home - {{title}}\"}, \"robots\": {\"index\": true, \"follow\": true, \"nocache\": false, \"googleBot\": {\"index\": true, \"follow\": true, \"noimageindex\": false}}, \"authors\": [{\"url\": \"\", \"name\": \"\"}], \"creator\": \"\", \"keywords\": [\"\"], \"manifest\": \"/manifest.json\", \"referrer\": \"no-referrer\", \"generator\": \"\", \"publisher\": \"\", \"themeColor\": [{\"color\": \"#000\", \"media\": \"(prefers-color-scheme: dark)\"}], \"colorScheme\": \"dark light\", \"description\": \"This is the Home page\", \"metadataBase\": \"https://example.com\", \"applicationName\": \"\", \"formatDetection\": {\"email\": false, \"address\": false, \"telephone\": false}}', 5, 0, 3, 1),
-('i18n', 'guest', 'i18n', '/i18n', 0, '2025-04-23 10:16:56.234000', '2025-04-23 16:17:11.319269', 1, 6, 7, '{\"title\": {\"default\": \"i18n\", \"absolute\": \"https://example.com\", \"template\": \"i18n - {{title}}\"}, \"robots\": {\"index\": true, \"follow\": true, \"nocache\": false, \"googleBot\": {\"index\": true, \"follow\": true, \"noimageindex\": false}}, \"authors\": [{\"url\": \"\", \"name\": \"\"}], \"creator\": \"\", \"keywords\": [\"\"], \"manifest\": \"/manifest.json\", \"referrer\": \"no-referrer\", \"generator\": \"\", \"publisher\": \"\", \"themeColor\": [{\"color\": \"#000\", \"media\": \"(prefers-color-scheme: dark)\"}], \"colorScheme\": \"dark light\", \"description\": \"This is the i18n page\", \"metadataBase\": \"https://example.com\", \"applicationName\": \"\", \"formatDetection\": {\"email\": false, \"address\": false, \"telephone\": false}}', 5, 0, 4, 1),
-('login', 'guest', 'Login', '/login', 0, '2025-04-23 10:20:29.036000', '2025-04-23 17:19:33.461610', 1, 8, 9, '{\"title\": {\"default\": \"login\", \"absolute\": \"https://example.com\", \"template\": \"login - {{title}}\"}, \"robots\": {\"index\": true, \"follow\": true, \"nocache\": false, \"googleBot\": {\"index\": true, \"follow\": true, \"noimageindex\": false}}, \"authors\": [{\"url\": \"\", \"name\": \"\"}], \"creator\": \"\", \"keywords\": [\"\"], \"manifest\": \"/manifest.json\", \"referrer\": \"no-referrer\", \"generator\": \"\", \"publisher\": \"\", \"themeColor\": [{\"color\": \"#000\", \"media\": \"(prefers-color-scheme: dark)\"}], \"colorScheme\": \"dark light\", \"description\": \"This is the login page\", \"metadataBase\": \"https://example.com\", \"applicationName\": \"\", \"formatDetection\": {\"email\": false, \"address\": false, \"telephone\": false}}', 5, 0, 5, 1);
+INSERT INTO `route` (`id`, `slug`, `name`, `bn_name`, `status`, `created_by`, `updated_by`, `deleted_by`, `created_at`, `updated_at`, `deleted_at`, `deleted`, `type`, `parent_id`, `path`, `position`, `is_menu`, `is_sub_menu`, `is_dynamic_route`, `metadata`, `nsleft`, `nsright`, `parentId`) VALUES
+(1, 'root', 'Root', NULL, 1, 1, 0, 0, '2025-05-02 19:29:03.603840', '2025-05-02 20:20:48.551216', NULL, 0, 'guest', NULL, '', 0, 1, 0, 0, '{\"title\": {\"default\": \"Root\", \"absolute\": \"https://example.com\", \"template\": \"Root - {{title}}\"}, \"description\": \"This is the home page\"}', 1, 20, NULL),
+(4, 'configuration', 'Configuration', NULL, 1, 1, 0, 0, '2025-05-02 19:34:38.302790', '2025-05-02 20:20:10.140164', NULL, 0, 'protected', 1, 'configuration', 3, 1, 0, 0, '{\"title\": {\"default\": \"Configuration\", \"absolute\": \"https://example.com\", \"template\": \"Configuration - {{title}}\"}, \"description\": \"This is the Configuration page\"}', 2, 13, 1),
+(5, 'permission', 'Permission', NULL, 1, 1, 0, 0, '2025-05-02 19:37:28.707825', '2025-05-02 20:18:27.416822', NULL, 0, 'protected', 4, '/permission', 1, 0, 1, 0, '{\"title\": {\"default\": \"Permission\", \"absolute\": \"https://example.com\", \"template\": \"Permission - {{title}}\"}, \"description\": \"This is the Permission page\"}', 3, 4, 4),
+(6, 'role', 'Role', NULL, 1, 1, 0, 0, '2025-05-02 19:38:20.347913', '2025-05-02 20:18:24.472054', NULL, 0, 'protected', 4, '/role', 2, 0, 1, 0, '{\"title\": {\"default\": \"Role\", \"absolute\": \"https://example.com\", \"template\": \"Role - {{title}}\"}, \"description\": \"This is the Role page\"}', 5, 6, 4),
+(7, 'user', 'User', NULL, 1, 1, 0, 0, '2025-05-02 19:38:53.469618', '2025-05-02 20:18:21.734647', NULL, 0, 'protected', 4, '/user', 3, 0, 1, 0, '{\"title\": {\"default\": \"User\", \"absolute\": \"https://example.com\", \"template\": \"User - {{title}}\"}, \"description\": \"This is the User page\"}', 7, 8, 4),
+(8, 'routes', 'Routes', NULL, 1, 1, 0, 0, '2025-05-02 19:39:26.930929', '2025-05-02 20:18:15.564203', NULL, 0, 'protected', 4, '/routes', 4, 0, 1, 0, '{\"title\": {\"default\": \"Routes\", \"absolute\": \"https://example.com\", \"template\": \"Routes - {{title}}\"}, \"description\": \"This is the Routes page\"}', 9, 10, 4),
+(9, 'login', 'Login', NULL, 1, 1, 0, 0, '2025-05-02 19:40:01.790795', '2025-05-02 20:20:37.716806', NULL, 0, 'guest', 1, '/login', 1, 1, 0, 0, '{\"title\": {\"default\": \"Login\", \"absolute\": \"https://example.com\", \"template\": \"Login - {{title}}\"}, \"description\": \"This is the Login page\"}', 14, 15, 1),
+(10, 'i18n', 'I18n', NULL, 1, 1, 0, 0, '2025-05-02 19:41:23.081434', '2025-05-02 20:20:39.203083', NULL, 0, 'guest', 1, '/i18n', 2, 1, 0, 0, '{\"title\": {\"default\": \"I18n\", \"absolute\": \"https://example.com\", \"template\": \"I18n - {{title}}\"}, \"description\": \"This is the I18n page\"}', 16, 17, 1),
+(11, 'home', 'Home', NULL, 1, 1, 0, 0, '2025-05-02 19:45:46.449308', '2025-05-02 20:20:41.985904', NULL, 0, 'guest', 1, '/', 0, 1, 0, 0, '{\"title\": {\"default\": \"Home\", \"absolute\": \"https://example.com\", \"template\": \"Home - {{title}}\"}, \"description\": \"This is the Home page\"}', 18, 19, 1);
 
 -- --------------------------------------------------------
 
@@ -165,21 +149,24 @@ INSERT INTO `route` (`slug`, `type`, `name`, `path`, `isComponent`, `createdAt`,
 --
 
 CREATE TABLE `route_has_permissions` (
-  `permission_id` int NOT NULL,
-  `route_id` int NOT NULL
+  `route_id` int NOT NULL,
+  `permission_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `route_has_permissions`
 --
 
-INSERT INTO `route_has_permissions` (`permission_id`, `route_id`) VALUES
+INSERT INTO `route_has_permissions` (`route_id`, `permission_id`) VALUES
 (1, 1),
-(2, 1),
-(20, 2),
-(20, 3),
-(20, 4),
-(20, 5);
+(4, 1),
+(5, 1),
+(6, 1),
+(7, 1),
+(8, 1),
+(9, 1),
+(10, 1),
+(11, 1);
 
 -- --------------------------------------------------------
 
@@ -189,23 +176,28 @@ INSERT INTO `route_has_permissions` (`permission_id`, `route_id`) VALUES
 
 CREATE TABLE `user` (
   `id` int NOT NULL,
+  `slug` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
+  `bn_name` varchar(255) DEFAULT NULL,
+  `status` int NOT NULL DEFAULT '1',
+  `created_by` int NOT NULL DEFAULT '0',
+  `updated_by` int NOT NULL DEFAULT '0',
+  `deleted_by` int NOT NULL DEFAULT '0',
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `deleted_at` datetime DEFAULT NULL,
+  `deleted` int NOT NULL DEFAULT '0',
   `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `isSuperAdmin` int NOT NULL DEFAULT '0',
-  `createdAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  `createBy` int NOT NULL DEFAULT '0',
-  `updateBy` int NOT NULL DEFAULT '0',
-  `status` int NOT NULL DEFAULT '1'
+  `isSuperAdmin` int NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user`
 --
 
-INSERT INTO `user` (`id`, `name`, `email`, `password`, `isSuperAdmin`, `createdAt`, `updatedAt`, `createBy`, `updateBy`, `status`) VALUES
-(5, 'John Doe', 'john.doe@gmail.com', '$2a$08$WesmMpzeo0ZgvAjmTXItaug6JB26MBNpMrrV3Ka9ax3kLA2H3B.Da', 0, '2025-04-07 09:07:37.567233', '2025-04-07 09:07:37.567233', 0, 0, 1);
+INSERT INTO `user` (`id`, `slug`, `name`, `bn_name`, `status`, `created_by`, `updated_by`, `deleted_by`, `created_at`, `updated_at`, `deleted_at`, `deleted`, `email`, `password`, `isSuperAdmin`) VALUES
+(1, 'john-doe', 'John Doe 2', NULL, 1, 0, 0, 0, '2025-05-02 17:45:19.072448', '2025-05-02 19:11:04.000000', NULL, 0, 'john.doe@gmail.com', '$2b$08$cXCPt1bWHsq0pv/q/TVbmeo0UDOLC4uaDplzaK8aPdOqyxMCxcRDS', 1);
 
 -- --------------------------------------------------------
 
@@ -223,8 +215,7 @@ CREATE TABLE `user_roles` (
 --
 
 INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
-(5, 4),
-(5, 5);
+(1, 1);
 
 --
 -- Indexes for dumped tables
@@ -236,7 +227,8 @@ INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 ALTER TABLE `permission`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `IDX_240853a0c3353c25fb12434ad3` (`name`),
-  ADD UNIQUE KEY `IDX_3379e3b123dac5ec10734b8cc8` (`slug`);
+  ADD UNIQUE KEY `IDX_3379e3b123dac5ec10734b8cc8` (`slug`),
+  ADD KEY `IDX_3b8b97af9d9d8807e41e6f4836` (`id`);
 
 --
 -- Indexes for table `role`
@@ -244,7 +236,8 @@ ALTER TABLE `permission`
 ALTER TABLE `role`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `IDX_ae4578dcaed5adff96595e6166` (`name`),
-  ADD UNIQUE KEY `IDX_35c9b140caaf6da09cfabb0d67` (`slug`);
+  ADD UNIQUE KEY `IDX_35c9b140caaf6da09cfabb0d67` (`slug`),
+  ADD KEY `IDX_b36bcfe02fc8de3c57a8b2391c` (`id`);
 
 --
 -- Indexes for table `role_permissions`
@@ -259,25 +252,29 @@ ALTER TABLE `role_permissions`
 --
 ALTER TABLE `route`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `IDX_9c5e65ac97111c46de524f8177` (`slug`),
   ADD UNIQUE KEY `IDX_cc16047ba5141ec8dec50451df` (`name`),
   ADD UNIQUE KEY `IDX_1050f1bce08c8eb606e1a8607d` (`path`),
+  ADD UNIQUE KEY `IDX_9c5e65ac97111c46de524f8177` (`slug`),
+  ADD KEY `IDX_08affcd076e46415e5821acf52` (`id`),
   ADD KEY `FK_2bf40bee2cce314e08c93d995dd` (`parentId`);
 
 --
 -- Indexes for table `route_has_permissions`
 --
 ALTER TABLE `route_has_permissions`
-  ADD PRIMARY KEY (`permission_id`,`route_id`),
-  ADD KEY `IDX_ea46e0b428cc56bc70eeb00978` (`permission_id`),
-  ADD KEY `IDX_66ff4403037962ee3ec1105dc6` (`route_id`);
+  ADD PRIMARY KEY (`route_id`,`permission_id`),
+  ADD KEY `IDX_66ff4403037962ee3ec1105dc6` (`route_id`),
+  ADD KEY `IDX_ea46e0b428cc56bc70eeb00978` (`permission_id`);
 
 --
 -- Indexes for table `user`
 --
 ALTER TABLE `user`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `IDX_e12875dfb3b1d92d7d7c5377e2` (`email`);
+  ADD UNIQUE KEY `IDX_065d4d8f3b5adb4a08841eae3c` (`name`),
+  ADD UNIQUE KEY `IDX_e12875dfb3b1d92d7d7c5377e2` (`email`),
+  ADD UNIQUE KEY `IDX_ac08b39ccb744ea6682c0db1c2` (`slug`),
+  ADD KEY `IDX_cace4a159ff9f2512dd4237376` (`id`);
 
 --
 -- Indexes for table `user_roles`
@@ -295,25 +292,25 @@ ALTER TABLE `user_roles`
 -- AUTO_INCREMENT for table `permission`
 --
 ALTER TABLE `permission`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `role`
 --
 ALTER TABLE `role`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `route`
 --
 ALTER TABLE `route`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
