@@ -1,5 +1,6 @@
 // entities/base.entity.ts
 import {
+    BaseEntity,
     BeforeInsert,
     Column,
     CreateDateColumn,
@@ -8,7 +9,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 
-export abstract class BaseEntity {
+export abstract class CoreEntity extends BaseEntity {
     @PrimaryGeneratedColumn()
     @Index()
     id: number;

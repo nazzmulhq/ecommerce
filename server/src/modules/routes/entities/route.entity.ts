@@ -1,5 +1,5 @@
 import { Permission } from 'modules/auth/permission/entities/permission.entity';
-import { BaseEntity } from 'modules/core.entity';
+import { CoreEntity } from 'modules/core.entity';
 import {
     BeforeInsert,
     Column,
@@ -14,7 +14,7 @@ import { IMetaData } from 'types';
 
 @Entity()
 @Tree('nested-set')
-export class Route extends BaseEntity {
+export class Route extends CoreEntity {
     @Column({
         type: 'enum',
         enum: ['guest', 'shared', 'protected', 'devOnly'],

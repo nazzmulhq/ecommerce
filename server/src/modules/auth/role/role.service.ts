@@ -39,8 +39,7 @@ export class RoleService {
         const role = new Role();
         role.name = createRoleDto.name;
         role.permissions = permissions;
-        role.createBy = userId;
-        role.createdAt = new Date();
+        role.created_by = userId;
 
         return this.roleRepository.save(role);
     }
@@ -84,8 +83,7 @@ export class RoleService {
 
         role.name = updateRoleDto.name;
         role.permissions = permissions;
-        role.updateBy = userId;
-        role.updatedAt = new Date();
+        role.updated_by = userId;
 
         return this.roleRepository.save(role);
     }
