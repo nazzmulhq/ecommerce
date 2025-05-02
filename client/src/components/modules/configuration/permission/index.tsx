@@ -156,7 +156,7 @@ const Permissions: FC<IPermissions> = ({
     ];
 
     return (
-        <div className="p-4">
+        <div className="">
             <Card>
                 <div className="mb-4">
                     <Title level={3}>Permissions Management</Title>

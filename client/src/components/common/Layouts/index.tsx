@@ -189,7 +189,6 @@ const Layouts: React.FC<ILayoutsProps> = ({ children, token }) => {
 
                         <main
                             style={{
-                                padding: 12,
                                 minHeight: "100%",
                             }}
                         >
