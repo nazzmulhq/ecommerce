@@ -64,7 +64,7 @@ export class Route extends CoreEntity {
     metadata: IMetaData;
 
     @BeforeInsert()
-    async generateSlug() {
+    async menuSubMenuAndDynamicRoute() {
         // Menu is the root node
         // Submenu is the child node of the menu
         // If parent_id is 1, then it is a menu

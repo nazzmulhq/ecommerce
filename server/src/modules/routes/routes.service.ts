@@ -34,6 +34,7 @@ export class RouteService {
             });
             if (parent) {
                 route.parent = parent;
+                route.parent_id = parent.id;
             } else {
                 throw new Error('Parent route not found');
             }

@@ -26,7 +26,7 @@ export class RoleController {
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
-        permission: ['role.create'],
+        permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Post()
@@ -61,7 +61,7 @@ export class RoleController {
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
-        permission: ['role.find-all'],
+        permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
     async findAll() {
@@ -83,7 +83,7 @@ export class RoleController {
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
-        permission: ['role.find-one'],
+        permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Get(':id')
@@ -107,7 +107,7 @@ export class RoleController {
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
-        permission: ['role.edit'],
+        permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Put(':id')
@@ -134,7 +134,7 @@ export class RoleController {
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
-        permission: ['role.delete'],
+        permission: [''],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Delete(':id')

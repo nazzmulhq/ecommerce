@@ -1,12 +1,12 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  UseGuards,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -18,60 +18,60 @@ import { UsersService } from './user.service';
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+    constructor(private readonly usersService: UsersService) {}
 
-  @ApiBearerAuth()
-  @AccessRoles({
-    roles: ['superadmin'],
-    permission: [],
-  })
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Post()
+    create(@Body() createUserDto: CreateUserDto) {
+        return this.usersService.create(createUserDto);
+    }
 
-  @ApiBearerAuth()
-  @AccessRoles({
-    roles: ['superadmin'],
-    permission: [],
-  })
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Get()
+    findAll() {
+        return this.usersService.findAll();
+    }
 
-  @ApiBearerAuth()
-  @AccessRoles({
-    roles: ['superadmin'],
-    permission: [],
-  })
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  @Get(':id')
-  show(@Param('id') id: string) {
-    return this.usersService.showById(+id);
-  }
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Get(':id')
+    show(@Param('id') id: string) {
+        return this.usersService.showById(+id);
+    }
 
-  @ApiBearerAuth()
-  @AccessRoles({
-    roles: ['superadmin'],
-    permission: [],
-  })
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  @Put(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: CreateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Put(':id')
+    update(@Param('id') id: string, @Body() updateUserDto: CreateUserDto) {
+        return this.usersService.update(+id, updateUserDto);
+    }
 
-  @ApiBearerAuth()
-  @AccessRoles({
-    roles: ['superadmin'],
-    permission: [],
-  })
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
-  }
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Delete(':id')
+    remove(@Param('id') id: string) {
+        return this.usersService.remove(+id);
+    }
 }

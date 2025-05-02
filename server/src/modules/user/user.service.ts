@@ -114,7 +114,7 @@ export class UsersService {
 
         user.name = updateUserDto.name;
         user.email = updateUserDto.email;
-        user.password = updateUserDto.password;
+
         user.updated_by = 0;
 
         return this.userRepository.save(user);

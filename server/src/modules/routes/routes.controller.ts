@@ -42,7 +42,7 @@ export class RouteController {
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
-        permission: ['route.create'],
+        permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
     async create(
@@ -69,7 +69,7 @@ export class RouteController {
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
-        permission: ['route.get-all'],
+        permission: [],
     })
     // @UseInterceptors(CacheInterceptor)
     @UseGuards(JwtAuthGuard, RoleGuard)
@@ -92,7 +92,7 @@ export class RouteController {
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
-        permission: ['route.get-one'],
+        permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Get(':id')
@@ -115,7 +115,7 @@ export class RouteController {
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
-        permission: ['route.update'],
+        permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Patch(':id')
@@ -130,7 +130,7 @@ export class RouteController {
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
-        permission: ['route.delete'],
+        permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
     @Delete(':id')

@@ -86,10 +86,10 @@ export class AuthService {
         delete user.isSuperAdmin;
         delete user.status;
         delete user.roles;
-        delete user.createBy;
-        delete user.updateBy;
-        delete user.createdAt;
-        delete user.updatedAt;
+        delete user.created_by;
+        delete user.updated_by;
+        delete user.created_at;
+        delete user.updated_at;
 
         return {
             token: this.jwtService.sign(payload),

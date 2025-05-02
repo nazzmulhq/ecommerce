@@ -1,13 +1,13 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Req,
-  UseGuards,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Req,
+    UseGuards,
 } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -24,131 +24,134 @@ import { PermissionService } from './permission.service';
 @ApiTags('Permissions')
 @Controller('permissions')
 export class PermissionController {
-  constructor(private readonly permissionService: PermissionService) {}
+    constructor(private readonly permissionService: PermissionService) {}
 
-  @Post()
-  @ApiBearerAuth()
-  @AccessRoles({
-    roles: ['admin'],
-    permission: ['permission.create'],
-  })
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  async create(
-    @Req() req: UserAndRequest,
-    @Body() createPermissionDto: CreatePermissionDto,
-  ) {
-    try {
-      await this.permissionService.create(createPermissionDto, req.user.id);
-      return {
-        success: true,
-        message: 'Permission Created Successfully',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message,
-      };
+    @Post()
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    async create(
+        @Req() req: UserAndRequest,
+        @Body() createPermissionDto: CreatePermissionDto,
+    ) {
+        try {
+            await this.permissionService.create(
+                createPermissionDto,
+                req.user.id,
+            );
+            return {
+                success: true,
+                message: 'Permission Created Successfully',
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message,
+            };
+        }
     }
-  }
 
-  @Get()
-  @ApiBearerAuth()
-  @AccessRoles({
-    roles: ['admin'],
-    permission: ['permission.get-all'],
-  })
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  async findAll() {
-    try {
-      const data = await this.permissionService.findAll();
-      return {
-        success: true,
-        data,
-        message: 'Permissions Fetched Successfully',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message,
-      };
+    @Get()
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    async findAll() {
+        try {
+            const data = await this.permissionService.findAll();
+            return {
+                success: true,
+                data,
+                message: 'Permissions Fetched Successfully',
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message,
+            };
+        }
     }
-  }
 
-  @ApiBearerAuth()
-  @AccessRoles({
-    roles: ['admin'],
-    permission: ['permission.get-one'],
-  })
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  @Get(':id')
-  async findOne(@Param('id') id: number) {
-    try {
-      const data = await this.permissionService.findOne(+id);
-      return {
-        success: true,
-        data,
-        message: 'Permission Fetched Successfully',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        data: null,
-        message: error.message,
-      };
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @Get(':id')
+    async findOne(@Param('id') id: number) {
+        try {
+            const data = await this.permissionService.findOne(+id);
+            return {
+                success: true,
+                data,
+                message: 'Permission Fetched Successfully',
+            };
+        } catch (error) {
+            return {
+                success: false,
+                data: null,
+                message: error.message,
+            };
+        }
     }
-  }
 
-  @Put(':id')
-  @ApiBearerAuth()
-  @AccessRoles({
-    roles: ['admin'],
-    permission: ['permission.edit'],
-  })
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  async update(
-    @Req() req: UserAndRequest,
-    @Param('id') id: number,
-    @Body() updatePermissionDto: UpdatePermissionDto,
-  ) {
-    try {
-      updatePermissionDto.updateBy = req.user.id || 0;
-      await this.permissionService.update(
-        +id,
-        updatePermissionDto,
-        req.user.id,
-      );
-      return {
-        success: true,
-        message: 'Permission Updated Successfully',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        data: null,
-        message: error.message,
-      };
+    @Put(':id')
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    async update(
+        @Req() req: UserAndRequest,
+        @Param('id') id: number,
+        @Body() updatePermissionDto: UpdatePermissionDto,
+    ) {
+        try {
+            updatePermissionDto.updateBy = req.user.id || 0;
+            await this.permissionService.update(
+                +id,
+                updatePermissionDto,
+                req.user.id,
+            );
+            return {
+                success: true,
+                message: 'Permission Updated Successfully',
+            };
+        } catch (error) {
+            return {
+                success: false,
+                data: null,
+                message: error.message,
+            };
+        }
     }
-  }
 
-  @Delete(':id')
-  @ApiBearerAuth()
-  @AccessRoles({
-    roles: ['admin'],
-    permission: ['permission.delete'],
-  })
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  async remove(@Param('id') id: number, @Req() req: UserAndRequest) {
-    try {
-      await this.permissionService.remove(+id, req.user.id);
-      return {
-        success: true,
-        message: 'Permission Deleted Successfully',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message,
-      };
+    @Delete(':id')
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    async remove(@Param('id') id: number, @Req() req: UserAndRequest) {
+        try {
+            await this.permissionService.remove(+id, req.user.id);
+            return {
+                success: true,
+                message: 'Permission Deleted Successfully',
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message,
+            };
+        }
     }
-  }
 }
