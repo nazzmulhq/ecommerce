@@ -1,5 +1,5 @@
-import Layouts from "@ui/Layouts";
-import Providers from "@ui/providers";
+import Layouts from "@components/Layouts";
+import Providers from "@components/providers";
 import { cookies } from "next/headers";
 
 interface LangLayoutProps {

@@ -1,4 +1,4 @@
-import I18n from "@ui/settings/i18n";
+import I18n from "@components/settings/i18n";
 import { FC } from "react";
 
 export interface IPage {}

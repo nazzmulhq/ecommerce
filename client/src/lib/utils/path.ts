@@ -103,15 +103,15 @@ class FileCreator {
 
         return `
 import { FC } from "react";
-import ${pageName} from "@ui${folderPath}";
-    
+import ${pageName} from "@components${folderPath}";
+
 export interface I${pageName} {
     params: {
         ${query}
         searchParams: Record<string, string>;
     };
 }
-    
+
 const ${pageName}Page: FC<I${pageName}> = (props) => {
 ${
     isDynamicRoutes
@@ -122,7 +122,7 @@ ${
 }
     return <>${component}</>;
 };
-    
+
 export default ${pageName}Page;`;
     }
 
