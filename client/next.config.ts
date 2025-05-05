@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
     reactStrictMode: true,
     env: {
-        NEXT_PUBLIC_INITIAL_URL: "/dashboards/crypto",
+        NEXT_PUBLIC_INITIAL_URL: "/",
         NEXT_PUBLIC_STATE_TYPE: "context",
         NEXT_PUBLIC_FILESTACK_KEY: "Ach6MsgoQHGK6tCaq5uJ34gz",
         NEXT_PUBLIC_LAYOUT: "default",

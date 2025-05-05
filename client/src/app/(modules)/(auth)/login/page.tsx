@@ -8,13 +8,10 @@ export const metadata: Metadata = {
 
 interface ILoginPageProps {
     searchParams: Promise<{ error?: string }>;
-    params: Promise<{
-        lang: string;
-    }>;
 }
 
-export default async function LoginPage({ searchParams, params }: ILoginPageProps) {
+export default async function LoginPage({ searchParams }: ILoginPageProps) {
     const searchParam = await searchParams;
-    const { lang } = await params;
-    return <Login lang={lang} searchParams={searchParam} />;
+
+    return <Login searchParams={searchParam} />;
 }

@@ -1,4 +1,5 @@
 import { getRoutes } from "@lib/actions/auth/login";
+import { initialUrl } from "@lib/constants/AppConst";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { IRoute } from "./types/basic";
@@ -7,18 +8,6 @@ import { IRoute } from "./types/basic";
  * Regular expression to match public files like images, CSS, JS, etc.
  */
 const PUBLIC_FILE = /\.(.*)$/;
-
-/**
- * Available locales for the application
- * @type {string[]}
- */
-const locales = ["en", "bn", "fr"];
-
-/**
- * Default locale for the application
- * @type {string}
- */
-const defaultLocale = "en";
 
 /**
  * Routes that shouldn't be accessed after user login
@@ -52,26 +41,11 @@ export async function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
-    // Detect the locale from the URL path or use default
-    const pathLocale =
-        locales.find(locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`) || defaultLocale;
-
-    // Redirect to localized URL if locale is missing in the URL
-    if (!locales.some(locale => pathname.startsWith(`/${locale}`))) {
-        const newUrl = new URL(`/${pathLocale}${pathname}`, req.url);
-        if (req.nextUrl.pathname === newUrl.pathname) {
-            return NextResponse.next();
-        }
-        return NextResponse.redirect(newUrl);
-    }
-
-    // Extract the path without locale prefix for route matching
-    const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "") || "/";
     const token = req.cookies.get("token")?.value;
 
     // Redirect authenticated users away from auth pages (login, register, etc.)
-    if (token && afterLoginNotVisitedRoutes.includes(pathWithoutLocale)) {
-        const redirectUrl = new URL(`/${pathLocale}/`, req.url);
+    if (token && afterLoginNotVisitedRoutes.includes(pathname)) {
+        const redirectUrl = new URL(initialUrl, req.url);
         return NextResponse.redirect(redirectUrl);
     }
 
@@ -80,17 +54,17 @@ export async function middleware(req: NextRequest) {
 
     // If no routes are available, user is not authenticated - redirect to login
     if (allRoute && allRoute.length === 0) {
-        const redirectUrl = new URL(`/${pathLocale}/login`, req.url);
+        const redirectUrl = new URL("/login", req.url);
 
         return NextResponse.redirect(redirectUrl);
     }
 
     // Check if the requested route is in the user's allowed routes
-    const isRouteExists = allRoute.some(route => route.path === pathWithoutLocale);
+    const isRouteExists = allRoute.some(route => route.path === pathname);
 
     // If route is not allowed for this user, redirect to login
     if (!isRouteExists) {
-        const redirectUrl = new URL(`/${pathLocale}/login`, req.url);
+        const redirectUrl = new URL("/login", req.url);
 
         return NextResponse.redirect(redirectUrl);
     }

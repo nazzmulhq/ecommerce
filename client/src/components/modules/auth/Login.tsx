@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect, RedirectType } from "next/navigation";
 
-export default function Login({ searchParams, lang }: { searchParams: { error?: string }; lang: string }) {
+export default function Login({ searchParams }: { searchParams: { error?: string } }) {
     async function handleLogin(formData: FormData) {
         "use server";
 
@@ -63,7 +63,7 @@ export default function Login({ searchParams, lang }: { searchParams: { error?: 
             path: "/",
         });
 
-        redirect(`/${lang}/`, RedirectType.push);
+        redirect("/", RedirectType.push);
     }
 
     return (
