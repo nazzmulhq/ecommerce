@@ -4,7 +4,7 @@ import { Avatar, Breadcrumb, Button, GetProp, Layout, Menu, MenuProps, Select, T
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import React, { useEffect } from "react";
-import { IRoute } from "../../../types";
+import { IRoute } from "../../../types/basic";
 
 const { Header, Content, Footer, Sider } = Layout;
 

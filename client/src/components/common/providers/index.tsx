@@ -1,34 +1,33 @@
-import { StyleProvider } from "@ant-design/cssinjs";
+"use client";
+
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import "@ant-design/v5-patch-for-react-19";
+import AppContextProvider from "@lib/context/AppContextProvider";
+import AppLocaleProvider from "@lib/context/AppLocaleProvider";
+import AppStyleProvider from "@lib/context/AppStyleProvider";
+import AppThemeProvider from "@lib/context/AppThemeProvider";
 import { GlobalStyles } from "@lib/theme/GlobalStyle";
-import theme from "@lib/utils/theme";
-import { ConfigProvider } from "antd";
-import "antd/dist/reset.css";
 import { FC, ReactNode } from "react";
 import { Normalize } from "styled-normalize";
-import ServerStyleRegistry from "./ServerStyleRegistry";
+
 export interface IProviders {
     children: ReactNode;
 }
 
-/**
- * Application provider that sets up Ant Design theming and styling
- * Works in both client and server components
- */
 const Providers: FC<IProviders> = ({ children }) => {
     return (
-        <AntdRegistry>
-            <StyleProvider hashPriority="high">
-                <ConfigProvider theme={theme}>
-                    <ServerStyleRegistry>
-                        <Normalize />
-                        <GlobalStyles />
-                        {children}
-                    </ServerStyleRegistry>
-                </ConfigProvider>
-            </StyleProvider>
-        </AntdRegistry>
+        <AppContextProvider>
+            <AppThemeProvider>
+                <AppLocaleProvider>
+                    <AntdRegistry>
+                        <AppStyleProvider>
+                            <GlobalStyles />
+                            <Normalize />
+                            {children}
+                        </AppStyleProvider>
+                    </AntdRegistry>
+                </AppLocaleProvider>
+            </AppThemeProvider>
+        </AppContextProvider>
     );
 };
 

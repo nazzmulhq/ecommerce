@@ -1,11 +1,14 @@
 "use client";
-
 import { createCache, extractStyle, StyleProvider } from "@ant-design/cssinjs";
-import type Entity from "@ant-design/cssinjs/es/Cache";
+import Entity from "@ant-design/cssinjs/lib/Cache";
 import { useServerInsertedHTML } from "next/navigation";
-import React from "react";
+import React, { ReactNode } from "react";
 
-export default function ServerStyleRegistry({ children }: { children: React.ReactNode }) {
+interface AppStyleProviderProps {
+    children: ReactNode;
+}
+
+const AppStyleProvider: React.FC<AppStyleProviderProps> = ({ children }) => {
     const cache = React.useMemo<Entity>(() => createCache(), []);
     const isServerInserted = React.useRef<boolean>(false);
 
@@ -19,4 +22,5 @@ export default function ServerStyleRegistry({ children }: { children: React.Reac
     });
 
     return <StyleProvider cache={cache}>{children}</StyleProvider>;
-}
+};
+export default AppStyleProvider;

@@ -1,3 +1,9 @@
+export type TLanguage = {
+    languageId: string;
+    locale: string;
+    name: string;
+};
+
 export interface ISubMenuItem {
     name: string;
     link: string;

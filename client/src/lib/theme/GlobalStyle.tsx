@@ -1,3 +1,5 @@
+"use client";
+
 import { darken, rgba } from "polished";
 import { createGlobalStyle } from "styled-components";
 

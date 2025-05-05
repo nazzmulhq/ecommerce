@@ -1,7 +1,7 @@
 import { getRoutes } from "@lib/actions/auth/login";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { IRoute } from "./types/index";
+import { IRoute } from "./types/basic";
 
 /**
  * Regular expression to match public files like images, CSS, JS, etc.
