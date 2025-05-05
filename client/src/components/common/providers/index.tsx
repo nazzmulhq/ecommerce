@@ -1,8 +1,8 @@
 "use client";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
+import theme from "@lib/utils/theme";
 import { ConfigProvider } from "antd";
 import { FC } from "react";
-import theme from "../../../lib/utils/theme";
 
 export interface IProviders {
     children: React.ReactNode;
