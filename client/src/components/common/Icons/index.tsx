@@ -3,7 +3,7 @@ import iconData from "./icon.json";
 
 // Interface for Icon component props
 interface IconProps extends React.SVGProps<SVGSVGElement> {
-    name: string;
+    name: keyof iconData;
     size?: number | string;
     className?: string;
 }

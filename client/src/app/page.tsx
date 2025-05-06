@@ -8,7 +8,7 @@ const Component: FC<IComponent> = () => {
     return (
         <>
             <h1>Page</h1>
-            <Icons className="text-red-500" name="MdClose" size={100} />
+            <Icons className="text-red-500" name="" size={100} />
         </>
     );
 };
