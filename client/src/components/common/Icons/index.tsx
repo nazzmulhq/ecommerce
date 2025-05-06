@@ -1,9 +1,10 @@
 import React from "react";
 import iconData from "./icon.json";
+import { TIconName } from "@src/types/iconName";
 
 // Interface for Icon component props
 interface IconProps extends React.SVGProps<SVGSVGElement> {
-    name: keyof iconData;
+    name: TIconName;
     size?: number | string;
     className?: string;
 }
@@ -29,6 +30,7 @@ const generateElement = (item: SvgElement, key: string | number = ""): React.Rea
 
 // Icon component
 export const Icons: React.FC<IconProps> = ({ name, size = "1em", className = "", ...props }) => {
+    console.log("iconData", iconData);
     // Return null if icon name doesn't exist
     if (!iconData[name as keyof typeof iconData]) {
         console.warn(`Icon "${name}" not found in icon data`);
