@@ -11,12 +11,12 @@ interface IconProps extends React.SVGProps<SVGSVGElement> {
 // Define types for SVG element structure
 interface SvgElement {
     tag: string;
-    attr?: Record<string, string | number>;
+    attr?: Record<string, any>; // Changed to 'any' to accommodate React SVG attributes
     child?: SvgElement[];
 }
 
 // Helper function to generate JSX elements from SVG structure
-const generateElement = (item: SvgElement, key: string | number = "") => {
+const generateElement = (item: SvgElement, key: string | number = ""): React.ReactElement => {
     const { tag, attr = {}, child = [] } = item;
 
     // Use createElement instead of JSX to avoid TypeScript errors
