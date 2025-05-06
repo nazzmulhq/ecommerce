@@ -1,6 +1,6 @@
 import "@ant-design/v5-patch-for-react-19";
 import Layouts from "@components/common/Layouts";
-import Providers from "@components/common/providers";
+import Providers from "@components/common/Providers";
 import "antd/dist/reset.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
