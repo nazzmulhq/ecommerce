@@ -1,4 +1,4 @@
-* {
-    margin: 0;
-    padding: 0;
-}
+/* import css  'simplebar-react/dist/simplebar.min.css'; */
+@import "simplebar-react/dist/simplebar.min.css";
+@import "antd/dist/reset.css";
+@import "../../public/styles/index.css";

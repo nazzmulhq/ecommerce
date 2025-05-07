@@ -25,7 +25,7 @@ export interface SidebarData {
     sidebarTextColor: string;
     sidebarHeaderColor: string;
     sidebarMenuSelectedBgColor: string;
-    sidebarMenuSelectedTextColor: string;
+    sidebarMenuSelectedTextColor?: string;
     mode: string;
 }
 

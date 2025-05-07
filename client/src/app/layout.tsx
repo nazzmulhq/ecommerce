@@ -1,7 +1,5 @@
 import "@ant-design/v5-patch-for-react-19";
-import Layouts from "@components/common/Layouts";
 import Providers from "@components/common/Providers";
-import "antd/dist/reset.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
@@ -42,7 +40,8 @@ export default async function RootLayout({ children, params }: LangLayoutProps) 
                     zIndex={1600}
                 />
                 <Providers>
-                    <Layouts token={token}>{children}</Layouts>
+                    {/* <Layouts token={token}>{children}</Layouts> */}
+                    {children}
                 </Providers>
             </body>
         </html>

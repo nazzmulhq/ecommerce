@@ -1,6 +1,6 @@
-import React from "react";
-import iconData from "./icon.json";
 import { TIconName } from "@src/types/iconName";
+import React from "react";
+// import iconData from "../../../../public/icons/icon.json";
 
 // Interface for Icon component props
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -30,30 +30,26 @@ const generateElement = (item: SvgElement, key: string | number = ""): React.Rea
 
 // Icon component
 export const Icons: React.FC<IconProps> = ({ name, size = "1em", className = "", ...props }) => {
-    console.log("iconData", iconData);
     // Return null if icon name doesn't exist
-    if (!iconData[name as keyof typeof iconData]) {
-        console.warn(`Icon "${name}" not found in icon data`);
-        return null;
-    }
-
+    // if (!iconData[name as keyof typeof iconData]) {
+    //     console.warn(`Icon "${name}" not found in icon data`);
+    //     return null;
+    // }
     // Get the icon data
-    const icon = iconData[name as keyof typeof iconData];
-
+    // const icon = iconData[name as keyof typeof iconData];
     // Set the width and height
-    const svgProps = {
-        ...icon.attr,
-        ...props,
-        width: size,
-        height: size,
-        className: className ? `icon ${className}` : "icon",
-    };
-
-    return generateElement({
-        tag: icon.tag,
-        attr: svgProps,
-        child: icon.child,
-    });
+    // const svgProps = {
+    //     ...icon.attr,
+    //     ...props,
+    //     width: size,
+    //     height: size,
+    //     className: className ? `icon ${className}` : "icon",
+    // };
+    // return generateElement({
+    //     tag: icon.tag,
+    //     attr: svgProps,
+    //     child: icon.child,
+    // });
 };
 
 export default Icons;
