@@ -4,8 +4,8 @@ import { useLayoutActionsContext, useLayoutContext } from "@lib/context/AppConte
 import { useSidebarActionsContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import "slick-carousel/slick/slick-theme.css";
-import "slick-carousel/slick/slick.css";
+// import "slick-carousel/slick/slick-theme.css";
+// import "slick-carousel/slick/slick.css";
 import routesConfig from "../AppRoutes/routeConfig";
 import Layouts from "./Layouts";
 

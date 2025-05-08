@@ -1,5 +1,5 @@
 import AppGrid from "@components/common/AppGrid";
-import { ThemeColorType } from "@lib/constants/ColorSets";
+import themeColorSets, { ThemeColorType } from "@lib/constants/ColorSets";
 import { useThemeActionsContext, useThemeContext } from "@lib/context/AppContextProvider/ThemeContextProvider";
 import IntlMessages from "@lib/utils/IntlMessages";
 

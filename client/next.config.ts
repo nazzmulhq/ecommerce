@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
     reactStrictMode: true,
+
+    compiler: {
+        styledComponents: true,
+    },
     env: {
         NEXT_PUBLIC_INITIAL_URL: "/",
         NEXT_PUBLIC_STATE_TYPE: "context",

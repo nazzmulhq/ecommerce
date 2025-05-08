@@ -2,6 +2,7 @@ import Image from "next/image";
 
 import AppSelectedIcon from "@components/common/AppSelectedIcon";
 import { useSidebarActionsContext, useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
+import { menuStyles } from "@lib/fakedb/navigationStyle";
 import IntlMessages from "@lib/utils/IntlMessages";
 import { StyledCustomizedItem } from "../../index.styled";
 import { StyledNavMenu, StyledNavMenuItem, StyledNavMenuItemCur } from "./index.styled";

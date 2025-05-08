@@ -3,7 +3,6 @@ import Providers from "@components/common/Providers";
 import "antd/dist/reset.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { cookies } from "next/headers";
 import NextTopLoader from "nextjs-toploader";
 import "simplebar-react/dist/simplebar.min.css";
 import "../../public/styles/index.css";
@@ -22,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children, params }: LangLayoutProps) {
-    const token = (await cookies()).get("token")?.value;
+    // const token = (await cookies()).get("token")?.value;
     const { lang } = await params;
 
     return (

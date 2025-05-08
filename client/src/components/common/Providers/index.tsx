@@ -1,13 +1,10 @@
-"use client";
-
-import { AntdRegistry } from "@ant-design/nextjs-registry";
 import AppContextProvider from "@lib/context/AppContextProvider";
 import AppLocaleProvider from "@lib/context/AppLocaleProvider";
-import AppStyleProvider from "@lib/context/AppStyleProvider";
+import StyledComponentsRegistry from "@lib/context/AppStyleProvider";
 import AppThemeProvider from "@lib/context/AppThemeProvider";
 import { GlobalStyles } from "@lib/theme/GlobalStyle";
 import { FC, ReactNode } from "react";
-import { Normalize } from "styled-normalize";
+import AntdRegistryRegistry from "./AntdRegistryRegistry";
 
 export interface IProviders {
     children: ReactNode;
@@ -18,13 +15,12 @@ const Providers: FC<IProviders> = ({ children }) => {
         <AppContextProvider>
             <AppThemeProvider>
                 <AppLocaleProvider>
-                    <AntdRegistry>
-                        <AppStyleProvider>
+                    <AntdRegistryRegistry>
+                        <StyledComponentsRegistry>
                             <GlobalStyles />
-                            <Normalize />
                             {children}
-                        </AppStyleProvider>
-                    </AntdRegistry>
+                        </StyledComponentsRegistry>
+                    </AntdRegistryRegistry>
                 </AppLocaleProvider>
             </AppThemeProvider>
         </AppContextProvider>
