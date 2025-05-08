@@ -18,9 +18,8 @@ const AppHorizontalNav = ({ className, routesConfig }: AppHorizontalNavProps) =>
             defaultOpenKeys={[defaultOpenKeys]}
             mode="horizontal"
             selectedKeys={[selectedKeys.split("/").join(":")]}
-        >
-            {getRouteHorMenus(routesConfig)}
-        </Menu>
+            items={getRouteHorMenus(routesConfig) as any}
+        />
     ) : (
         <></>
     );

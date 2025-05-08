@@ -6,6 +6,7 @@ const { Footer } = Layout;
 export const StyledMainFooter = styled(Footer)`
     display: flex;
     align-items: center;
+    justify-content: center;
     padding: 5.5px 20px !important;
     color: ${({ theme }) => theme.palette.text.primary} !important;
     background-color: ${({ theme }) => theme.palette.background.paper} !important;

@@ -16,6 +16,7 @@ export interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
     const { navStyle } = useLayoutContext();
+
     const Layout: React.FC<any> = Layouts[navStyle];
 
     const { updateNavStyle } = useLayoutActionsContext();

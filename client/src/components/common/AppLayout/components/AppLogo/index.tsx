@@ -11,9 +11,9 @@ const AppLogo: React.FC<AppLogoProps> = ({ hasSidebarColor }) => {
     return (
         <StyledAppLogo>
             {hasSidebarColor && sidebarColorSet.mode === "dark" ? (
-                <Image alt="crema-logo" height={36} src="/assets/images/logo-white-with-name.png" width={110} />
+                <Image alt="logo" height={36} src="/assets/images/logo-white-with-name.png" width={110} />
             ) : (
-                <Image alt="crema-logo" height={36} src="/assets/images/logo-with-name.png" width={110} />
+                <Image alt="logo" height={36} src="/assets/images/logo-with-name.png" width={110} />
             )}
         </StyledAppLogo>
     );

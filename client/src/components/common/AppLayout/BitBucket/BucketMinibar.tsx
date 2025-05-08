@@ -34,7 +34,7 @@ const BucketMinibar = () => {
             <StyledBucketMinibarInner>
                 <StyledBucketMinibarLogo onClick={e => e.preventDefault()}>
                     <Image
-                        alt="crema-logo"
+                        alt="logo"
                         height={40}
                         src={`${
                             sidebarColorSet.mode === "dark"

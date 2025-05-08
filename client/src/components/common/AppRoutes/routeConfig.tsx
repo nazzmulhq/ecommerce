@@ -27,6 +27,20 @@ const routesConfig = [
         type: "group",
         children: [
             {
+                id: "permissions",
+                title: "Permissions",
+                messageId: "sidebar.app.dashboard.crypto",
+                icon: <BsCurrencyBitcoin />,
+                path: "/permission",
+            },
+            {
+                id: "role",
+                title: "Role",
+                messageId: "sidebar.app.dashboard.crypto",
+                icon: <BsCurrencyBitcoin />,
+                path: "/role",
+            },
+            {
                 id: "crypto",
                 title: "Crypto",
                 messageId: "sidebar.app.dashboard.crypto",
