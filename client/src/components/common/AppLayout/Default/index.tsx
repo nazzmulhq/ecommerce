@@ -1,12 +1,13 @@
-import { FooterType } from "@crema/constants/AppEnums";
-import { useLayoutContext } from "@crema/context/AppContextProvider/LayoutContextProvider";
-import { isEmpty } from "@crema/helpers/Common";
-import { RouterConfigData } from "@crema/types/models/Apps";
+import { FooterType } from "@lib/constants/AppEnums";
+import { useLayoutContext } from "@lib/context/AppContextProvider/LayoutContextProvider";
+import { isEmpty } from "@lib/utils/Common";
+import { RouterConfigData } from "@src/types/Apps";
 import { Grid } from "antd";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
-import AppContentView from "../../AppContentView";
-import AppThemeSetting from "../../AppThemeSetting";
+
+import AppContentView from "@components/common/AppContentView";
+import AppThemeSetting from "@components/common/AppThemeSetting";
 import AppFooter from "../components/AppFooter";
 import AppHeader from "./AppHeader";
 import AppSidebar from "./AppSidebar";
@@ -16,7 +17,7 @@ const { useBreakpoint } = Grid;
 
 type Props = {
     children: React.ReactNode;
-    routesConfig?: RouterConfigData[];
+    routesConfig: RouterConfigData[];
 };
 const DefaultLayout: React.FC<Props> = ({ children, routesConfig }) => {
     const width = useBreakpoint();

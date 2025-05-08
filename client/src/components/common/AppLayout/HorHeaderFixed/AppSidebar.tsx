@@ -1,53 +1,50 @@
-import React, { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import UserInfo from '../components/UserInfo';
-import clsx from 'clsx';
-import AppVerticalMenu from '../components/AppVerticalNav';
-import { LayoutDirection } from '@crema/constants/AppEnums';
-import { useSidebarContext } from '@crema/context/AppContextProvider/SidebarContextProvider';
-import { useLayoutContext } from '@crema/context/AppContextProvider/LayoutContextProvider';
-import {
-  StyledAppHeaderDrawerFixed,
-  StyledAppHorHeaderFixedSidebar,
-  StyledAppHorScrollbar,
-} from './index.styled';
-import { RouterConfigData } from '@crema/types/models/Apps';
+import { LayoutDirection } from "@lib/constants/AppEnums";
+import { useLayoutContext } from "@lib/context/AppContextProvider/LayoutContextProvider";
+import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
+import { RouterConfigData } from "@src/types/Apps";
+import clsx from "clsx";
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+
+import AppVerticalNav from "../components/AppVerticalNav";
+import UserInfo from "../components/UserInfo";
+import { StyledAppHeaderDrawerFixed, StyledAppHorHeaderFixedSidebar, StyledAppHorScrollbar } from "./index.styled";
 
 type AppSidebarProps = {
-  visible: boolean;
-  onClose: () => void;
-  routesConfig: RouterConfigData[];
+    visible: boolean;
+    onClose: () => void;
+    routesConfig: RouterConfigData[];
 };
 
 const AppSidebar = ({ visible, onClose, routesConfig }: AppSidebarProps) => {
-  const { allowSidebarBgImage } = useSidebarContext();
-  const { direction } = useLayoutContext();
-  const pathname = usePathname();
+    const { allowSidebarBgImage } = useSidebarContext();
+    const { direction } = useLayoutContext();
+    const pathname = usePathname();
 
-  useEffect(() => {
-    onClose();
-  }, [pathname]);
+    useEffect(() => {
+        onClose();
+    }, [pathname]);
 
-  return (
-    <StyledAppHeaderDrawerFixed
-      placement={direction === LayoutDirection.LTR ? 'left' : 'right'}
-      closable={false}
-      onClose={onClose}
-      open={visible}
-    >
-      <StyledAppHorHeaderFixedSidebar
-        className={clsx({
-          'hor-header-fixed-sidebar-img-background': allowSidebarBgImage,
-        })}
-        collapsible
-      >
-        <UserInfo />
-        <StyledAppHorScrollbar scrollToTop={false}>
-          <AppVerticalMenu routesConfig={routesConfig} />
-        </StyledAppHorScrollbar>
-      </StyledAppHorHeaderFixedSidebar>
-    </StyledAppHeaderDrawerFixed>
-  );
+    return (
+        <StyledAppHeaderDrawerFixed
+            closable={false}
+            onClose={onClose}
+            open={visible}
+            placement={direction === LayoutDirection.LTR ? "left" : "right"}
+        >
+            <StyledAppHorHeaderFixedSidebar
+                className={clsx({
+                    "hor-header-fixed-sidebar-img-background": allowSidebarBgImage,
+                })}
+                collapsible
+            >
+                <UserInfo />
+                <StyledAppHorScrollbar scrollToTop={false}>
+                    <AppVerticalNav routesConfig={routesConfig} />
+                </StyledAppHorScrollbar>
+            </StyledAppHorHeaderFixedSidebar>
+        </StyledAppHeaderDrawerFixed>
+    );
 };
 
 export default AppSidebar;

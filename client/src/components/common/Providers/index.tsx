@@ -18,13 +18,13 @@ const Providers: FC<IProviders> = ({ children }) => {
         <AppContextProvider>
             <AppThemeProvider>
                 <AppLocaleProvider>
-                    <AppStyleProvider>
-                        <AntdRegistry>
+                    <AntdRegistry>
+                        <AppStyleProvider>
                             <GlobalStyles />
                             <Normalize />
                             {children}
-                        </AntdRegistry>
-                    </AppStyleProvider>
+                        </AppStyleProvider>
+                    </AntdRegistry>
                 </AppLocaleProvider>
             </AppThemeProvider>
         </AppContextProvider>

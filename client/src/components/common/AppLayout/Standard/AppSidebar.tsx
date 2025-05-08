@@ -1,36 +1,32 @@
-import React from "react";
-import UserInfo from "../components/UserInfo";
+import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
+import { RouterConfigData } from "@src/types/Apps";
 import clsx from "clsx";
 import AppVerticalMenu from "../components/AppVerticalNav";
-import { useSidebarContext } from "@crema/context/AppContextProvider/SidebarContextProvider";
-import {
-  StyledAppStandardScrollbar,
-  StyledStandardSidebar,
-} from "./index.styled";
-import { RouterConfigData } from "@crema/types/models/Apps";
+import UserInfo from "../components/UserInfo";
+import { StyledAppStandardScrollbar, StyledStandardSidebar } from "./index.styled";
 
 type AppSidebarProps = {
-  isCollapsed: boolean;
-  routesConfig: RouterConfigData[];
+    isCollapsed: boolean;
+    routesConfig: RouterConfigData[];
 };
 const AppSidebar = ({ isCollapsed, routesConfig }: AppSidebarProps) => {
-  const { allowSidebarBgImage } = useSidebarContext();
+    const { allowSidebarBgImage } = useSidebarContext();
 
-  return (
-    <StyledStandardSidebar
-      className={clsx({
-        "standard-sidebar-img-background": allowSidebarBgImage,
-      })}
-      collapsible
-      breakpoint="xl"
-      collapsed={isCollapsed}
-    >
-      <UserInfo hasColor />
-      <StyledAppStandardScrollbar scrollToTop={false}>
-        <AppVerticalMenu routesConfig={routesConfig} />
-      </StyledAppStandardScrollbar>
-    </StyledStandardSidebar>
-  );
+    return (
+        <StyledStandardSidebar
+            breakpoint="xl"
+            className={clsx({
+                "standard-sidebar-img-background": allowSidebarBgImage,
+            })}
+            collapsed={isCollapsed}
+            collapsible
+        >
+            <UserInfo hasColor />
+            <StyledAppStandardScrollbar scrollToTop={false}>
+                <AppVerticalMenu routesConfig={routesConfig} />
+            </StyledAppStandardScrollbar>
+        </StyledStandardSidebar>
+    );
 };
 
 export default AppSidebar;

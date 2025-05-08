@@ -1,38 +1,34 @@
-import React from "react";
-import UserInfo from "../components/UserInfo";
+import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
+import { RouterConfigData } from "@src/types/Apps";
 import clsx from "clsx";
 import AppVerticalMenu from "../components/AppVerticalNav";
-import { useSidebarContext } from "@crema/context/AppContextProvider/SidebarContextProvider";
-import {
-  StyledMiniSidebarScrollbar,
-  StyledMiniSidebarToggle,
-} from "./index.styled";
-import { RouterConfigData } from "@crema/types/models/Apps";
+import UserInfo from "../components/UserInfo";
+import { StyledMiniSidebarScrollbar, StyledMiniSidebarToggle } from "./index.styled";
 
 type AppSidebarProps = {
-  isCollapsed: boolean;
-  routesConfig: RouterConfigData[];
+    isCollapsed: boolean;
+    routesConfig: RouterConfigData[];
 };
 
 const AppSidebar = ({ isCollapsed, routesConfig }: AppSidebarProps) => {
-  const { allowSidebarBgImage } = useSidebarContext();
+    const { allowSidebarBgImage } = useSidebarContext();
 
-  return (
-    <StyledMiniSidebarToggle
-      className={clsx({
-        "mini-sidebar-toggle-img-background": allowSidebarBgImage,
-      })}
-      collapsible
-      breakpoint="xl"
-      collapsedWidth="0"
-      collapsed={isCollapsed}
-    >
-      <UserInfo hasColor />
-      <StyledMiniSidebarScrollbar scrollToTop={false}>
-        <AppVerticalMenu routesConfig={routesConfig} />
-      </StyledMiniSidebarScrollbar>
-    </StyledMiniSidebarToggle>
-  );
+    return (
+        <StyledMiniSidebarToggle
+            breakpoint="xl"
+            className={clsx({
+                "mini-sidebar-toggle-img-background": allowSidebarBgImage,
+            })}
+            collapsed={isCollapsed}
+            collapsedWidth="0"
+            collapsible
+        >
+            <UserInfo hasColor />
+            <StyledMiniSidebarScrollbar scrollToTop={false}>
+                <AppVerticalMenu routesConfig={routesConfig} />
+            </StyledMiniSidebarScrollbar>
+        </StyledMiniSidebarToggle>
+    );
 };
 
 export default AppSidebar;

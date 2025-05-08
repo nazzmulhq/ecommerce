@@ -1,10 +1,12 @@
 import "@ant-design/v5-patch-for-react-19";
 import Providers from "@components/common/Providers";
+import "antd/dist/reset.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import NextTopLoader from "nextjs-toploader";
-import "./globals.css";
+import "simplebar-react/dist/simplebar.min.css";
+import "../../public/styles/index.css";
 
 const inter = Inter({ subsets: ["latin"] });
 interface LangLayoutProps {
@@ -39,10 +41,7 @@ export default async function RootLayout({ children, params }: LangLayoutProps) 
                     speed={200}
                     zIndex={1600}
                 />
-                <Providers>
-                    {/* <Layouts token={token}>{children}</Layouts> */}
-                    {children}
-                </Providers>
+                <Providers>{children}</Providers>
             </body>
         </html>
     );

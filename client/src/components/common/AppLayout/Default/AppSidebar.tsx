@@ -1,40 +1,34 @@
-import React from "react";
-import UserInfo from "../components/UserInfo";
+import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
+import { RouterConfigData } from "@src/types/Apps";
 import clsx from "clsx";
+import React from "react";
 import AppVerticalMenu from "../components/AppVerticalNav";
-import {
-  StyledAppMainSidebar,
-  StyledAppSidebarScrollbar,
-} from "./index.styled";
-import { useSidebarContext } from "@crema/context/AppContextProvider/SidebarContextProvider";
-import { RouterConfigData } from "@crema/types/models/Apps";
+import UserInfo from "../components/UserInfo";
+import { StyledAppMainSidebar, StyledAppSidebarScrollbar } from "./index.styled";
 
 type AppSidebarProps = {
-  routesConfig: RouterConfigData[];
-  isCollapsed: boolean;
+    routesConfig: RouterConfigData[];
+    isCollapsed: boolean;
 };
 
-const AppSidebar: React.FC<AppSidebarProps> = ({
-  isCollapsed,
-  routesConfig,
-}) => {
-  const { allowSidebarBgImage } = useSidebarContext();
+const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed, routesConfig }) => {
+    const { allowSidebarBgImage } = useSidebarContext();
 
-  return (
-    <StyledAppMainSidebar
-      className={clsx({
-        "sidebar-img-background": allowSidebarBgImage,
-      })}
-      collapsible
-      breakpoint="xl"
-      collapsed={isCollapsed}
-    >
-      <UserInfo hasColor />
-      <StyledAppSidebarScrollbar scrollToTop={false}>
-        <AppVerticalMenu routesConfig={routesConfig} />
-      </StyledAppSidebarScrollbar>
-    </StyledAppMainSidebar>
-  );
+    return (
+        <StyledAppMainSidebar
+            breakpoint="xl"
+            className={clsx({
+                "sidebar-img-background": allowSidebarBgImage,
+            })}
+            collapsed={isCollapsed}
+            collapsible
+        >
+            <UserInfo hasColor />
+            <StyledAppSidebarScrollbar scrollToTop={false}>
+                <AppVerticalMenu routesConfig={routesConfig} />
+            </StyledAppSidebarScrollbar>
+        </StyledAppMainSidebar>
+    );
 };
 
 export default AppSidebar;
