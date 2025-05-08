@@ -4,5 +4,5 @@
  * @returns fileUrl string
  */
 export const getAssetsUrl = (fileUrl: string) => {
-  return `/assets/images/${fileUrl}`;
+    return `/assets/images/${fileUrl}`;
 };

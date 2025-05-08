@@ -1,5 +1,11 @@
 import { RoutePermittedRole } from "@lib/constants/AppEnums";
 import { ReactNode } from "react";
+export type CountryType = {
+    label: string;
+    code: string;
+    phone: string;
+    suggested?: boolean;
+};
 
 export type LanguageProps = {
     languageId: string;

@@ -1,5 +1,5 @@
-import sanitizeHtml from "sanitize-html";
 import dayjs from "dayjs";
+import sanitizeHtml from "sanitize-html";
 
 /**
  * Sanitize Content
@@ -7,11 +7,11 @@ import dayjs from "dayjs";
  * @returns content any
  */
 export const sanitizeContent = (content: any) => {
-  if (typeof content === "string") {
-    return sanitizeHtml(content);
-  }
+    if (typeof content === "string") {
+        return sanitizeHtml(content);
+    }
 
-  return content;
+    return content;
 };
 
 /**
@@ -20,72 +20,57 @@ export const sanitizeContent = (content: any) => {
  * @returns output Array or Object
  */
 const sanitizeArrayObject = (arrayOrObject: any) => {
-  const output = Array.isArray(arrayOrObject) ? [] : {};
+    const output = Array.isArray(arrayOrObject) ? [] : {};
 
-  // loop for an array
-  for (const key in arrayOrObject) {
-    const item = arrayOrObject[key];
-    if (typeof item === "object" && item instanceof FormData) {
-      // @ts-ignore
-      output[key] = item;
-    } else if (
-      typeof item === "object" &&
-      item !== null &&
-      dayjs.isDayjs(item)
-    ) {
-      // @ts-ignore
-      output[key] = item;
-    } else if (
-      typeof item === "object" &&
-      item !== null &&
-      typeof item.getMonth === "function"
-    ) {
-      // @ts-ignore
-      output[key] = item;
-    } else if (
-      Array.isArray(item) ||
-      (typeof item === "object" && item !== null)
-    ) {
-      // @ts-ignore
-      output[key] = sanitizeArrayObject(item);
-    } else {
-      // @ts-ignore
-      output[key] = sanitizeContent(item);
+    // loop for an array
+    for (const key in arrayOrObject) {
+        const item = arrayOrObject[key];
+        if (typeof item === "object" && item instanceof FormData) {
+            // @ts-ignore
+            output[key] = item;
+        } else if (typeof item === "object" && item !== null && dayjs.isDayjs(item)) {
+            // @ts-ignore
+            output[key] = item;
+        } else if (typeof item === "object" && item !== null && typeof item.getMonth === "function") {
+            // @ts-ignore
+            output[key] = item;
+        } else if (Array.isArray(item) || (typeof item === "object" && item !== null)) {
+            // @ts-ignore
+            output[key] = sanitizeArrayObject(item);
+        } else {
+            // @ts-ignore
+            output[key] = sanitizeContent(item);
+        }
     }
-  }
 
-  return output;
+    return output;
 };
 
 export const sanitizeData = (inputVal: any) => {
-  try {
-    if (typeof inputVal === "object" && inputVal instanceof FormData) {
-      return inputVal;
-    }
+    try {
+        if (typeof inputVal === "object" && inputVal instanceof FormData) {
+            return inputVal;
+        }
 
-    if (
-      Array.isArray(inputVal) ||
-      (typeof inputVal === "object" && inputVal !== null)
-    ) {
-      return sanitizeArrayObject(inputVal);
-    }
+        if (Array.isArray(inputVal) || (typeof inputVal === "object" && inputVal !== null)) {
+            return sanitizeArrayObject(inputVal);
+        }
 
-    return sanitizeContent(inputVal);
-  } catch (e) {
-    console.log("parse error", e);
-  }
+        return sanitizeContent(inputVal);
+    } catch (e) {
+        console.log("parse error", e);
+    }
 };
 
 export const isRequestSuccessful = (code: number) => {
-  return code >= 200 && code <= 204;
+    return code >= 200 && code <= 204;
 };
 
 export const isEmptyObject = (obj = {}) => {
-  for (const key in obj) {
-    // eslint-disable-next-line no-prototype-builtins
-    if (obj?.hasOwnProperty(key)) {
-      return false;
+    for (const key in obj) {
+        if (obj?.hasOwnProperty(key)) {
+            return false;
+        }
     }
-  }
-  return true;
+    return true;
 };

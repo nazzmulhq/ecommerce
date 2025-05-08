@@ -1,6 +1,7 @@
 import { CheckOutlined } from "@ant-design/icons";
 
 import { useSidebarActionsContext, useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
+import { sidebarBgImages } from "@lib/fakedb/navigationStyle";
 import IntlMessages from "@lib/utils/IntlMessages";
 import Image from "next/image";
 import {

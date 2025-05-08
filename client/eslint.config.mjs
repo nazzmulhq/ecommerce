@@ -103,6 +103,7 @@ const eslintConfig = [
 
             "@typescript-eslint/explicit-module-boundary-types": "off",
             "@typescript-eslint/no-empty-object-type": "off",
+            "eslint-disable-next-line @typescript-eslint/ban-ts-comment": "warn",
             "prettier/prettier": ["error", { ...prettierConfig }],
         },
         settings: {

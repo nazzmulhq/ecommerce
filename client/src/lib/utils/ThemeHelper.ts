@@ -1,15 +1,15 @@
 export const getAntTheme = (theme: any) => {
-  return {
-    colorPrimary: theme.palette.primary.main,
-    // colorTextBase: theme.palette.text.primary,
-    // fontFamilyBase: theme.font.family,
-    // fontSizeBase: theme.font.size.base,
-    // borderRadius: theme.cardRadius,
-    // colorBgBase: theme.palette.background.paper,
-    // colorText:  theme.palette.text.primary,
-    // boxShadow:  theme.cardShadow,
-    // sizeStep:4
-  };
+    return {
+        colorPrimary: theme.palette.primary.main,
+        // colorTextBase: theme.palette.text.primary,
+        // fontFamilyBase: theme.font.family,
+        // fontSizeBase: theme.font.size.base,
+        // borderRadius: theme.cardRadius,
+        // colorBgBase: theme.palette.background.paper,
+        // colorText:  theme.palette.text.primary,
+        // boxShadow:  theme.cardShadow,
+        // sizeStep:4
+    };
 }; /*
 const generateColorPalettes=(color, type)=>{
   return {
