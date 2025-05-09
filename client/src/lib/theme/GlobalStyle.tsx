@@ -498,7 +498,7 @@ export const GlobalStyles = createGlobalStyle`
   .ant-list-item-meta-description,
   .ant-input-group-addon > .ant-btn-icon-only,
   .ant-collapse > .ant-collapse-item > .ant-collapse-header {
-    background: ${({ theme }) => theme.palette.background.paper} !important;
+    /* background: ${({ theme }) => theme.palette.background.paper} !important; */
     color: ${({ theme }) => theme.palette.text.primary} !important;
   }
 

@@ -8,7 +8,6 @@ import "antd/dist/reset.css";
 import { FC, ReactNode } from "react";
 import "simplebar-react/dist/simplebar.min.css";
 import "../../../../public/styles/index.css";
-import AppLayout from "../AppLayout";
 import StyledComponentsRegistry from "./StyledComponentsRegistry";
 export interface IProviders {
     children: ReactNode;
@@ -22,7 +21,7 @@ const Providers: FC<IProviders> = ({ children }) => {
                     <AntdRegistry>
                         <StyledComponentsRegistry>
                             <GlobalStyles />
-                            <AppLayout>{children}</AppLayout>
+                            {children}
                         </StyledComponentsRegistry>
                     </AntdRegistry>
                 </AppLocaleProvider>

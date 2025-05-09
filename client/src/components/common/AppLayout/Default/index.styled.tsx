@@ -1,6 +1,7 @@
 import { Input, Layout } from "antd";
 import styled from "styled-components";
-import AppScrollbar from "../../AppScrollbar";
+
+import AppScrollbar from "@components/common/AppScrollbar";
 import MainSidebar from "../components/MainSidebar";
 
 const { Header } = Layout;
