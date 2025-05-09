@@ -3,6 +3,7 @@ import Providers from "@components/common/Providers";
 
 import { Inter } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 interface LangLayoutProps {

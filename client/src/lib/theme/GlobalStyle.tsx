@@ -4,6 +4,8 @@ import { darken, rgba } from "polished";
 import { createGlobalStyle } from "styled-components";
 
 export const GlobalStyles = createGlobalStyle`
+
+
   html,
   body,
   #root {
