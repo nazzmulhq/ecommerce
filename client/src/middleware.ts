@@ -1,8 +1,9 @@
 import { getRoutes } from "@lib/actions/auth/login";
-import { initialUrl } from "@lib/constants/AppConst";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { IRoute } from "./types/basic";
+
+const afterLoginRedirectRoute = "/permission";
 
 /**
  * Regular expression to match public files like images, CSS, JS, etc.
@@ -45,7 +46,7 @@ export async function middleware(req: NextRequest) {
 
     // Redirect authenticated users away from auth pages (login, register, etc.)
     if (token && afterLoginNotVisitedRoutes.includes(pathname)) {
-        const redirectUrl = new URL(initialUrl, req.url);
+        const redirectUrl = new URL(afterLoginRedirectRoute, req.url);
         return NextResponse.redirect(redirectUrl);
     }
 

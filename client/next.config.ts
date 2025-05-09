@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
         },
     },
     env: {
-        NEXT_PUBLIC_INITIAL_URL: "/",
+        NEXT_PUBLIC_INITIAL_URL: "/permissions",
         NEXT_PUBLIC_STATE_TYPE: "context",
         NEXT_PUBLIC_FILESTACK_KEY: "Ach6MsgoQHGK6tCaq5uJ34gz",
         NEXT_PUBLIC_LAYOUT: "default",

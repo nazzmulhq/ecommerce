@@ -41,13 +41,47 @@ export interface User {
     roles: Role[];
 }
 
+/**
+ * Interface for route objects used in application
+ */
 export interface IRoute {
-    parent_id: number | null;
-    id: number;
-    type: "guest" | "shared" | "protected" | "devOnly";
+    /**
+     * Unique identifier for the route
+     */
+    id: string;
+
+    /**
+     * Display name of the route
+     */
     name: string;
-    slug: string;
+
+    /**
+     * URL path for the route
+     */
     path: string;
-    position: number;
-    permissions: IPermission[];
+
+    /**
+     * Icon name or identifier
+     */
+    icon?: string;
+
+    /**
+     * Parent route ID if this is a child route
+     */
+    parentId?: string;
+
+    /**
+     * List of child route IDs
+     */
+    children?: string[];
+
+    /**
+     * Route permission requirements
+     */
+    permissions?: string[];
+
+    /**
+     * Whether this route is a component (not a page)
+     */
+    isComponent?: boolean;
 }

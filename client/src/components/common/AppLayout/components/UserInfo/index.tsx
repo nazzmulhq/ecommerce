@@ -2,6 +2,8 @@ import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContex
 import { useThemeContext } from "@lib/context/AppContextProvider/ThemeContextProvider";
 import { Dropdown } from "antd";
 import clsx from "clsx";
+
+import { deleteCookie } from "@lib/actions";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { FaChevronDown } from "react-icons/fa";
@@ -27,11 +29,6 @@ const UserInfo: React.FC<UserInfoProps> = ({ hasColor }) => {
         photoURL: "https://example.com/photo.jpg",
     };
 
-    const logout = () => {
-        // Implement your logout logic here
-        console.log("User logged out");
-    };
-
     const router = useRouter();
     const { sidebarColorSet } = useSidebarContext();
     const { allowSidebarBgImage } = useSidebarContext();
@@ -45,6 +42,14 @@ const UserInfo: React.FC<UserInfoProps> = ({ hasColor }) => {
         }
     };
 
+    const logout = async () => {
+        deleteCookie("user");
+        deleteCookie("token");
+        deleteCookie("routes");
+        deleteCookie("permissions");
+        router.push("/login");
+    };
+
     const items = [
         {
             key: 1,
@@ -52,7 +57,11 @@ const UserInfo: React.FC<UserInfoProps> = ({ hasColor }) => {
         },
         {
             key: 2,
-            label: <div onClick={() => logout()}>Logout</div>,
+            label: (
+                <div role="button" onClick={logout}>
+                    Logout
+                </div>
+            ),
         },
     ];
 
