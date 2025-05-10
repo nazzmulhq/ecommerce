@@ -41,7 +41,7 @@ const BucketMinibar = () => {
                                 ? "/assets/images/logo-white.png"
                                 : "/assets/images/logo.png"
                         }`}
-                        width={31}
+                        width={40}
                     />
                 </StyledBucketMinibarLogo>
 

@@ -1,12 +1,8 @@
 import { cookies } from "next/headers";
+import Image from "next/image";
 import { redirect, RedirectType } from "next/navigation";
 import {
-    ActionRow,
-    Checkbox,
-    CheckboxLabel,
     ErrorMessage,
-    ForgotPasswordContainer,
-    ForgotPasswordLink,
     Input,
     InputField,
     InputGroup,
@@ -14,8 +10,8 @@ import {
     LoginContainer,
     LoginForm,
     LoginHeader,
+    LoginLogo,
     LoginTitle,
-    RememberMeContainer,
     SubmitButton,
 } from "./index.styled";
 
@@ -87,6 +83,9 @@ export default function Login({ searchParams }: { searchParams: { error?: string
     return (
         <LoginContainer>
             <LoginCard>
+                <LoginLogo>
+                    <Image alt="logo" height={64} src="/assets/images/logo-with-name.png" width={64} />
+                </LoginLogo>
                 <LoginHeader>
                     <LoginTitle>Sign in to your account</LoginTitle>
                 </LoginHeader>
@@ -125,7 +124,7 @@ export default function Login({ searchParams }: { searchParams: { error?: string
                         </InputField>
                     </InputGroup>
 
-                    <ActionRow>
+                    {/* <ActionRow>
                         <RememberMeContainer>
                             <Checkbox type="checkbox" id="remember-me" name="remember-me" />
                             <CheckboxLabel htmlFor="remember-me">Remember me</CheckboxLabel>
@@ -134,7 +133,7 @@ export default function Login({ searchParams }: { searchParams: { error?: string
                         <ForgotPasswordContainer>
                             <ForgotPasswordLink href="/forgot-password">Forgot your password?</ForgotPasswordLink>
                         </ForgotPasswordContainer>
-                    </ActionRow>
+                    </ActionRow> */}
 
                     <SubmitButton type="submit">Sign in</SubmitButton>
                 </LoginForm>

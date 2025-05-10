@@ -21,6 +21,12 @@ export const LoginCard = styled.div`
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
 `;
 
+export const LoginLogo = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
 export const LoginHeader = styled.div`
     margin-bottom: 2rem;
 `;
@@ -28,7 +34,7 @@ export const LoginHeader = styled.div`
 export const LoginTitle = styled.h2`
     margin-top: 1.5rem;
     text-align: center;
-    font-size: 1.875rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #1f2937;
 `;

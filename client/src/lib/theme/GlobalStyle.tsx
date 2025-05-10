@@ -416,6 +416,10 @@ export const GlobalStyles = createGlobalStyle`
       background-color: ${({ theme }) => rgba(theme.palette.primary.main, 0.1)};
       transform: translateY(-2px);
       box-shadow: 0 3px 10px 0 ${({ theme }) => rgba(theme.palette.primary.main, 0.1)};
+
+      .ant-list-item-meta-description {
+        background-color: transparent !important;
+      }
     }
   }
 
@@ -498,8 +502,12 @@ export const GlobalStyles = createGlobalStyle`
   .ant-list-item-meta-description,
   .ant-input-group-addon > .ant-btn-icon-only,
   .ant-collapse > .ant-collapse-item > .ant-collapse-header {
-    /* background: ${({ theme }) => theme.palette.background.paper} !important; */
+    background: ${({ theme }) => theme.palette.background.paper} !important;
     color: ${({ theme }) => theme.palette.text.primary} !important;
+    &:hover{
+        background: transparent !important;
+    }
+
   }
 
   .ant-input::placeholder {
