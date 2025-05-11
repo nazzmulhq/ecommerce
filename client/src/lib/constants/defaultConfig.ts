@@ -1,6 +1,8 @@
 import { DefaultTheme } from "styled-components";
 import { Fonts, FooterType, LayoutDirection, MenuStyle, ThemeMode, ThemeStyle, ThemeStyleRadius } from "./AppEnums";
 
+export const componentTokens = {};
+
 export const appThemeFont = {
     family: ["Be Vietnam", "sans-serif"].join(","),
     weight: {

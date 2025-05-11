@@ -54,6 +54,7 @@ const DefaultLayout: React.FC<Props> = ({ children, routesConfig }) => {
                         <div className="logo"></div>
                         <div className="avatar"></div>
                         <div className="avatar"></div>
+                        <div className="avatar"></div>
                     </div>
                 </div>
 

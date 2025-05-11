@@ -35,6 +35,7 @@ export const StyledLayoutLoadingSkeleton = styled.div`
         height: 64px;
         display: flex;
         align-items: center;
+        justify-content: space-between;
         padding: 0 20px;
         background-color: ${({ theme }) => theme.palette.background.paper};
         border-bottom: 1px solid ${({ theme }) => theme.palette.borderColor};
@@ -71,7 +72,6 @@ export const StyledLayoutLoadingSkeleton = styled.div`
         .group {
             display: flex;
             align-items: center;
-            width: 100%;
             gap: 10px;
 
             .logo,

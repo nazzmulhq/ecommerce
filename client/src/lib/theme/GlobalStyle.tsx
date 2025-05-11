@@ -504,10 +504,6 @@ export const GlobalStyles = createGlobalStyle`
   .ant-collapse > .ant-collapse-item > .ant-collapse-header {
     background: ${({ theme }) => theme.palette.background.paper} !important;
     color: ${({ theme }) => theme.palette.text.primary} !important;
-    &:hover{
-        background: transparent !important;
-    }
-
   }
 
   .ant-input::placeholder {

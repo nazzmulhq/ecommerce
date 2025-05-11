@@ -13,6 +13,7 @@ export default function Loading() {
                         <div className="logo"></div>
                         <div className="avatar"></div>
                         <div className="avatar"></div>
+                        <div className="avatar"></div>
                     </div>
                 </div>
 
