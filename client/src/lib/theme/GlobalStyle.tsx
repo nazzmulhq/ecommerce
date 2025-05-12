@@ -483,7 +483,7 @@ export const GlobalStyles = createGlobalStyle`
     line-height: 1;
   }
 
-  .ant-picker,
+  /* .ant-picker,
   .ant-picker-calendar-header,
   .ant-picker-panel,
   .ant-picker-body,
@@ -504,7 +504,7 @@ export const GlobalStyles = createGlobalStyle`
   .ant-collapse > .ant-collapse-item > .ant-collapse-header {
     background: ${({ theme }) => theme.palette.background.paper} !important;
     color: ${({ theme }) => theme.palette.text.primary} !important;
-  }
+  } */
 
   .ant-input::placeholder {
     color: ${({ theme }) => theme.palette.text.secondary} !important;

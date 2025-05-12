@@ -33,6 +33,7 @@ export const StyledNotifyListItem = styled(List.Item)`
 
     & .ant-list-item-meta-description {
         color: ${({ theme }) => theme.palette.text.secondary} !important;
+        background-color: transparent !important;
     }
 `;
 

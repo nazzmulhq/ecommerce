@@ -1,10 +1,14 @@
 import styled from "styled-components";
+import { shouldForwardProp } from "@styled-system/should-forward-prop"; // Optional: can manually define too
 
 type StyledAppSelectedIconProps = {
-    backgroundColor: string | undefined;
+    backgroundColor?: string;
+    color?: string;
 };
 
-export const StyledAppSelectedIcon = styled.div<StyledAppSelectedIconProps>`
+export const StyledAppSelectedIcon = styled.div.withConfig({
+    shouldForwardProp: (prop) => !["backgroundColor", "color"].includes(prop)
+})<StyledAppSelectedIconProps>`
     width: 20px;
     height: 20px;
     border-radius: ${({ theme }) => theme.sizes.borderRadius.circle};
@@ -16,12 +20,12 @@ export const StyledAppSelectedIcon = styled.div<StyledAppSelectedIconProps>`
     right: 10px;
     top: 10px;
     z-index: 1;
-    background-color: ${props => (props.backgroundColor ? props.backgroundColor : props.theme.palette.text.primary)};
+    background-color: ${({ backgroundColor, theme }) => backgroundColor || theme.palette.text.primary};
     color: ${({ color }) => color};
 
     .anticon {
-        background-color: ${props => (props.backgroundColor ? props.backgroundColor : "transparent")};
-        color: ${props => (props.color ? props.color : props.theme.palette.background.paper)};
+        background-color: ${({ backgroundColor }) => backgroundColor || "transparent"};
+        color: ${({ color, theme }) => color || theme.palette.background.paper};
     }
 
     &.isCenter {

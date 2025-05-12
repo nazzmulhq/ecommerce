@@ -1,16 +1,17 @@
 export const getAntTheme = (theme: any) => {
     return {
         colorPrimary: theme.palette.primary.main,
-        // colorTextBase: theme.palette.text.primary,
-        // fontFamilyBase: theme.font.family,
-        // fontSizeBase: theme.font.size.base,
-        // borderRadius: theme.cardRadius,
-        // colorBgBase: theme.palette.background.paper,
-        // colorText:  theme.palette.text.primary,
-        // boxShadow:  theme.cardShadow,
-        // sizeStep:4
+        colorTextBase: theme.palette.text.primary,
+        fontFamilyBase: theme.font.family,
+        fontSizeBase: theme.font.size.base,
+        borderRadius: theme.cardRadius,
+        colorBgBase: theme.palette.background.paper,
+        colorText: theme.palette.text.primary,
+        boxShadow: theme.cardShadow,
+        sizeStep: theme.spacing,
     };
-}; /*
+};
+/*
 const generateColorPalettes=(color, type)=>{
   return {
     [`color${type}`]: '',

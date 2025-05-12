@@ -70,11 +70,10 @@ export const backgroundLight = {
     default: "#F4F7FE",
 };
 
-const cardRadius = ThemeStyleRadius.STANDARD;
 export const defaultTheme: { theme: DefaultTheme } = {
     theme: {
         spacing: 4,
-        cardRadius: cardRadius,
+        cardRadius: ThemeStyleRadius.ROUNDED,
         cardRadius30: ThemeStyleRadius.MODERN,
         cardShadow: "0 0 5px 5px rgba(0,0,0,0.03)",
         direction: LayoutDirection.LTR, //ltr, rtl
@@ -170,6 +169,7 @@ export const defaultTheme: { theme: DefaultTheme } = {
         },
     },
 };
+
 const defaultConfig = {
     sidebar: {
         borderColor: "#757575",

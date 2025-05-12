@@ -5,6 +5,8 @@ export enum ThemeStyle {
 export enum ThemeStyleRadius {
     MODERN = "30px",
     STANDARD = "16px",
+    ROUNDED = "8px",
+    SEMI_ROUNDED = "4px",
 }
 export enum ThemeMode {
     LIGHT = "light",

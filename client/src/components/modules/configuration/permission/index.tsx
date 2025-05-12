@@ -1,7 +1,7 @@
 "use client";
 
 import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Card, Input, Select, Table, Typography } from "antd";
+import { Button, Card, DatePicker, Input, Select, Space, Table, Typography } from "antd";
 import { FC } from "react";
 
 const { Title } = Typography;
@@ -54,7 +54,11 @@ const Permissions: FC<IPermissions> = () => {
                     <Title level={3}>Permissions Management</Title>
                 </div>
 
-                <div className="mb-4 flex flex-wrap items-center gap-4">
+                <Space
+                    style={{
+                        marginBottom: 16,
+                    }}
+                >
                     <Input
                         allowClear
                         placeholder="Search permissions..."
@@ -62,13 +66,15 @@ const Permissions: FC<IPermissions> = () => {
                         style={{ width: 250 }}
                     />
 
+                    <DatePicker allowClear style={{ width: 300 }} format="YYYY-MM-DD" />
+
                     <Select allowClear placeholder="Filter by status" style={{ width: 150 }}>
                         <Option value="active">Active</Option>
                         <Option value="inactive">Inactive</Option>
                     </Select>
 
                     <Button icon={<ReloadOutlined />}>Refresh</Button>
-                </div>
+                </Space>
 
                 <Table columns={columns} dataSource={[]} rowKey="id" />
             </Card>
