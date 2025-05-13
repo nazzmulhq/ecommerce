@@ -15,14 +15,13 @@ export abstract class CoreEntity extends BaseEntity {
     id: number;
 
     @Column({ unique: true })
-    @Index()
     slug: string;
 
     @Column({ unique: true })
     name: string;
 
     @Column({ nullable: true })
-    bn_name: string;
+    message_id: string;
 
     @Column({ default: 1 })
     status: number;

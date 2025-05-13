@@ -10,7 +10,7 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AlowAllGuard, JwtAuthGuard } from 'modules/auth/jwt-auth.guard';
+import { AllowAllGuard, JwtAuthGuard } from 'modules/auth/jwt-auth.guard';
 import { AccessRoles } from 'modules/auth/role/role.decorator';
 import { RoleGuard } from 'modules/auth/role/role.guard';
 import { UserAndRequest } from 'types';
@@ -24,7 +24,8 @@ export class RouteController {
     constructor(private readonly routeService: RouteService) {}
 
     @Get('all')
-    @UseGuards(AlowAllGuard)
+    @ApiBearerAuth()
+    @UseGuards(AllowAllGuard)
     async findManyRouteByUserId(@Req() req: UserAndRequest) {
         try {
             const user = req.user;
@@ -47,31 +48,33 @@ export class RouteController {
     @UseGuards(JwtAuthGuard, RoleGuard)
     async create(
         @Req() req: UserAndRequest,
-        @Body() createRoleDto: CreateRouteDto,
+        @Body() createRouteDto: CreateRouteDto,
     ) {
         try {
-            await this.routeService.create(createRoleDto, req.user.id);
+            const result = await this.routeService.create(
+                createRouteDto,
+                req.user.id,
+            );
             return {
                 success: true,
+                data: result,
                 message: 'Route Created Successfully',
             };
         } catch (error) {
-            console.log(error);
+            console.error('Error creating route:', error);
             return {
                 success: false,
-                message: error.message,
+                message: error.message || 'Failed to create route',
             };
         }
     }
-    // @CacheKey('custom-key') // custom key
-    // @CacheTTL(30) // 30 seconds
+
     @Get()
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
         permission: [],
     })
-    // @UseInterceptors(CacheInterceptor)
     @UseGuards(JwtAuthGuard, RoleGuard)
     async findAll() {
         try {

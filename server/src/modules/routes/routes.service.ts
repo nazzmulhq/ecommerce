@@ -25,16 +25,29 @@ export class RouteService {
         const route = new Route();
         route.name = createRouteDto.name;
         route.path = createRouteDto.path;
+        route.message_id = createRouteDto.message_id;
+        route.type = createRouteDto.type;
+        route.icon = createRouteDto.icon;
+        route.position = createRouteDto.position;
         route.metadata = createRouteDto.metadata;
 
         // Allow multiple roots by making parent_id optional
         if (createRouteDto.parent_id) {
+            // Ensure parent_id is properly converted to number
+            const parentId =
+                typeof createRouteDto.parent_id === 'string'
+                    ? parseInt(createRouteDto.parent_id, 10)
+                    : createRouteDto.parent_id;
+
+            if (isNaN(parentId)) {
+                throw new Error('Invalid parent_id format');
+            }
+
             const parent = await this.routeRepository.findOne({
-                where: { id: createRouteDto.parent_id },
+                where: { id: parentId },
             });
             if (parent) {
                 route.parent = parent;
-                route.parent_id = parent.id;
             } else {
                 throw new Error('Parent route not found');
             }
@@ -80,8 +93,18 @@ export class RouteService {
         });
 
         if (updateRouteDto.parent_id) {
+            // Ensure parent_id is properly converted to number
+            const parentId =
+                typeof updateRouteDto.parent_id === 'string'
+                    ? parseInt(updateRouteDto.parent_id, 10)
+                    : updateRouteDto.parent_id;
+
+            if (isNaN(parentId)) {
+                throw new Error('Invalid parent_id format');
+            }
+
             const parent = await this.routeRepository.findOne({
-                where: { id: updateRouteDto.parent_id },
+                where: { id: parentId },
             });
             if (parent) {
                 route.parent = parent;
@@ -146,35 +169,43 @@ export class RouteService {
                 .createQueryBuilder('route')
                 .leftJoinAndSelect('route.permissions', 'permission')
                 .leftJoinAndSelect('route.children', 'children')
+                .leftJoinAndSelect('route.parent', 'parent')
+                .where('parent.id IS NULL')
+                .andWhere('route.deleted = 0')
+                .andWhere('parent.deleted = 0')
+                .andWhere('children.deleted = 0')
                 .where('permission.id IN (:...permissions)', { permissions })
                 .orWhere('route.type IN (:...types)', {
-                    types: ['guest', 'shared', 'devOnly'],
+                    types: ['guest', 'shared', 'devOnly', 'protected'],
                 })
                 .orderBy('route.position', 'ASC')
                 .addOrderBy('children.position', 'ASC')
                 .getMany();
 
-            return routes.map((route) => {
-                delete route.metadata;
-                return route;
-            });
+            return routes;
         } else {
             // only type guest shared and devOnly
             const routes = await this.routeRepository
                 .createQueryBuilder('route')
                 .leftJoinAndSelect('route.parent', 'parent')
                 .leftJoinAndSelect('route.children', 'children')
-                .where('route.type IN (:...types)', {
+                .leftJoinAndSelect('route.parent', 'parent')
+                .where('parent.id IS NULL')
+                .andWhere('route.deleted = 0')
+                .andWhere('parent.deleted = 0')
+                .andWhere('children.deleted = 0')
+                .andWhere('route.type IN (:...types)', {
                     types: ['guest', 'shared', 'devOnly'],
                 })
                 .orderBy('route.position', 'ASC')
                 .addOrderBy('children.position', 'ASC')
                 .getMany();
 
-            return routes.map((route) => {
-                delete route.metadata;
-                return route;
-            });
+            return routes;
         }
+    }
+
+    baseOnRouteMakeMenu(routes: Route[], parentId: number | null = null) {
+        // type of menu group,
     }
 }

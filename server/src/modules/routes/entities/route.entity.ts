@@ -22,11 +22,11 @@ export class Route extends CoreEntity {
     })
     type: string;
 
-    @Column({ nullable: true })
-    parent_id: null | number;
-
     @Column({ unique: true })
     path: string;
+
+    @Column({ default: null })
+    icon: string;
 
     @Column({ default: 0 })
     position: number;
@@ -54,6 +54,9 @@ export class Route extends CoreEntity {
     })
     permissions: Permission[];
 
+    @Column({ default: null })
+    parentId: number;
+
     @TreeParent()
     parent: Route;
 
@@ -65,25 +68,16 @@ export class Route extends CoreEntity {
 
     @BeforeInsert()
     async menuSubMenuAndDynamicRoute() {
-        // Menu is the root node
-        // Submenu is the child node of the menu
-        // If parent_id is 1, then it is a menu
-        // If parent_id is not 1, then it is a submenu
-        if (this.parent_id === 1) {
-            this.is_menu = true;
+        // Handle menu/submenu based on parent existence (root has no parent)
+        if (this.parent) {
+            this.is_menu = false;
+            this.is_sub_menu = true; // Direct child becomes submenu
         } else {
-            this.is_sub_menu = true;
+            this.is_menu = true; // No parent means it's a top-level menu
+            this.is_sub_menu = false;
         }
 
-        // Path is dynamic if it contains a parameter in square brackets
-        // e.g. /users/[id] or /users/[id]/posts/[postId]
-        // check if the path contains any square brackets
-        const regex = /\[(.*?)\]/g;
-        const matches = this.path.match(regex);
-        if (matches) {
-            this.is_dynamic_route = true;
-        } else {
-            this.is_dynamic_route = false;
-        }
+        // Determine dynamic route using regex test (safer than match)
+        this.is_dynamic_route = /\[.*?\]/.test(this.path || '');
     }
 }

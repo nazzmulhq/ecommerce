@@ -1,10 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
     IsArray,
-    IsJSON,
     IsNumber,
+    IsObject,
     IsOptional,
     IsString,
+    ValidateNested,
 } from 'class-validator';
 import { IMetaData } from 'types';
 
@@ -14,15 +16,16 @@ export class CreateRouteDto {
     @IsOptional()
     id: number;
 
-    @ApiProperty({ example: 'Home' })
+    @ApiProperty({ example: 'Root' })
     @IsString()
     name: string;
 
-    @ApiProperty({ example: 'Home' })
+    @ApiProperty({ example: 'route.root' })
     @IsString()
-    bn_name: string;
+    message_id: string;
 
-    @ApiProperty({ example: 1 })
+    @ApiProperty({ nullable: true })
+    @IsNumber()
     @IsOptional()
     parent_id: number;
 
@@ -35,12 +38,17 @@ export class CreateRouteDto {
     @IsOptional()
     type: string;
 
-    @ApiProperty({ example: 1 })
+    @ApiProperty({ nullable: true })
+    @IsString()
+    @IsOptional()
+    icon: string;
+
+    @ApiProperty({ example: 0 })
     @IsNumber()
     @IsOptional()
     position: number;
 
-    @ApiProperty({ example: [1, 2] })
+    @ApiProperty({ example: [1] })
     @IsArray()
     @IsOptional()
     permissions: number[];
@@ -48,16 +56,18 @@ export class CreateRouteDto {
     @ApiProperty({
         example: {
             title: {
-                default: 'Home',
-                template: 'Home - {{title}}',
+                default: 'Root',
+                template: 'Root - {{title}}',
                 absolute: 'https://example.com',
             },
-            description: 'This is the home page',
+            description: 'This is the root page',
         },
         description: 'Metadata for the route',
         required: false,
     })
-    @IsJSON()
+    @IsObject()
+    @ValidateNested()
+    @Type(() => Object)
     @IsOptional()
     metadata: IMetaData;
 
