@@ -3,8 +3,7 @@ import { Route } from 'modules/routes/entities/route.entity';
 import {
     Column,
     Entity,
-    JoinTable,
-    ManyToMany,
+    OneToMany,
     Tree,
     TreeChildren,
     TreeParent,
@@ -38,17 +37,6 @@ export class Menu extends CoreEntity {
     @TreeParent()
     parent: Menu;
 
-    @ManyToMany(() => Route, (route) => route.menus)
-    @JoinTable({
-        name: 'menu_has_routes',
-        joinColumn: {
-            name: 'menu_id',
-            referencedColumnName: 'id',
-        },
-        inverseJoinColumn: {
-            name: 'route_id',
-            referencedColumnName: 'id',
-        },
-    })
+    @OneToMany(() => Route, (route) => route.menus)
     routes: Route[];
 }
