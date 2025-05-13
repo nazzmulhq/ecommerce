@@ -1,5 +1,6 @@
 import { Permission } from 'modules/auth/permission/entities/permission.entity';
 import { CoreEntity } from 'modules/core.entity';
+import { Menu } from 'modules/menu/entities/menu.entity';
 import {
     BeforeInsert,
     Column,
@@ -53,6 +54,9 @@ export class Route extends CoreEntity {
         },
     })
     permissions: Permission[];
+
+    @ManyToMany(() => Menu, (menu) => menu.routes)
+    menus: Menu[];
 
     @Column({ default: null })
     parentId: number;
