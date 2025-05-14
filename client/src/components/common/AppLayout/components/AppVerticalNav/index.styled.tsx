@@ -62,7 +62,7 @@ export const StyledVerticalNav = styled(Menu)`
     & .ant-menu-item .ant-menu-title-content > a {
         display: flex;
         align-items: center;
-        background-color: inherit;
+        /* background-color: inherit; */
         font-weight: 500;
     }
 

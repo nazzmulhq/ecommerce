@@ -22,7 +22,7 @@ export class Route extends CoreEntity {
     })
     type: string;
 
-    @Column({ unique: true })
+    @Column({ default: null })
     path: string;
 
     @Column({ default: null })

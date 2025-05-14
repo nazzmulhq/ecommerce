@@ -190,12 +190,9 @@ export class RouteService {
             );
 
             // Apply permission filtering
-            this.applyPermissionFilters(
-                baseQuery,
-                user,
-                permissionIds,
-                publicTypes,
-            );
+            this.applyPermissionFilters(baseQuery, user, permissionIds, [
+                'protected',
+            ]);
 
             return baseQuery.getMany();
         } else {

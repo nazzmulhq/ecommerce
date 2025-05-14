@@ -506,6 +506,21 @@ export const GlobalStyles = createGlobalStyle`
     color: ${({ theme }) => theme.palette.text.primary} !important;
   } */
 
+    // Add to your GlobalStyles
+    .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+        background-color: ${({ theme }) => rgba(theme.palette.primary.main, 0.1)} !important;
+        color: ${({ theme }) => theme.palette.text.secondary} !important;
+    }
+
+    .ant-select-focused .ant-select-selector,
+    .ant-input-affix-wrapper-focused,
+    .ant-input-focused,
+    .ant-input-affix-wrapper:focus,
+    .ant-input:focus {
+        border-color: ${({ theme }) => theme.palette.primary.main} !important;
+        box-shadow: 0 0 0 2px ${({ theme }) => rgba(theme.palette.primary.main, 0.2)} !important;
+    }
+
   .ant-input::placeholder {
     color: ${({ theme }) => theme.palette.text.secondary} !important;
   }

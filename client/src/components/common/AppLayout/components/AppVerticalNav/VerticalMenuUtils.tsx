@@ -1,4 +1,6 @@
+import { isArrayOrObjectEmpty } from "@lib/utils/Common";
 import { RouterConfigData } from "@src/types/Apps";
+import { MenuProps } from "antd";
 import Link from "next/link";
 import React from "react";
 import { MessageFormatElement } from "react-intl";
@@ -76,4 +78,62 @@ export const getRouteMenus = (
     messages: Record<string, string> | Record<string, MessageFormatElement[]>,
 ) => {
     return routesConfig.map(route => renderMenu(route, messages));
+};
+
+interface IRouteItem {
+    slug: string;
+    name: string;
+    icon?: React.ReactNode;
+    message_id: string;
+    path: string;
+    type?: string;
+    children?: IRouteItem[];
+}
+export type TMenuItem = Required<MenuProps>["items"][number];
+
+/**
+ * Recursively traverses the route configuration and returns all nested items as a flat array
+ * @param routes - The route configuration to traverse
+ * @returns A flattened array containing all route items at any nesting level
+ */
+export const getMenuItems = (routes: IRouteItem[]): TMenuItem[] => {
+    return routes?.map(item => {
+        if (!isArrayOrObjectEmpty(item.children)) {
+            return {
+                key: item.slug,
+                icon:
+                    item.icon &&
+                    (React.isValidElement(item.icon) ? (
+                        <span className="ant-menu-item-icon">{item.icon}</span>
+                    ) : (
+                        <span className="ant-menu-item-icon" />
+                    )),
+                label: item.path ? (
+                    <Link href={item.path}>
+                        <span data-testid={item.message_id.toLowerCase() + "-nav"}>{item.name}</span>
+                    </Link>
+                ) : (
+                    <span data-testid={item.message_id.toLowerCase() + "-nav"}>{item.name}</span>
+                ),
+                children: getMenuItems(item.children as IRouteItem[]),
+            };
+        }
+        return {
+            key: item.slug,
+            icon:
+                item.icon &&
+                (React.isValidElement(item.icon) ? (
+                    <span className="ant-menu-item-icon">{item.icon}</span>
+                ) : (
+                    <span className="ant-menu-item-icon" />
+                )),
+            label: item.path ? (
+                <Link href={item.path}>
+                    <span data-testid={item.message_id.toLowerCase() + "-nav"}>{item.name}</span>
+                </Link>
+            ) : (
+                <span data-testid={item.message_id.toLowerCase() + "-nav"}>{item.name}</span>
+            ),
+        };
+    });
 };

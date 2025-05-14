@@ -1,3 +1,5 @@
+import { getCookie } from "@lib/actions";
+import { getRoutes } from "@lib/actions/auth/login";
 import { MenuStyle, ThemeMode } from "@lib/constants/AppEnums";
 import defaultConfig from "@lib/constants/defaultConfig";
 import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
@@ -8,7 +10,7 @@ import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useIntl } from "react-intl";
 import { StyledVerticalNav } from "./index.styled";
-import { getRouteMenus } from "./VerticalMenuUtils";
+import { getMenuItems, TMenuItem } from "./VerticalMenuUtils";
 
 type Props = {
     routesConfig: RouterConfigData[];
@@ -19,6 +21,7 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
     const { themeMode } = useThemeContext();
     const pathname = usePathname();
     const selectedKeys = pathname.substr(1);
+    const [menuItems, setMenuItems] = useState<TMenuItem[]>([]);
     const [openKeys, setOpenKeys] = useState([selectedKeys?.[0]]);
     const defaultOpenKeys = selectedKeys?.split("/")[1];
 
@@ -31,21 +34,42 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
     }, [pathname]);
 
     const onOpenChange = (keys: string[]) => {
-        const latestOpenKey = keys.find((key: string) => openKeys.indexOf(key) === -1);
-        setOpenKeys(latestOpenKey ? [latestOpenKey] : []);
+        // If the current key array contains a key that isn't in the previous state,
+        // add it to openKeys
+        if (keys.length > openKeys.length) {
+            setOpenKeys(keys);
+        } else {
+            // If we're closing a submenu (clicking on an already open one)
+            const latestClosedKey = openKeys.find((key: string) => keys.indexOf(key) === -1);
+            if (latestClosedKey) {
+                // Filter out the key that was just closed
+                setOpenKeys(openKeys.filter((key: string) => key !== latestClosedKey));
+            } else {
+                // If keys is empty, close all
+                setOpenKeys(keys);
+            }
+        }
     };
 
     const { messages } = useIntl();
 
-    // Convert the menu items to the correct type
-    const menuItems = React.useMemo(() => {
-        try {
-            return getRouteMenus(routesConfig, messages);
-        } catch (error) {
-            console.error("Error generating menu items:", error);
-            return [];
-        }
-    }, [routesConfig, messages]);
+    useEffect(() => {
+        const fetchMenuItems = async () => {
+            try {
+                const token = await getCookie("token");
+                const response = await getRoutes(token, "nested", "client");
+                const formatMenuItems = getMenuItems(response);
+                console.log("Formatted Menu Items:", formatMenuItems);
+                if (response) {
+                    setMenuItems(formatMenuItems);
+                }
+            } catch (error) {
+                console.error("Error fetching menu items:", error);
+            }
+        };
+
+        fetchMenuItems();
+    }, []);
 
     return (
         <StyledVerticalNav
@@ -68,8 +92,7 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
             mode="inline"
             onOpenChange={onOpenChange}
             openKeys={openKeys}
-            // selectedKeys={selectedKeys.split("/")}
-            selectedKeys={[selectedKeys[selectedKeys.length - 1]]}
+            selectedKeys={selectedKeys.split("/")}
             theme={themeMode === ThemeMode.DARK ? ThemeMode.DARK : ThemeMode.LIGHT}
         />
     );
