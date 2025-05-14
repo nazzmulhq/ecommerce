@@ -6,6 +6,7 @@ import {
     Param,
     Patch,
     Post,
+    Query,
     Req,
     UseGuards,
 } from '@nestjs/common';
@@ -26,10 +27,16 @@ export class RouteController {
     @Get('all')
     @ApiBearerAuth()
     @UseGuards(AllowAllGuard)
-    async findManyRouteByUserId(@Req() req: UserAndRequest) {
+    async findManyRouteByUserId(
+        @Req() req: UserAndRequest,
+        @Query('type') type: 'plain' | 'nested',
+    ) {
         try {
             const user = req.user;
-            return await this.routeService.findAllRoutesWithPermissions(user);
+            return await this.routeService.findAllRoutesWithPermissions(
+                user,
+                type,
+            );
         } catch (error) {
             console.error('Error fetching routes:', error.message);
             return {

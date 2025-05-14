@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { IRoute } from "./types/basic";
 
-const afterLoginRedirectRoute = "/permission";
+const afterLoginRedirectRoute = "/permissions";
 
 /**
  * Regular expression to match public files like images, CSS, JS, etc.
@@ -51,7 +51,7 @@ export async function middleware(req: NextRequest) {
     }
 
     // Fetch authorized routes for the current user based on their token
-    const allRoute: IRoute[] = await getRoutes(token);
+    const allRoute: IRoute[] = await getRoutes(token, "plain");
 
     // If no routes are available, user is not authenticated - redirect to login
     if (allRoute && allRoute.length === 0) {

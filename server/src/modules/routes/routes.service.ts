@@ -2,7 +2,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Permission } from 'modules/auth/permission/entities/permission.entity';
-import { In, Repository } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { ExtendedCache, IUser } from 'types';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
@@ -159,53 +159,162 @@ export class RouteService {
         return routes;
     }
 
-    async findAllRoutesWithPermissions(user: IUser): Promise<Route[]> {
-        if (user) {
-            // if user is logged in, get all routes with permissions
-            const permissions = user.roles
-                .flatMap((role) => role.permissions)
-                .map((permission) => permission.id);
-            const routes = await this.routeRepository
+    async findAllRoutesWithPermissions(
+        user: IUser,
+        type: 'plain' | 'nested' = 'nested',
+    ): Promise<Route[]> {
+        // Common constants
+        const publicTypes = ['guest', 'shared', 'devOnly'];
+
+        // Get user permissions if available
+        const permissionIds =
+            user?.roles
+                ?.flatMap((role) => role.permissions)
+                .map((permission) => permission.id) || [];
+
+        if (type === 'nested') {
+            const baseQuery = this.routeRepository
                 .createQueryBuilder('route')
-                .leftJoinAndSelect('route.permissions', 'permission')
                 .leftJoinAndSelect('route.children', 'children')
-                .leftJoinAndSelect('route.parent', 'parent')
-                .where('parent.id IS NULL')
+                .leftJoinAndSelect('children.children', 'grandchildren')
                 .andWhere('route.deleted = 0')
-                .andWhere('parent.deleted = 0')
-                .andWhere('children.deleted = 0')
-                .where('permission.id IN (:...permissions)', { permissions })
-                .orWhere('route.type IN (:...types)', {
-                    types: ['guest', 'shared', 'devOnly', 'protected'],
-                })
+                .andWhere('route.parentId IS NULL') // Only get top-level routes
                 .orderBy('route.position', 'ASC')
                 .addOrderBy('children.position', 'ASC')
-                .getMany();
+                .addOrderBy('grandchildren.position', 'ASC');
 
-            return routes;
+            // Filter out deleted children and grandchildren
+            baseQuery.andWhere('(children.id IS NULL OR children.deleted = 0)');
+            baseQuery.andWhere(
+                '(grandchildren.id IS NULL OR grandchildren.deleted = 0)',
+            );
+
+            // Apply permission filtering
+            this.applyPermissionFilters(
+                baseQuery,
+                user,
+                permissionIds,
+                publicTypes,
+            );
+
+            return baseQuery.getMany();
         } else {
-            // only type guest shared and devOnly
-            const routes = await this.routeRepository
+            // Plain list of routes - includes all routes with their metadata
+            // but doesn't create a nested structure
+            const baseQuery = this.routeRepository
                 .createQueryBuilder('route')
-                .leftJoinAndSelect('route.parent', 'parent')
-                .leftJoinAndSelect('route.children', 'children')
-                .leftJoinAndSelect('route.parent', 'parent')
-                .where('parent.id IS NULL')
+                .select([
+                    'route.id',
+                    'route.name',
+                    'route.slug',
+                    'route.message_id',
+                    'route.type',
+                    'route.path',
+                    'route.icon',
+                    'route.position',
+                    'route.is_menu',
+                    'route.is_sub_menu',
+                    'route.is_dynamic_route',
+                    'route.metadata',
+                    'route.parentId',
+                ])
                 .andWhere('route.deleted = 0')
-                .andWhere('parent.deleted = 0')
-                .andWhere('children.deleted = 0')
-                .andWhere('route.type IN (:...types)', {
-                    types: ['guest', 'shared', 'devOnly'],
-                })
-                .orderBy('route.position', 'ASC')
-                .addOrderBy('children.position', 'ASC')
-                .getMany();
+                .andWhere('route.parentId IS NOT NULL') // Exclude root routes
+                .orderBy('route.position', 'ASC');
 
-            return routes;
+            // Apply permission filtering for plain list
+            if (user) {
+                if (permissionIds.length > 0) {
+                    baseQuery
+                        .leftJoin('route.permissions', 'routePermission')
+                        .andWhere(
+                            'routePermission.id IN (:...permissionIds) OR route.type IN (:...publicTypes)',
+                            { permissionIds, publicTypes },
+                        );
+                } else {
+                    // User without permissions - only return public routes
+                    baseQuery.andWhere('route.type IN (:...types)', {
+                        types: publicTypes,
+                    });
+                }
+            } else {
+                // Unauthenticated user - only return public routes
+                baseQuery.andWhere('route.type IN (:...types)', {
+                    types: publicTypes,
+                });
+            }
+
+            return baseQuery.getMany();
         }
     }
 
-    baseOnRouteMakeMenu(routes: Route[], parentId: number | null = null) {
-        // type of menu group,
+    // Helper method to apply permission filters for nested queries
+    private applyPermissionFilters(
+        baseQuery: SelectQueryBuilder<Route>,
+        user: IUser | null,
+        permissionIds: number[],
+        publicTypes: string[],
+    ): void {
+        if (user) {
+            if (permissionIds.length > 0) {
+                // For authenticated users with permissions
+                baseQuery
+                    .leftJoin('route.permissions', 'routePermission')
+                    .leftJoin('children.permissions', 'childPermission')
+                    .leftJoin(
+                        'grandchildren.permissions',
+                        'grandchildPermission',
+                    )
+                    .andWhere(
+                        '(routePermission.id IN (:...routePermIds) OR route.type IN (:...routeTypes))',
+                        {
+                            routePermIds: permissionIds,
+                            routeTypes: publicTypes,
+                        },
+                    )
+                    .andWhere(
+                        '(children.id IS NULL OR childPermission.id IN (:...childPermIds) OR children.type IN (:...childTypes))',
+                        {
+                            childPermIds: permissionIds,
+                            childTypes: publicTypes,
+                        },
+                    )
+                    .andWhere(
+                        '(grandchildren.id IS NULL OR grandchildPermission.id IN (:...grandPermIds) OR grandchildren.type IN (:...grandTypes))',
+                        {
+                            grandPermIds: permissionIds,
+                            grandTypes: publicTypes,
+                        },
+                    );
+            } else {
+                // User is authenticated but has no permissions
+                baseQuery
+                    .andWhere('route.type IN (:...routeTypes)', {
+                        routeTypes: publicTypes,
+                    })
+                    .andWhere(
+                        '(children.id IS NULL OR children.type IN (:...childTypes))',
+                        { childTypes: publicTypes },
+                    )
+                    .andWhere(
+                        '(grandchildren.id IS NULL OR grandchildren.type IN (:...grandTypes))',
+                        { grandTypes: publicTypes },
+                    );
+            }
+        } else {
+            // For unauthenticated users
+            baseQuery
+                .andWhere('route.type IN (:...routeTypes)', {
+                    routeTypes: publicTypes,
+                })
+                .andWhere(
+                    '(children.id IS NULL OR children.type IN (:...childTypes))',
+                    { childTypes: publicTypes },
+                )
+                .andWhere(
+                    '(grandchildren.id IS NULL OR grandchildren.type IN (:...grandTypes))',
+                    { grandTypes: publicTypes },
+                );
+        }
     }
 }

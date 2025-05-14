@@ -12,8 +12,8 @@ export async function getUserInfo(token: string) {
     return res.json();
 }
 
-export async function getRoutes(token: string | null | undefined) {
-    const res = await fetch(`${process.env.API_URL}/route/all`, {
+export async function getRoutes(token: string | null | undefined, type: "plain" | "nested" = "nested") {
+    const res = await fetch(`${process.env.API_URL}/route/all?type=${type}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
