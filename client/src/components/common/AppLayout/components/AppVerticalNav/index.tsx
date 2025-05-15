@@ -33,7 +33,7 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
         }
     }, [pathname]);
 
-    const onOpenChange = (keys: string[]) => {
+    const onOpenChange = (keys: string[]): void => {
         // If the current key array contains a key that isn't in the previous state,
         // add it to openKeys
         if (keys.length > openKeys.length) {

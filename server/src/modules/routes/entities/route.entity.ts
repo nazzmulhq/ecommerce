@@ -80,4 +80,22 @@ export class Route extends CoreEntity {
         // Determine dynamic route using regex test (safer than match)
         this.is_dynamic_route = /\[.*?\]/.test(this.path || '');
     }
+
+    @BeforeInsert()
+    async generateSlug() {
+        if (this.path && this.path !== '/') {
+            const paths = this.path.split('/');
+            const lastSegment = paths[paths.length - 1];
+
+            // Check if it's a dynamic route segment with square brackets
+            if (lastSegment.startsWith('[') && lastSegment.endsWith(']')) {
+                // Extract the parameter name without square brackets
+                this.slug = lastSegment.substring(1, lastSegment.length - 1);
+            } else {
+                this.slug = lastSegment;
+            }
+        } else {
+            this.slug = this.name.toLowerCase().replace(/ /g, '-');
+        }
+    }
 }
