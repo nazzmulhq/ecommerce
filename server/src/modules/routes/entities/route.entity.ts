@@ -77,16 +77,16 @@ export class Route extends CoreEntity {
             this.is_sub_menu = false;
         }
 
-        // Determine dynamic route using regex test (safer than match)
-        this.is_dynamic_route = /\[.*?\]/.test(this.path || '');
+        // Determine dynamic route using regex test for any segment containing configuration/users/:id/profile
+
+        this.is_dynamic_route = this.path.includes(':');
     }
 
     @BeforeInsert()
     async generateSlug() {
         if (this.path && this.path !== '/') {
-            const paths = this.path.split('/');
+            const paths = this.path.split('/').filter(Boolean); // Remove empty segments
             const lastSegment = paths[paths.length - 1];
-
             // Check if it's a dynamic route segment with square brackets
             if (lastSegment.startsWith('[') && lastSegment.endsWith(']')) {
                 // Extract the parameter name without square brackets

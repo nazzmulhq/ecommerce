@@ -25,6 +25,40 @@ const afterLoginNotVisitedRoutes = [
 ];
 
 /**
+ * Function to check if a path matches a route pattern
+ * Supports dynamic segments with ':param' syntax
+ *
+ * @param {string} path - The actual path from the request
+ * @param {string} pattern - Route pattern that may contain dynamic segments
+ * @returns {boolean} Whether the path matches the pattern
+ */
+const matchesPattern = (path: string, pattern: string) => {
+    // Split both into segments
+    const pathSegments = path.split("/").filter(Boolean);
+    const patternSegments = pattern.split("/").filter(Boolean);
+
+    // If segment counts don't match, it's not a match
+    if (pathSegments.length !== patternSegments.length) {
+        return false;
+    }
+
+    // Check each segment
+    for (let i = 0; i < pathSegments.length; i++) {
+        // If pattern segment starts with ':', it's a parameter and always matches
+        if (patternSegments[i].startsWith(":")) {
+            continue;
+        }
+
+        // Otherwise segments must match exactly
+        if (pathSegments[i] !== patternSegments[i]) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+/**
  * Next.js middleware function to handle:
  * - Locale detection and redirection
  * - Authentication checks
@@ -37,6 +71,7 @@ const afterLoginNotVisitedRoutes = [
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
+    console.log("Middleware triggered for path:", pathname);
     // Skip middleware for Next.js internal routes, API routes, public files, and .well-known paths
     if (
         pathname.startsWith("/_next") ||
@@ -49,8 +84,15 @@ export async function middleware(req: NextRequest) {
 
     const token = req.cookies.get("token")?.value;
 
-    // Redirect authenticated users away from auth pages (login, register, etc.)
-    if (token && afterLoginNotVisitedRoutes.includes(pathname)) {
+    // Check if current path matches any of the after-login-not-visited routes
+    const shouldRedirectAfterLogin = afterLoginNotVisitedRoutes.some(route => {
+        // Handle routes with dynamic segments by replacing [param] with :param format
+        const routePattern = route.replace(/\[([^\]]+)\]/g, ":$1");
+        return matchesPattern(pathname, routePattern);
+    });
+
+    // Redirect authenticated users away from auth pages
+    if (token && shouldRedirectAfterLogin) {
         const redirectUrl = new URL(afterLoginRedirectRoute, req.url);
         return NextResponse.redirect(redirectUrl);
     }
@@ -61,17 +103,25 @@ export async function middleware(req: NextRequest) {
     // If no routes are available, user is not authenticated - redirect to login
     if (allRoute && allRoute.length === 0) {
         const redirectUrl = new URL("/login", req.url);
-
         return NextResponse.redirect(redirectUrl);
     }
 
     // Check if the requested route is in the user's allowed routes
-    const isRouteExists = allRoute.some(route => route.path === pathname);
+    // Use pattern matching to support dynamic routes
+    const isRouteExists = allRoute.some(route => {
+        // Check if route and route.path exist
+        if (!route || !route.path) {
+            return false;
+        }
+
+        // Convert route path to pattern format (if it contains dynamic segments)
+        const routePattern = route.path.replace(/\[([^\]]+)\]/g, ":$1");
+        return matchesPattern(pathname, routePattern);
+    });
 
     // If route is not allowed for this user, redirect to login
     if (!isRouteExists) {
         const redirectUrl = new URL("/login", req.url);
-
         return NextResponse.redirect(redirectUrl);
     }
 

@@ -13,6 +13,7 @@ import { AppModule } from './modules/app.module';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
+    console.log('Starting server...', new Date().getDate());
 
     // Enable CORS
     app.enableCors({
