@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { IRoute } from "./types/basic";
 
-const afterLoginRedirectRoute = "/permissions";
+const afterLoginRedirectRoute = "/configuration/permissions";
 
 /**
  * Regular expression to match public files like images, CSS, JS, etc.
@@ -37,8 +37,13 @@ const afterLoginNotVisitedRoutes = [
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // Skip middleware for Next.js internal routes, API routes, and public files
-    if (pathname.startsWith("/_next") || pathname.startsWith("/api") || PUBLIC_FILE.test(pathname)) {
+    // Skip middleware for Next.js internal routes, API routes, public files, and .well-known paths
+    if (
+        pathname.startsWith("/_next") ||
+        pathname.startsWith("/api") ||
+        PUBLIC_FILE.test(pathname) ||
+        pathname.startsWith("/.well-known")
+    ) {
         return NextResponse.next();
     }
 

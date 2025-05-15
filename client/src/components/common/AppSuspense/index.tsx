@@ -1,15 +1,13 @@
-import React, { ReactNode } from "react";
+"use client";
+import React, { ReactNode, Suspense } from "react";
 import AppLoader from "../AppLoader";
 
-type AppSuspenseProps = {
+interface AppSuspenseProps {
     children: ReactNode;
-    loadingProps?: {
-        delay: number;
-    };
-};
+}
 
 const AppSuspense: React.FC<AppSuspenseProps> = ({ children }) => {
-    return <React.Suspense fallback={<AppLoader />}>{children}</React.Suspense>;
+    return <Suspense fallback={<AppLoader />}>{children}</Suspense>;
 };
 
 export default AppSuspense;

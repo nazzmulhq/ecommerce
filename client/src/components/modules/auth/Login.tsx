@@ -1,3 +1,4 @@
+import { initialUrl } from "@lib/constants/AppConst";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import { redirect, RedirectType } from "next/navigation";
@@ -77,7 +78,7 @@ export default function Login({ searchParams }: { searchParams: { error?: string
             path: "/",
         });
 
-        redirect("/permission", RedirectType.push);
+        redirect(initialUrl, RedirectType.push);
     }
 
     return (

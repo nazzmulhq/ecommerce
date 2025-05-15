@@ -22,7 +22,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const selectedNavStyle = navStyle && Layouts[navStyle] ? navStyle : NavStyle.STANDARD;
 
     // Log the navStyle to help with debugging
-    console.log("Current navStyle:", navStyle, "Available layouts:", Object.keys(Layouts));
 
     // Get the Layout component safely with fallback to a default layout
     const Layout = Layouts[selectedNavStyle] || Layouts[NavStyle.STANDARD];
