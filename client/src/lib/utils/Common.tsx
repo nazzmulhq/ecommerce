@@ -91,14 +91,17 @@ export const generateRandomUniqueNumber = (): number => {
 };
 
 export const isArrayOrObjectEmpty = (value: any) => {
+    if (value === null || value === undefined) {
+        return true;
+    }
     // Check if the value is null or undefined
     if (Array.isArray(value)) {
         return value.length === 0;
     }
     // Check if the value is an object and not null
-    if (typeof value === "object" && value !== null) {
+    if (typeof value === "object") {
         // Check if the object has no own properties key and value also any value nullable undefined
         return Object.keys(value).length === 0 || Object.values(value).every(val => val === null || val === undefined);
     }
-    return false;
+    return true;
 };

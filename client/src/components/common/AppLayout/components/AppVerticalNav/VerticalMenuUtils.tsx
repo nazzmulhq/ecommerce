@@ -88,52 +88,66 @@ interface IRouteItem {
     path: string;
     type?: string;
     children?: IRouteItem[];
+    parentId: string | null;
 }
 export type TMenuItem = Required<MenuProps>["items"][number];
 
 /**
  * Recursively traverses the route configuration and returns all nested items as a flat array
  * @param routes - The route configuration to traverse
+ * @param isAuthenticated - Flag to determine if user is authenticated
  * @returns A flattened array containing all route items at any nesting level
  */
-export const getMenuItems = (routes: IRouteItem[]): TMenuItem[] => {
-    return routes?.map(item => {
-        if (!isArrayOrObjectEmpty(item.children)) {
-            return {
-                key: item.slug,
-                icon:
-                    item.icon &&
-                    (React.isValidElement(item.icon) ? (
-                        <span className="ant-menu-item-icon">{item.icon}</span>
-                    ) : (
-                        <span className="ant-menu-item-icon" />
-                    )),
-                label: item.path ? (
-                    <Link href={item.path}>
-                        <span data-testid={item.message_id.toLowerCase() + "-nav"}>{item.name}</span>
-                    </Link>
-                ) : (
-                    <span data-testid={item.message_id.toLowerCase() + "-nav"}>{item.name}</span>
-                ),
-                children: getMenuItems(item.children as IRouteItem[]),
-            };
+export const getMenuItems = (routes: IRouteItem[], isAuthenticated: boolean = false): TMenuItem[] => {
+    if (!routes || routes.length === 0) {
+        return [];
+    }
+
+    // Filter out root items but keep their children
+    const filteredRoutes = routes.flatMap(item => {
+        if (item.parentId === null) {
+            return item.children || [];
         }
-        return {
-            key: item.slug,
-            icon:
+        return [item];
+    });
+
+    return filteredRoutes
+        .filter(item => {
+            // Filter out protected routes if user is not authenticated
+            return item.type === "protected";
+        })
+        .map(item => {
+            // Create the icon element once to avoid repetition
+            const iconElement =
                 item.icon &&
                 (React.isValidElement(item.icon) ? (
                     <span className="ant-menu-item-icon">{item.icon}</span>
                 ) : (
                     <span className="ant-menu-item-icon" />
-                )),
-            label: item.path ? (
+                ));
+
+            // Create the label element once to avoid repetition
+            const labelElement = item.path ? (
                 <Link href={item.path}>
-                    <span data-testid={item.message_id.toLowerCase() + "-nav"}>{item.name}</span>
+                    <span data-testid={`${item.message_id.toLowerCase()}-nav`}>{item.name}</span>
                 </Link>
             ) : (
-                <span data-testid={item.message_id.toLowerCase() + "-nav"}>{item.name}</span>
-            ),
-        };
-    });
+                <span data-testid={`${item.message_id.toLowerCase()}-nav`}>{item.name}</span>
+            );
+
+            // Base menu item properties
+            const menuItem: TMenuItem = {
+                key: item.slug,
+                icon: iconElement,
+                label: labelElement,
+            };
+
+            if (!isArrayOrObjectEmpty(item.children)) {
+                return {
+                    ...menuItem,
+                    children: getMenuItems(item.children as IRouteItem[], isAuthenticated),
+                };
+            }
+            return menuItem;
+        });
 };
