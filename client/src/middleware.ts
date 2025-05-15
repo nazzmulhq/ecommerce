@@ -121,7 +121,7 @@ export async function middleware(req: NextRequest) {
 
     // If route is not allowed for this user, redirect to login
     if (!isRouteExists) {
-        const redirectUrl = new URL("/login", req.url);
+        const redirectUrl = new URL("/configuration/forbidden", req.url);
         return NextResponse.redirect(redirectUrl);
     }
 
