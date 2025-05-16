@@ -20,10 +20,8 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
     const { menuStyle, sidebarColorSet } = useSidebarContext();
     const { themeMode } = useThemeContext();
     const pathname = usePathname();
-    const selectedKeys = pathname.substr(1);
     const [menuItems, setMenuItems] = useState<TMenuItem[]>([]);
-    const [openKeys, setOpenKeys] = useState([selectedKeys?.[0]]);
-    const defaultOpenKeys = selectedKeys?.split("/")[1];
+    const [openKeys, setOpenKeys] = useState(pathname.split("/").splice(1));
 
     useEffect(() => {
         if (pathname && document.getElementById(pathname)) {
@@ -70,7 +68,8 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
 
         fetchMenuItems();
     }, []);
-
+    console.log("openKeys", openKeys);
+    console.log("selectedKeys", pathname);
     return (
         <StyledVerticalNav
             className={clsx({
@@ -86,13 +85,13 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
                 "menu-rounded curved-menu": menuStyle === MenuStyle.CURVED_MENU,
             })}
             color={sidebarColorSet?.sidebarMenuSelectedTextColor}
-            defaultOpenKeys={[defaultOpenKeys]}
-            defaultSelectedKeys={[selectedKeys[selectedKeys.length - 1]]}
+            defaultOpenKeys={[pathname]}
+            defaultSelectedKeys={[pathname]}
             items={menuItems as any} // Using type assertion as a temporary solution
             mode="inline"
             onOpenChange={onOpenChange}
             openKeys={openKeys}
-            selectedKeys={selectedKeys.split("/")}
+            selectedKeys={pathname.split("/")}
             theme={themeMode === ThemeMode.DARK ? ThemeMode.DARK : ThemeMode.LIGHT}
         />
     );
