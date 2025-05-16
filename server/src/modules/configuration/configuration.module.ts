@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as redisStore from 'cache-manager-redis-store';
+import { PaginationModule } from 'modules/pagination/pagination.module';
 import { RabbitmqModule } from 'modules/rabbitmq/rabbitmq.module';
 import {
     WinstonModule,
@@ -47,6 +48,7 @@ import * as winston from 'winston';
         }),
 
         RabbitmqModule,
+        PaginationModule,
     ],
 })
 export class ConfigurationModule {}
