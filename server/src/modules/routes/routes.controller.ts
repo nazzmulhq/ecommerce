@@ -124,6 +124,17 @@ export class RouteController {
         permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
+    @Get('metadata/:slug')
+    async getMetadataBySlug(@Param('slug') slug: string) {
+        return await this.routeService.getMetadataBySlug(slug);
+    }
+
+    @ApiBearerAuth()
+    @AccessRoles({
+        roles: ['admin'],
+        permission: [],
+    })
+    @UseGuards(JwtAuthGuard, RoleGuard)
     @Patch(':id')
     update(
         @Req() req: UserAndRequest,

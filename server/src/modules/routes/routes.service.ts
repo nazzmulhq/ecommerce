@@ -84,11 +84,23 @@ export class RouteService {
         return [route, total];
     }
 
-    findOne(id: string) {
-        return this.routeRepository.findOne({
+    async findOne(id: string) {
+        return await this.routeRepository.findOne({
             where: { id: +id },
             relations: ['permissions', 'parent', 'children'],
         });
+    }
+
+    async getMetadataBySlug(slug: string) {
+        const route = await this.routeRepository.findOne({
+            where: { slug },
+        });
+
+        if (!route) {
+            throw new Error('Route not found');
+        }
+
+        return route.metadata;
     }
 
     async update(id: string, updateRouteDto: UpdateRouteDto, userId: number) {
