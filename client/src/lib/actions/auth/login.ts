@@ -9,7 +9,9 @@ export async function getUserInfo(token: string) {
     if (!res.ok) {
         throw new Error("Failed to fetch user info");
     }
-    return res.json();
+
+    const { data } = await res.json();
+    return data;
 }
 
 export async function getRoutes(
@@ -28,5 +30,7 @@ export async function getRoutes(
         },
     );
 
-    return res.json();
+    const { data } = await res.json();
+
+    return data;
 }

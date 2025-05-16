@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Col, Input, message, Row, Space, Table } from "antd";
+import { Button, Card, Col, Input, message, Row, Space, Table } from "antd";
 import { ChangeEvent, FC, useEffect, useState } from "react";
 
 export interface II18n {
@@ -260,44 +260,51 @@ const I18n: FC = () => {
     }, [refetch]);
 
     return (
-        <Row gutter={24} justify="end">
-            <Col span={4}>
-                <Space>
-                    <Button htmlType="submit" onClick={onSave} type="primary">
-                        Save I18n
-                    </Button>
-                    <Button
-                        htmlType="button"
-                        onClick={() => {
-                            const newI18nData = [
-                                {
-                                    id: `${Date.now()}-${Math.random()}`,
-                                    title: "",
-                                    en: "",
-                                    bn: "",
-                                },
-                                ...i18nData,
-                            ];
-                            setI18nData(newI18nData);
+        <Card
+            title="Language"
+            extra={
+                <>
+                    <Space>
+                        <Button htmlType="submit" onClick={onSave} type="primary">
+                            Save I18n
+                        </Button>
+                        <Button
+                            htmlType="button"
+                            onClick={() => {
+                                const newI18nData = [
+                                    {
+                                        id: `${Date.now()}-${Math.random()}`,
+                                        title: "",
+                                        en: "",
+                                        bn: "",
+                                    },
+                                    ...i18nData,
+                                ];
+                                setI18nData(newI18nData);
+                            }}
+                            type="primary"
+                        >
+                            Add New
+                        </Button>
+                    </Space>
+                </>
+            }
+        >
+            <Row gutter={24} justify="end">
+                <Col span={24}>
+                    <Table
+                        id="i18n-table"
+                        bordered
+                        columns={columns}
+                        dataSource={i18nData}
+                        size="small"
+                        style={{
+                            marginTop: "10px",
                         }}
-                        type="primary"
-                    >
-                        Add New
-                    </Button>
-                </Space>
-            </Col>
-            <Col span={24}>
-                <Table
-                    bordered
-                    columns={columns}
-                    dataSource={i18nData}
-                    size="small"
-                    style={{
-                        marginTop: "10px",
-                    }}
-                />
-            </Col>
-        </Row>
+                    />
+                </Col>
+            </Row>
+        </Card>
     );
 };
 

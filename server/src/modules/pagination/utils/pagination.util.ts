@@ -47,7 +47,7 @@ export function createPaginationResponse<T>(
 
     // Create response object
     const response: PaginatedResponse<T> = {
-        data: transformedItems,
+        list: transformedItems,
         meta,
     };
 

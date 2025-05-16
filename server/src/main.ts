@@ -6,6 +6,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import basicAuth from 'express-basic-auth';
 import * as hbs from 'express-handlebars';
 import { ExpiredFilter } from 'modules/auth/jwt-auth.filter';
+import { GlobalExceptionFilter } from 'modules/configuration/http-exception.filter';
+import { TransformInterceptor } from 'modules/configuration/transform.interceptor';
 import { LoggingService } from 'modules/log/logging.service';
 import { join } from 'path';
 import { ExtendedCache } from 'types';
@@ -13,7 +15,6 @@ import { AppModule } from './modules/app.module';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
-    console.log('Starting server...', new Date().getDate());
 
     // Enable CORS
     app.enableCors({
@@ -35,6 +36,7 @@ async function bootstrap() {
             },
         }),
     );
+
     const config = new DocumentBuilder()
         .setTitle('Ecommerce API')
         .setDescription('The Ecommerce API description')
@@ -50,6 +52,12 @@ async function bootstrap() {
         app,
         document,
     );
+
+    // Apply global interceptor for success responses
+    app.useGlobalInterceptors(new TransformInterceptor());
+
+    // Apply global filter for error responses
+    app.useGlobalFilters(new GlobalExceptionFilter());
 
     const cacheManager = app.get<ExtendedCache>(CACHE_MANAGER);
     const loggingService = app.get<LoggingService>(LoggingService);

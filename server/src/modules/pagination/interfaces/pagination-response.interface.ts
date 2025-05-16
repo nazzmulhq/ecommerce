@@ -19,7 +19,7 @@ export interface PaginationLinks {
 }
 
 export interface PaginatedResponse<T> {
-    data: T[];
+    list: T[];
     meta: PaginationMeta;
     links?: PaginationLinks;
     [key: string]: any; // For additional top-level properties

@@ -14,6 +14,9 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AllowAllGuard, JwtAuthGuard } from 'modules/auth/jwt-auth.guard';
 import { AccessRoles } from 'modules/auth/role/role.decorator';
 import { RoleGuard } from 'modules/auth/role/role.guard';
+import { AutoPaginate } from 'modules/pagination/decorators/auto-paginate.decorator';
+import { Pagination } from 'modules/pagination/decorators/pagination.decorator';
+import { PaginationParams } from 'modules/pagination/interfaces/pagination-params.interface';
 import { UserAndRequest } from 'types';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
@@ -77,26 +80,19 @@ export class RouteController {
     }
 
     @Get()
+    @AutoPaginate({
+        resource: 'route',
+        route: 'route',
+    })
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
         permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
-    async findAll() {
-        try {
-            const route = await this.routeService.findAll();
-            return {
-                success: true,
-                data: route,
-                message: 'Route Created Successfully',
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: error.message,
-            };
-        }
+    async findAll(@Pagination() params: PaginationParams) {
+        const [route, _] = await this.routeService.findAll(params);
+        return route;
     }
 
     @ApiBearerAuth()

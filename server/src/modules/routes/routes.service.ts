@@ -2,6 +2,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Permission } from 'modules/auth/permission/entities/permission.entity';
+import { PaginationParams } from 'modules/pagination/interfaces/pagination-params.interface';
 import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { ExtendedCache, IUser } from 'types';
 import { CreateRouteDto } from './dto/create-route.dto';
@@ -65,11 +66,22 @@ export class RouteService {
         return this.routeRepository.save(route);
     }
 
-    async findAll() {
+    async findAll(params: PaginationParams) {
+        const { skip, limit, sortBy, sortOrder } = params;
         await this.cacheService.del('/route');
-        return this.routeRepository.find({
-            relations: ['permissions', 'parent', 'children'],
-        });
+        const queryBuilder = this.routeRepository.createQueryBuilder('route');
+        queryBuilder
+            .leftJoinAndSelect('route.permissions', 'permissions')
+            .leftJoinAndSelect('route.parent', 'parent')
+            .leftJoinAndSelect('route.children', 'children')
+            .where('route.deleted = 0')
+            .skip(skip)
+            .take(limit);
+        if (typeof sortBy !== 'symbol' && sortOrder) {
+            queryBuilder.orderBy(`route.${sortBy}`, sortOrder);
+        }
+        const [route, total] = await queryBuilder.getManyAndCount();
+        return [route, total];
     }
 
     findOne(id: string) {

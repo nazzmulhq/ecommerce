@@ -9,6 +9,7 @@ import {
     WinstonModule,
     utilities as nestWinstonModuleUtilities,
 } from 'nest-winston';
+import { join } from 'path';
 import * as winston from 'winston';
 
 @Module({
@@ -21,7 +22,9 @@ import * as winston from 'winston';
             username: process.env.DB_USER,
             password: process.env.DB_PASS,
             database: process.env.DB_NAME,
-            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            entities: [
+                join(process.cwd(), 'dist/modules/**/*.entity{.ts,.js}'),
+            ],
             synchronize: true,
             logging: true,
         }),

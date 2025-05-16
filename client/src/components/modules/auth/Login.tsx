@@ -34,7 +34,9 @@ export default function Login({ searchParams }: { searchParams: { error?: string
             body: JSON.stringify({ email, password }),
         });
 
-        const { token, user, routes, permissions } = await response.json();
+        const {
+            data: { token, user, routes, permissions },
+        } = await response.json();
 
         if (!token) {
             redirect("/login?error=invalid_credentials");

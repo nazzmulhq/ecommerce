@@ -71,7 +71,6 @@ const matchesPattern = (path: string, pattern: string) => {
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    console.log("Middleware triggered for path:", pathname);
     // Skip middleware for Next.js internal routes, API routes, public files, and .well-known paths
     if (
         pathname.startsWith("/_next") ||

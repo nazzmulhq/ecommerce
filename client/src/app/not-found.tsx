@@ -2,7 +2,7 @@
 
 import { initialUrl } from "@lib/constants/AppConst";
 import { Button, Result } from "antd";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -14,8 +14,6 @@ const Container = styled.div`
 `;
 
 export default function NotFound() {
-    const router = useRouter();
-
     return (
         <Container>
             <Result
@@ -23,9 +21,9 @@ export default function NotFound() {
                 title="404"
                 subTitle="Sorry, the page you visited does not exist."
                 extra={
-                    <Button type="primary" onClick={() => router.push(initialUrl)}>
-                        Back Home
-                    </Button>
+                    <Link href={initialUrl} passHref>
+                        <Button type="primary">Back Home</Button>
+                    </Link>
                 }
             />
         </Container>
