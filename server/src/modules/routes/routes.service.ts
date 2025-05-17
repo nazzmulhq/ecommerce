@@ -243,9 +243,8 @@ export class RouteService {
                     'route.path',
                     'route.icon',
                     'route.position',
-                    'route.is_menu',
-                    'route.is_sub_menu',
                     'route.is_dynamic_route',
+                    'route.not_show_in_menu',
                     'route.metadata',
                     'route.parentId',
                 ])

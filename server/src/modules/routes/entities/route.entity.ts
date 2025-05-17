@@ -32,12 +32,6 @@ export class Route extends CoreEntity {
     position: number;
 
     @Column({ default: false })
-    is_menu: boolean;
-
-    @Column({ default: false })
-    is_sub_menu: boolean;
-
-    @Column({ default: false })
     is_dynamic_route: boolean;
 
     @Column({ default: false })
@@ -68,18 +62,6 @@ export class Route extends CoreEntity {
 
     @Column({ type: 'json', nullable: true })
     metadata: IMetaData;
-
-    @BeforeInsert()
-    async menuSubMenuAndDynamicRoute() {
-        // Handle menu/submenu based on parent existence (root has no parent)
-        if (this.parent) {
-            this.is_menu = false;
-            this.is_sub_menu = true; // Direct child becomes submenu
-        } else {
-            this.is_menu = true; // No parent means it's a top-level menu
-            this.is_sub_menu = false;
-        }
-    }
 
     @BeforeInsert()
     async generateSlug() {
