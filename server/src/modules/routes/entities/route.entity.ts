@@ -40,6 +40,9 @@ export class Route extends CoreEntity {
     @Column({ default: false })
     is_dynamic_route: boolean;
 
+    @Column({ default: false })
+    not_show_in_menu: boolean;
+
     @ManyToMany(() => Permission, (permission) => permission.routes)
     @JoinTable({
         name: 'route_has_permissions',
@@ -76,16 +79,24 @@ export class Route extends CoreEntity {
             this.is_menu = true; // No parent means it's a top-level menu
             this.is_sub_menu = false;
         }
-
-        // Determine dynamic route using regex test for any segment containing configuration/users/:id/profile
-
-        this.is_dynamic_route = this.path.includes(':');
     }
 
     @BeforeInsert()
     async generateSlug() {
+        // Skip slug generation for dynamic routes
+        if (this.path && this.path.includes(':')) {
+            this.is_dynamic_route = true;
+            this.slug = this.path; // Keep the original path for dynamic routes
+            return; // Skip slug generation for dynamic routes
+        }
+
         if (this.path && this.path !== '/') {
-            this.slug = this.path;
+            const paths = this.path.split('/');
+            if (paths.length > 1) {
+                this.slug = paths[paths.length - 1];
+            } else {
+                this.slug = this.path;
+            }
         } else {
             this.slug = this.name.toLowerCase().replace(/ /g, '/');
         }

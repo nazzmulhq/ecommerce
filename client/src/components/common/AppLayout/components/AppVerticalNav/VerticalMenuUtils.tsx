@@ -89,7 +89,7 @@ interface IRouteItem {
     type?: string;
     children?: IRouteItem[];
     parentId: string | null;
-    is_dynamic_route?: boolean;
+    not_show_in_menu?: boolean;
 }
 export type TMenuItem = Required<MenuProps>["items"][number];
 
@@ -115,7 +115,7 @@ export const getMenuItems = (routes: IRouteItem[], isAuthenticated: boolean = fa
     return filteredRoutes
         .filter(item => {
             // Filter out protected routes if user is not authenticated
-            return item.type === "protected" && !item.is_dynamic_route;
+            return item.type === "protected" && !item.not_show_in_menu;
         })
         .map(item => {
             // Create the icon element once to avoid repetition

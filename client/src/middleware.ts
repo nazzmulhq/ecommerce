@@ -1,4 +1,5 @@
 import { getRoutes } from "@lib/actions/auth/login";
+import { notFound } from "next/navigation";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { IRoute } from "./types/basic";
@@ -120,8 +121,7 @@ export async function middleware(req: NextRequest) {
 
     // If route is not allowed for this user, redirect to login
     if (!isRouteExists) {
-        const redirectUrl = new URL("/configuration/forbidden", req.url);
-        return NextResponse.redirect(redirectUrl);
+        notFound();
     }
 
     // Allow the request to proceed
