@@ -16,7 +16,7 @@
         "antd": "^5.25.1",
         "clsx": "^2.1.1",
         "js-cookie": "^3.0.5",
-        "next": "^15.3.1",
+        "next": "^15.3.2",
         "nextjs-toploader": "^3.8.16",
         "polished": "^4.3.1",
         "react": "^19.1.0",
