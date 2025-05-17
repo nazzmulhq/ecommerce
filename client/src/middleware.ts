@@ -92,5 +92,5 @@ export async function middleware(req: NextRequest) {
  * Applies this middleware to all routes except next.js static files, favicon, and image directories
  */
 export const config = {
-    matcher: ["/((?!_next/static|favicon.ico|images/.*|icons/.*|403|404).*)"],
+    matcher: ["/((?!_next/static|favicon.ico|images/.*|icons/.*|403|404|500).*)"],
 };
