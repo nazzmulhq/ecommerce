@@ -76,10 +76,11 @@ export async function middleware(req: NextRequest) {
         }
     });
 
-    // If the route is not found in the user's allowed routes, redirect to not-found
+    // If the route is not found in the user's allowed routes, redirect to 403 forbidden page
     if (!isRouteExists) {
-        const redirectUrl = new URL("/403", req.url);
-        return NextResponse.redirect(redirectUrl);
+        // Use redirect instead of forbidden() which is not allowed in middleware
+        const forbiddenUrl = new URL("/403", req.url);
+        return NextResponse.redirect(forbiddenUrl);
     }
 
     // Allow the request to proceed
@@ -91,5 +92,5 @@ export async function middleware(req: NextRequest) {
  * Applies this middleware to all routes except next.js static files, favicon, and image directories
  */
 export const config = {
-    matcher: ["/((?!_next/static|favicon.ico|images/.*|icons/.*|403|404|500).*)"],
+    matcher: ["/((?!_next/static|favicon.ico|images/.*|icons/.*|403|404).*)"],
 };
