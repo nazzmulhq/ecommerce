@@ -1,25 +1,30 @@
-import { FC } from "react";
-import { IconType } from "react-icons";
-import { BiArrowBack } from "react-icons/bi";
+import React from "react";
 
-export interface IIcons extends IconType {
-    name: TIconNames;
-}
-
-export type TIconNames = "BiArrowBack";
-
-const icons = {
-    BiArrowBack,
+// Icon map object that contains all available icons
+export const icons = {
+    IoSettingsSharp: React.lazy(() => import("react-icons/io5").then(module => ({ default: module.IoSettingsSharp }))),
+    MdAdminPanelSettings: React.lazy(() =>
+        import("react-icons/md").then(module => ({ default: module.MdAdminPanelSettings })),
+    ),
 };
 
-const Icons: FC<IIcons> = ({ name }) => {
+// Define the types for our props
+interface IconProps {
+    name: keyof typeof icons;
+    size?: number;
+    color?: string;
+    className?: string;
+}
+
+const Icons: React.FC<IconProps> = ({ name, size = 20, color = "currentColor", className = "" }) => {
     const IconComponent = icons[name];
+
     if (!IconComponent) {
-        console.error(`Icon ${name} not found`);
+        console.warn(`Icon with name "${name}" not found`);
         return null;
     }
 
-    return <IconComponent />;
+    return <IconComponent size={size} color={color} className={className} />;
 };
 
 export default Icons;

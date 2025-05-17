@@ -21,7 +21,7 @@ export default async function RootLayout({ children, params }: LangLayoutProps) 
         <html>
             <body className={inter.className} lang={lang}>
                 <NextTopLoader
-                    color="#2299DD"
+                    color={"#2299DD"}
                     crawl={true}
                     crawlSpeed={200}
                     easing="ease"
@@ -33,7 +33,6 @@ export default async function RootLayout({ children, params }: LangLayoutProps) 
                     speed={200}
                     zIndex={1600}
                 />
-
                 <Providers>{children}</Providers>
             </body>
         </html>

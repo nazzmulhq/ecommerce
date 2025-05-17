@@ -1,3 +1,4 @@
+import Icons, { icons } from "@components/common/AppIcons";
 import { isArrayOrObjectEmpty } from "@lib/utils/Common";
 import { RouterConfigData } from "@src/types/Apps";
 import { MenuProps } from "antd";
@@ -83,7 +84,7 @@ export const getRouteMenus = (
 interface IRouteItem {
     slug: string;
     name: string;
-    icon?: React.ReactNode;
+    icon?: keyof typeof icons;
     message_id: string;
     path: string;
     type?: string;
@@ -119,16 +120,16 @@ export const getMenuItems = (routes: IRouteItem[], isAuthenticated: boolean = fa
         })
         .map(item => {
             // Create the icon element once to avoid repetition
-            const iconElement =
-                item.icon &&
-                (React.isValidElement(item.icon) ? (
-                    <span className="ant-menu-item-icon">{item.icon}</span>
-                ) : (
-                    <span className="ant-menu-item-icon" />
-                ));
+            const iconElement = item.icon ? (
+                <span className="ant-menu-item-icon">
+                    <Icons name={item.icon} size={20} />
+                </span>
+            ) : (
+                <span className="ant-menu-item-icon" />
+            );
 
             // Create the label element once to avoid repetition
-            const labelElement = item.path ? (
+            const labelElement = isArrayOrObjectEmpty(item.children) ? (
                 <Link href={item.path}>
                     <span data-testid={`${item.message_id.toLowerCase()}-nav`}>{item.name}</span>
                 </Link>

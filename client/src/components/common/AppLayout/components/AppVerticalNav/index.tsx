@@ -68,8 +68,7 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
 
         fetchMenuItems();
     }, []);
-    console.log("openKeys", openKeys);
-    console.log("selectedKeys", pathname);
+
     return (
         <StyledVerticalNav
             className={clsx({

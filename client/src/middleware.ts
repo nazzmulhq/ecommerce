@@ -1,5 +1,4 @@
 import { getRoutes } from "@lib/actions/auth/login";
-import { notFound } from "next/navigation";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { IRoute } from "./types/basic";
@@ -119,9 +118,10 @@ export async function middleware(req: NextRequest) {
         return matchesPattern(pathname, routePattern);
     });
 
-    // If route is not allowed for this user, redirect to login
+    // If route is not allowed for this user, redirect to a 404 page instead of using notFound()
     if (!isRouteExists) {
-        notFound();
+        const notFoundUrl = new URL("/404", req.url);
+        return NextResponse.redirect(notFoundUrl);
     }
 
     // Allow the request to proceed
