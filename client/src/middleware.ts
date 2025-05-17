@@ -79,9 +79,13 @@ export async function middleware(req: NextRequest) {
 
         // If the route is not found in the user's allowed routes, redirect to 403 forbidden page
         if (!isRouteExists) {
-            // Use redirect instead of forbidden() which is not allowed in middleware
-            const forbiddenUrl = new URL("/403", req.url);
-            return NextResponse.redirect(forbiddenUrl);
+            if (!token) {
+                const redirectUrl = new URL("/login", req.url);
+                return NextResponse.redirect(redirectUrl);
+            } else {
+                const forbiddenUrl = new URL("/403", req.url);
+                return NextResponse.redirect(forbiddenUrl);
+            }
         }
 
         // Allow the request to proceed
