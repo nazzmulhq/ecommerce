@@ -248,7 +248,10 @@ const I18n: FC = () => {
                 return;
             }
             const data = await response.json();
-            const formattedData = formatData(data);
+            const formattedData = formatData(data)?.map((item: II18n) => ({
+                ...item,
+                key: item.title,
+            }));
             setI18nData(formattedData);
         };
         fetchData();
@@ -282,7 +285,7 @@ const I18n: FC = () => {
                             }}
                             type="primary"
                         >
-                            Add New
+                            Add New Row
                         </Button>
                     </Space>
                 </>
@@ -290,16 +293,7 @@ const I18n: FC = () => {
         >
             <Row gutter={24} justify="end">
                 <Col span={24}>
-                    <Table
-                        id="i18n-table"
-                        bordered
-                        columns={columns}
-                        dataSource={i18nData}
-                        size="small"
-                        style={{
-                            marginTop: "10px",
-                        }}
-                    />
+                    <Table id="i18n-table" bordered columns={columns} dataSource={i18nData} size="small" />
                 </Col>
             </Row>
         </Card>
