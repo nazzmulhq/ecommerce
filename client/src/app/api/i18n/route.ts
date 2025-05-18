@@ -44,7 +44,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
-        const path = `${process.cwd()}/public/locales`;
+        const path = `${process.cwd()}/src/lib/localization/locales`;
 
         const { languages, data } = await request.json();
 
