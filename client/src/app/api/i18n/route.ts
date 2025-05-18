@@ -2,7 +2,7 @@ import File from "../../../lib/utils/file";
 
 export async function GET() {
     try {
-        const path = `${process.cwd()}/public/locales`;
+        const path = `${process.cwd()}/src/lib/localization/locales`;
 
         const folder = await File.readFilesInFolder(path);
 

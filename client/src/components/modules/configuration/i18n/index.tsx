@@ -6,8 +6,7 @@ import { ChangeEvent, FC, useEffect, useState } from "react";
 export interface II18n {
     id: string;
     title: string;
-    en: string;
-    bn: string;
+    [key: string]: string | object | any;
 }
 
 interface Translations {
@@ -17,11 +16,28 @@ interface Translations {
 interface Locales {
     en: Translations;
     bn: Translations;
+    [key: string]: Translations; // Add this index signature to allow string indexing
 }
 
 const I18n: FC = () => {
     const [i18nData, setI18nData] = useState<II18n[]>([]);
     const [refetch, setFetch] = useState(0);
+
+    // Function to get available languages from the data
+    const getAvailableLanguages = (): string[] => {
+        if (!i18nData.length) return ["en", "bn"]; // Default languages
+
+        const languages = new Set<string>();
+        i18nData.forEach(item => {
+            Object.keys(item).forEach(key => {
+                if (key !== "id" && key !== "title") {
+                    languages.add(key);
+                }
+            });
+        });
+
+        return Array.from(languages);
+    };
 
     const onChange = (e: ChangeEvent<HTMLInputElement>, record: II18n) => {
         const isDuplicate = i18nData.some(i18n => i18n.title === e.target.value);
@@ -38,25 +54,27 @@ const I18n: FC = () => {
     };
 
     const onSave = async () => {
-        const data: Locales = {
-            en: {},
-            bn: {},
-        };
-        i18nData.forEach(i18n => {
-            data.en[i18n.title] = i18n.en;
-            data.bn[i18n.title] = i18n.bn;
+        const data: Locales = {} as Locales;
+        const languages = getAvailableLanguages();
+
+        // Initialize language objects
+        languages.forEach(lang => {
+            data[lang] = {};
         });
-        // const response = await API.post(ENDPOINT.SETTINGS.I18N, {
-        //     languages: Object.keys(data),
-        //     data,
-        // });
+
+        i18nData.forEach(i18n => {
+            languages.forEach(lang => {
+                data[lang][i18n.title] = i18n[lang] || "";
+            });
+        });
+
         const response = await fetch("/api/i18n", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                languages: Object.keys(data),
+                languages,
                 data,
             }),
         });
@@ -73,6 +91,50 @@ const I18n: FC = () => {
             clearFilters();
         }
         setFetch(prev => prev + 1);
+    };
+
+    // Generate language columns dynamically
+    const generateLanguageColumns = () => {
+        const languages = getAvailableLanguages();
+
+        return languages.map(lang => ({
+            title: lang === "en" ? "English" : lang === "bn" ? "বাংলা" : lang.toUpperCase(),
+            dataIndex: lang,
+            key: lang,
+            filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+                <div style={{ padding: 8 }}>
+                    <Input
+                        onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                        onPressEnter={() => confirm()}
+                        placeholder={`Search ${lang}`}
+                        style={{ marginBottom: 8, display: "block" }}
+                        value={selectedKeys[0]}
+                    />
+                    <Space>
+                        <Button onClick={() => confirm()} size="small" style={{ width: 90 }} type="primary">
+                            Search
+                        </Button>
+                        <Button onClick={e => onFilterReset(e, clearFilters)} size="small" style={{ width: 90 }}>
+                            Reset
+                        </Button>
+                    </Space>
+                </div>
+            ),
+            onFilter: (value: any, record: any) =>
+                record[lang] && record[lang].toLowerCase().includes(value.toLowerCase()),
+            render: (text: string, record: II18n) => (
+                <Input
+                    allowClear
+                    key={record.id}
+                    name={lang}
+                    onChange={e => {
+                        onChange(e, record);
+                    }}
+                    type="text"
+                    value={text || ""}
+                />
+            ),
+        }));
     };
 
     const columns = [
@@ -119,90 +181,7 @@ const I18n: FC = () => {
             title: "Value",
             dataIndex: "value",
             key: "value",
-            children: [
-                {
-                    title: "English",
-                    dataIndex: "en",
-                    key: "en",
-                    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
-                        <div style={{ padding: 8 }}>
-                            <Input
-                                onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                                onPressEnter={() => confirm()}
-                                placeholder="Search English"
-                                style={{ marginBottom: 8, display: "block" }}
-                                value={selectedKeys[0]}
-                            />
-                            <Space>
-                                <Button onClick={() => confirm()} size="small" style={{ width: 90 }} type="primary">
-                                    Search
-                                </Button>
-                                <Button
-                                    onClick={e => onFilterReset(e, clearFilters)}
-                                    size="small"
-                                    style={{ width: 90 }}
-                                >
-                                    Reset
-                                </Button>
-                            </Space>
-                        </div>
-                    ),
-                    onFilter: (value: any, record: any) => record.en.toLowerCase().includes(value.toLowerCase()),
-                    render: (text: string, record: II18n) => (
-                        <Input
-                            allowClear
-                            key={record.id}
-                            name="en"
-                            onChange={e => {
-                                onChange(e, record);
-                            }}
-                            type="text"
-                            value={text}
-                        />
-                    ),
-                },
-                {
-                    title: "বাংলা",
-                    dataIndex: "bn",
-                    key: "bn",
-                    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
-                        <div style={{ padding: 8 }}>
-                            <Input
-                                onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                                onPressEnter={() => confirm()}
-                                placeholder="Search বাংলা"
-                                style={{ marginBottom: 8, display: "block" }}
-                                value={selectedKeys[0]}
-                            />
-                            <Space>
-                                <Button onClick={() => confirm()} size="small" style={{ width: 90 }} type="primary">
-                                    Search
-                                </Button>
-                                <Button
-                                    onClick={e => onFilterReset(e, clearFilters)}
-                                    size="small"
-                                    style={{ width: 90 }}
-                                >
-                                    Reset
-                                </Button>
-                            </Space>
-                        </div>
-                    ),
-                    onFilter: (value: any, record: any) => record.bn.toLowerCase().includes(value.toLowerCase()),
-                    render: (text: string, record: II18n) => (
-                        <Input
-                            allowClear
-                            key={record.id}
-                            name="bn"
-                            onChange={e => {
-                                onChange(e, record);
-                            }}
-                            type="text"
-                            value={text}
-                        />
-                    ),
-                },
-            ],
+            children: generateLanguageColumns(),
         },
         {
             title: "Action",
@@ -225,18 +204,34 @@ const I18n: FC = () => {
     ];
 
     const formatData = (res: Locales) => {
-        console.log(res);
-        const data: Locales = res;
-        if (!data || !data.en || !data.bn) {
+        if (!res || Object.keys(res).length === 0) {
             return [];
         }
-        return Object.keys(data.en).map(key => ({
-            key,
-            id: key,
-            title: key,
-            en: data.en[key],
-            bn: data.bn[key],
-        }));
+
+        // Get all unique keys from all language objects
+        const allKeys = new Set<string>();
+        Object.values(res).forEach(langObj => {
+            if (langObj && typeof langObj === "object") {
+                Object.keys(langObj).forEach(key => allKeys.add(key));
+            }
+        });
+
+        // Create i18n data array
+        return Array.from(allKeys).map(key => {
+            const item: II18n = {
+                id: key,
+                title: key,
+            };
+
+            // Add translations for each language
+            Object.keys(res).forEach(lang => {
+                if (res[lang] && typeof res[lang] === "object") {
+                    item[lang] = res[lang][key] || "";
+                }
+            });
+
+            return item;
+        });
     };
 
     useEffect(() => {
@@ -271,15 +266,18 @@ const I18n: FC = () => {
                         <Button
                             htmlType="button"
                             onClick={() => {
-                                const newI18nData = [
-                                    {
-                                        id: `${Date.now()}-${Math.random()}`,
-                                        title: "",
-                                        en: "",
-                                        bn: "",
-                                    },
-                                    ...i18nData,
-                                ];
+                                const languages = getAvailableLanguages();
+                                const newEntry: II18n = {
+                                    id: `${Date.now()}-${Math.random()}`,
+                                    title: "",
+                                };
+
+                                // Add empty values for each available language
+                                languages.forEach(lang => {
+                                    newEntry[lang] = "";
+                                });
+
+                                const newI18nData = [newEntry, ...i18nData];
                                 setI18nData(newI18nData);
                             }}
                             type="primary"
