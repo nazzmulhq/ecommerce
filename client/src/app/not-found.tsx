@@ -4,7 +4,7 @@ import { initialUrl } from "@lib/constants/AppConst";
 import { Button, Result } from "antd";
 import { ExceptionStatusType, ResultStatusType } from "antd/es/result";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -19,6 +19,9 @@ const Container = styled.div`
 export default function NotFound() {
     // get status code from url
     const pathname = usePathname();
+    const { lang } = useParams();
+
+    const path = lang ? `/${lang}${initialUrl}` : "";
     const statusCode = pathname.split("/").pop();
     const result: Record<
         ExceptionStatusType,
@@ -33,19 +36,19 @@ export default function NotFound() {
             status: "403",
             title: "403",
             subTitle: "Sorry, you are not authorized to access this page.",
-            redirectUrl: initialUrl,
+            redirectUrl: path,
         },
         404: {
             status: "404",
             title: "404",
             subTitle: "Sorry, the page you visited does not exist.",
-            redirectUrl: initialUrl,
+            redirectUrl: path,
         },
         500: {
             status: "500",
             title: "500",
             subTitle: "Sorry, something went wrong.",
-            redirectUrl: initialUrl,
+            redirectUrl: path,
         },
     };
 
