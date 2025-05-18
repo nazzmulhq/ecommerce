@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import { shouldForwardProp } from "@styled-system/should-forward-prop"; // Optional: can manually define too
 
 type StyledAppSelectedIconProps = {
     backgroundColor?: string;
@@ -7,7 +6,7 @@ type StyledAppSelectedIconProps = {
 };
 
 export const StyledAppSelectedIcon = styled.div.withConfig({
-    shouldForwardProp: (prop) => !["backgroundColor", "color"].includes(prop)
+    shouldForwardProp: prop => !["backgroundColor", "color"].includes(prop),
 })<StyledAppSelectedIconProps>`
     width: 20px;
     height: 20px;
