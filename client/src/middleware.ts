@@ -48,10 +48,20 @@ export async function middleware(req: NextRequest) {
             return NextResponse.next();
         }
 
+        // Handle locale prefixes (e.g., /en/, /fr/)
+        const localePattern = /^\/([a-z]{2})(?:\/|$)/;
+        const localeMatch = pathname.match(localePattern);
+
+        // Extract the actual path without locale prefix if it exists
+        const pathWithoutLocale = localeMatch ? pathname.replace(localeMatch[0], "/") : pathname;
+
+        // Use normalized path (without locale) for route checking
+        const pathToCheck = pathWithoutLocale === "" ? "/" : pathWithoutLocale;
+
         const token = req.cookies.get("token")?.value;
 
         // Redirect authenticated users away from auth pages
-        if (token && afterLoginNotVisitedRoutes.includes(pathname)) {
+        if (token && afterLoginNotVisitedRoutes.includes(pathToCheck)) {
             const redirectUrl = new URL(afterLoginRedirectRoute, req.url);
             return NextResponse.redirect(redirectUrl);
         }
@@ -71,7 +81,7 @@ export async function middleware(req: NextRequest) {
             if (route.path) {
                 const routePath = route.path.replace(/\/\[(.*?)\]/g, "/$1");
                 const regex = new RegExp(`^${routePath.replace(/:[^\s/]+/g, "([^/]+)")}$`);
-                return regex.test(pathname);
+                return regex.test(pathToCheck);
             } else {
                 return false;
             }
