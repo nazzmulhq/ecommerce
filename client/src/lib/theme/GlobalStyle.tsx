@@ -347,7 +347,7 @@ export const GlobalStyles = createGlobalStyle`
     //padding-bottom: @input-padding-vertical-base;
   }
 
-  .ant-pagination {
+  /* .ant-pagination {
     & li {
       margin-bottom: 4px;
       margin-top: 4px;
@@ -362,7 +362,7 @@ export const GlobalStyles = createGlobalStyle`
         margin-top: 4px;
       }
     }
-  }
+  } */
 
   .ant-drawer,
   .ant-modal-wrap,
@@ -557,7 +557,7 @@ export const GlobalStyles = createGlobalStyle`
   .ant-card {
     background: ${({ theme }) => theme.palette.background.paper};
     color: ${({ theme }) => theme.palette.text.primary};
-    overflow: hidden;
+    /* overflow: hidden; */
     border-radius: ${({ theme }) => theme.cardRadius};
   }
 
