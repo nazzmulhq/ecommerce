@@ -3,7 +3,6 @@
 import { initialUrl } from "@lib/constants/AppConst";
 import { Button, Result } from "antd";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -15,11 +14,7 @@ const Container = styled.div`
     color: ${({ theme }) => theme.palette.text.primary};
 `;
 
-export default async function InternalServerError() {
-    const { lang } = useParams();
-
-    const path = lang ? `/${lang}${initialUrl}` : "";
-
+export default function InternalServerError() {
     return (
         <Container>
             <Result
@@ -27,7 +22,7 @@ export default async function InternalServerError() {
                 title="500"
                 subTitle="Sorry, something went wrong on our end."
                 extra={
-                    <Link href={path} passHref>
+                    <Link href={initialUrl} passHref>
                         <Button type="primary">Back Home</Button>
                     </Link>
                 }

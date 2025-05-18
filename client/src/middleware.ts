@@ -4,10 +4,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { IRoute } from "./types/basic";
 
-const defaultLang = "en"; // Default language
-const supportedLangs = ["en", "fr"]; // Supported languages
-
-const afterLoginRedirectRoute = `/${defaultLang}${initialUrl}`; // Redirect route after login
+const afterLoginRedirectRoute = initialUrl; // Redirect route after login
 
 /**
  * Regular expression to match public files like images, CSS, JS, etc.

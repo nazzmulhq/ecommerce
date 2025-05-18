@@ -4,7 +4,7 @@ import { initialUrl } from "@lib/constants/AppConst";
 import { Button, Result } from "antd";
 import { ExceptionStatusType, ResultStatusType } from "antd/es/result";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -19,9 +19,8 @@ const Container = styled.div`
 export default function NotFound() {
     // get status code from url
     const pathname = usePathname();
-    const { lang } = useParams();
 
-    const path = lang ? `/${lang}${initialUrl}` : "";
+    const path = initialUrl;
     const statusCode = pathname.split("/").pop();
     const result: Record<
         ExceptionStatusType,
