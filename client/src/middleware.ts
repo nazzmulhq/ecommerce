@@ -60,11 +60,15 @@ export async function middleware(req: NextRequest) {
         // Fetch authorized routes for the current user based on their token
         const allRoute: IRoute[] = await getRoutes(token, "plain");
 
-        // If no routes are available, user is not authenticated - redirect to login
-        if (allRoute && allRoute.length === 0) {
-            const redirectUrl = new URL("/login", req.url);
-            return NextResponse.redirect(redirectUrl);
-        }
+        /**
+         * Route access control logic:
+         * 1. If user is not logged in (no token):
+         *    - If allRoute is empty, redirect to 500 page
+         *    - If allRoute is not empty, check if route exists in allRoute
+         * 2. If user is logged in (has token):
+         *    - If allRoute is empty, redirect to 403 page
+         *    - If allRoute is not empty, check if route exists in allRoute
+         */
 
         // Check if the requested route is in the user's allowed routes
         // Use pattern matching to support dynamic routes
@@ -78,19 +82,40 @@ export async function middleware(req: NextRequest) {
             }
         });
 
-        // If the route is not found in the user's allowed routes, redirect to 403 forbidden page
-        if (!isRouteExists) {
-            if (!token) {
-                const redirectUrl = new URL("/login", req.url);
-                return NextResponse.redirect(redirectUrl);
-            } else {
+        // User is not logged in
+        if (!token) {
+            // If allRoute is empty, there's a system issue - redirect to 500
+            if (allRoute.length === 0) {
+                const errorUrl = new URL("/500", req.url);
+                return NextResponse.redirect(errorUrl);
+            }
+
+            // If route doesn't exist in allowed routes, redirect to login
+            if (!isRouteExists) {
+                const loginUrl = new URL("/login", req.url);
+                return NextResponse.redirect(loginUrl);
+            }
+
+            // Allow the request to proceed if route exists
+            return NextResponse.next();
+        }
+        // User is logged in
+        else {
+            // If allRoute is empty, user has no permissions - redirect to 403
+            if (allRoute.length === 0) {
                 const forbiddenUrl = new URL("/403", req.url);
                 return NextResponse.redirect(forbiddenUrl);
             }
-        }
 
-        // Allow the request to proceed
-        return NextResponse.next();
+            // If route doesn't exist in allowed routes, redirect to 403
+            if (!isRouteExists) {
+                const forbiddenUrl = new URL("/403", req.url);
+                return NextResponse.redirect(forbiddenUrl);
+            }
+
+            // Allow the request to proceed if route exists
+            return NextResponse.next();
+        }
     } catch (error) {
         console.error("Middleware error:", error);
         // Handle error appropriately, e.g., redirect to an error page
