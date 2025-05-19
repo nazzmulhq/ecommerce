@@ -101,10 +101,7 @@ export type TMenuItem = Required<MenuProps>["items"][number];
  * @param isAuthenticated - Flag to determine if user is authenticated
  * @returns A flattened array containing all route items at any nesting level
  */
-export const getMenuItems = (
-    routes: IRouteItem[],
-    messages: Record<string, string> | Record<string, MessageFormatElement[]>,
-): TMenuItem[] => {
+export const getMenuItems = (routes: IRouteItem[]): TMenuItem[] => {
     if (!routes || routes.length === 0) {
         return [];
     }
@@ -138,7 +135,7 @@ export const getMenuItems = (
                     <MemoizedFormattedMessage
                         data-testid={`${item.message_id.toLowerCase()}-nav`}
                         id={item.message_id}
-                        defaultMessage={messages[item.message_id] as string}
+                        defaultMessage={item.message_id as string}
                         values={{ name: item.message_id }}
                         tagName="span"
                     />
@@ -147,7 +144,7 @@ export const getMenuItems = (
                 <MemoizedFormattedMessage
                     data-testid={`${item.message_id.toLowerCase()}-nav`}
                     id={item.message_id}
-                    defaultMessage={messages[item.message_id] as string}
+                    defaultMessage={item.message_id as string}
                     values={{ name: item.message_id }}
                     tagName="span"
                 />
@@ -163,7 +160,7 @@ export const getMenuItems = (
             if (!isArrayOrObjectEmpty(item.children)) {
                 return {
                     ...menuItem,
-                    children: getMenuItems(item.children as IRouteItem[], messages),
+                    children: getMenuItems(item.children as IRouteItem[]),
                 };
             }
             return menuItem;

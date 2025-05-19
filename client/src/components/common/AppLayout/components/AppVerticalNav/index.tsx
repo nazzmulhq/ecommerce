@@ -56,7 +56,7 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
             try {
                 const token = await getCookie("token");
                 const response = await getRoutes(token, "nested", "client");
-                const formatMenuItems = getMenuItems(response, messages);
+                const formatMenuItems = getMenuItems(response);
 
                 if (response) {
                     setMenuItems(formatMenuItems);
