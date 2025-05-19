@@ -6,6 +6,6 @@ const BnLang = {
         ...enMessages,
     },
     antLocale: bnBD,
-    locale: "bn_BD",
+    locale: "bn-BD",
 };
 export default BnLang;

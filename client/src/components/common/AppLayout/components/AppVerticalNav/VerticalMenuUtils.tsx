@@ -5,6 +5,7 @@ import { MenuProps } from "antd";
 import Link from "next/link";
 import React from "react";
 import { MessageFormatElement } from "react-intl";
+import MemoizedFormattedMessage from "react-intl/src/components/message";
 
 const renderMenuItemChildren = (
     item: RouterConfigData,
@@ -100,7 +101,10 @@ export type TMenuItem = Required<MenuProps>["items"][number];
  * @param isAuthenticated - Flag to determine if user is authenticated
  * @returns A flattened array containing all route items at any nesting level
  */
-export const getMenuItems = (routes: IRouteItem[], isAuthenticated: boolean = false): TMenuItem[] => {
+export const getMenuItems = (
+    routes: IRouteItem[],
+    messages: Record<string, string> | Record<string, MessageFormatElement[]>,
+): TMenuItem[] => {
     if (!routes || routes.length === 0) {
         return [];
     }
@@ -131,10 +135,22 @@ export const getMenuItems = (routes: IRouteItem[], isAuthenticated: boolean = fa
             // Create the label element once to avoid repetition
             const labelElement = isArrayOrObjectEmpty(item.children) ? (
                 <Link href={item.path}>
-                    <span data-testid={`${item.message_id.toLowerCase()}-nav`}>{item.name}</span>
+                    <MemoizedFormattedMessage
+                        data-testid={`${item.message_id.toLowerCase()}-nav`}
+                        id={item.message_id}
+                        defaultMessage={messages[item.message_id] as string}
+                        values={{ name: item.message_id }}
+                        tagName="span"
+                    />
                 </Link>
             ) : (
-                <span data-testid={`${item.message_id.toLowerCase()}-nav`}>{item.name}</span>
+                <MemoizedFormattedMessage
+                    data-testid={`${item.message_id.toLowerCase()}-nav`}
+                    id={item.message_id}
+                    defaultMessage={messages[item.message_id] as string}
+                    values={{ name: item.message_id }}
+                    tagName="span"
+                />
             );
 
             // Base menu item properties
@@ -147,7 +163,7 @@ export const getMenuItems = (routes: IRouteItem[], isAuthenticated: boolean = fa
             if (!isArrayOrObjectEmpty(item.children)) {
                 return {
                     ...menuItem,
-                    children: getMenuItems(item.children as IRouteItem[], isAuthenticated),
+                    children: getMenuItems(item.children as IRouteItem[], messages),
                 };
             }
             return menuItem;

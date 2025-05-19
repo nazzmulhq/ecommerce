@@ -7,6 +7,11 @@ const languageData: LanguageProps[] = [
         name: "English",
     },
     {
+        languageId: "bangla",
+        locale: "bn",
+        name: "Bangla",
+    },
+    {
         languageId: "chinese",
         locale: "zh",
         name: "Chinese",

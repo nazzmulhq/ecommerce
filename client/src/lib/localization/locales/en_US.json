@@ -1,4 +1,6 @@
 {
+    "route.configuration": "Configuration",
+    "route.configuration.i18n": "Internationalization",
     "button.click_me": "Click Me",
     "dashboard.quickStats": "Quick Statistics",
     "dashboard.totalClients": "Total Clients",

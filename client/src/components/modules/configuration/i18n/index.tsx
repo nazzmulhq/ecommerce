@@ -97,44 +97,46 @@ const I18n: FC = () => {
     const generateLanguageColumns = () => {
         const languages = getAvailableLanguages();
 
-        return languages.map(lang => ({
-            title: lang === "en" ? "English" : lang === "bn" ? "বাংলা" : lang.toUpperCase(),
-            dataIndex: lang,
-            key: lang,
-            filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
-                <div style={{ padding: 8 }}>
+        return languages
+            .filter((lang: string) => lang !== "key")
+            .map(lang => ({
+                title: lang === "en" ? "English" : lang === "bn" ? "বাংলা" : lang.toUpperCase(),
+                dataIndex: lang,
+                key: lang,
+                filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
+                    <div style={{ padding: 8 }}>
+                        <Input
+                            onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                            onPressEnter={() => confirm()}
+                            placeholder={`Search ${lang}`}
+                            style={{ marginBottom: 8, display: "block" }}
+                            value={selectedKeys[0]}
+                        />
+                        <Space>
+                            <Button onClick={() => confirm()} size="small" style={{ width: 90 }} type="primary">
+                                Search
+                            </Button>
+                            <Button onClick={e => onFilterReset(e, clearFilters)} size="small" style={{ width: 90 }}>
+                                Reset
+                            </Button>
+                        </Space>
+                    </div>
+                ),
+                onFilter: (value: any, record: any) =>
+                    record[lang] && record[lang].toLowerCase().includes(value.toLowerCase()),
+                render: (text: string, record: II18n) => (
                     <Input
-                        onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                        onPressEnter={() => confirm()}
-                        placeholder={`Search ${lang}`}
-                        style={{ marginBottom: 8, display: "block" }}
-                        value={selectedKeys[0]}
+                        allowClear
+                        key={record.id}
+                        name={lang}
+                        onChange={e => {
+                            onChange(e, record);
+                        }}
+                        type="text"
+                        value={text || ""}
                     />
-                    <Space>
-                        <Button onClick={() => confirm()} size="small" style={{ width: 90 }} type="primary">
-                            Search
-                        </Button>
-                        <Button onClick={e => onFilterReset(e, clearFilters)} size="small" style={{ width: 90 }}>
-                            Reset
-                        </Button>
-                    </Space>
-                </div>
-            ),
-            onFilter: (value: any, record: any) =>
-                record[lang] && record[lang].toLowerCase().includes(value.toLowerCase()),
-            render: (text: string, record: II18n) => (
-                <Input
-                    allowClear
-                    key={record.id}
-                    name={lang}
-                    onChange={e => {
-                        onChange(e, record);
-                    }}
-                    type="text"
-                    value={text || ""}
-                />
-            ),
-        }));
+                ),
+            }));
     };
 
     const columns = [

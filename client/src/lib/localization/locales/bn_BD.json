@@ -1,4 +1,6 @@
 {
+    "route.configuration": "কনফিগারেশন",
+    "route.configuration.i18n": "আন্তর্জাতিকীকরণ",
     "button.click_me": "আমাকে ক্লিক করুন",
     "dashboard.quickStats": "Quick Statistics",
     "dashboard.totalClients": "Total Clients",
@@ -573,7 +575,7 @@
     "message.contactCreated": "Contact created successfully!",
     "message.contactUpdated": "Contact updated successfully!",
     "message.labelUpdatedTo": "Label Updated successfully!",
-    "common.searchHere": "Search here",
+    "common.searchHere": "এখানে অনুসন্ধান করুন",
     "common.notifications": "Notifications",
     "scrumBoard.boardEdited": "Board Edited Successfully!",
     "scrumBoard.boardAdded": "Board Added Successfully!",
