@@ -1,8 +1,17 @@
 "use client";
 
-import { Button, Card, Col, Input, message, Row, Space, Table } from "antd";
-import { ChangeEvent, FC, useEffect, useState } from "react";
+/**
+ * I18n Configuration Module
+ *
+ * This component provides an interface for managing application translations.
+ * It allows users to add, edit, filter, and save language key-value pairs.
+ */
 
+import { DeleteOutlined, EditOutlined, FilterOutlined, PlusOutlined, SaveOutlined } from "@ant-design/icons";
+import { App, Button, Card, Col, Collapse, Form, Input, Modal, Row, Space, Table, Tooltip } from "antd";
+import { FC, useEffect, useState } from "react";
+
+// Type Definitions
 export interface II18n {
     id: string;
     title: string;
@@ -16,21 +25,43 @@ interface Translations {
 interface Locales {
     en: Translations;
     bn: Translations;
-    [key: string]: Translations; // Add this index signature to allow string indexing
+    [key: string]: Translations;
 }
 
+/**
+ * I18n Configuration Component
+ *
+ * Provides an interface for managing multilingual content in the application.
+ */
 const I18n: FC = () => {
+    // State Management
     const [i18nData, setI18nData] = useState<II18n[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
     const [refetch, setFetch] = useState(0);
+    const [editingKey, setEditingKey] = useState<string>("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentRecord, setCurrentRecord] = useState<II18n | null>(null);
+    const [filterVisible, setFilterVisible] = useState(false);
+    const [filteredData, setFilteredData] = useState<II18n[]>([]);
 
-    // Function to get available languages from the data
+    // Get message from App
+    const { message } = App.useApp();
+
+    // Form instances
+    const [editForm] = Form.useForm();
+    const [filterForm] = Form.useForm();
+
+    /**
+     * Returns an array of available languages from the data
+     * Default returns ["en", "bn"] if no data is available
+     */
     const getAvailableLanguages = (): string[] => {
         if (!i18nData.length) return ["en", "bn"]; // Default languages
 
         const languages = new Set<string>();
         i18nData.forEach(item => {
             Object.keys(item).forEach(key => {
-                if (key !== "id" && key !== "title") {
+                if (key !== "id" && key !== "title" && key !== "key") {
                     languages.add(key);
                 }
             });
@@ -39,172 +70,96 @@ const I18n: FC = () => {
         return Array.from(languages);
     };
 
-    const onChange = (e: ChangeEvent<HTMLInputElement>, record: II18n) => {
-        const isDuplicate = i18nData.some(i18n => i18n.title === e.target.value);
+    // CRUD Operations
+
+    /**
+     * Updates a translation value for a specific record and language
+     * @param value - New translation value
+     * @param record - The record being updated
+     * @param lang - Language code
+     */
+    const handleChangeTranslation = (value: string, record: II18n, lang: string) => {
+        setI18nData(prevData => prevData.map(item => (item.id === record.id ? { ...item, [lang]: value } : item)));
+    };
+
+    /**
+     * Updates the key of a translation record
+     * @param value - New key value
+     * @param record - The record being updated
+     */
+    const handleChangeKey = (value: string, record: II18n) => {
+        const isDuplicate = i18nData.some(i18n => i18n.id !== record.id && i18n.title === value);
+
         if (isDuplicate) {
+            message.error("Key already exists!");
             return;
         }
-        const newI18nData = [...i18nData];
-        const index = newI18nData.indexOf(record);
-        newI18nData[index] = {
-            ...record,
-            [e.target.name]: e.target.value,
-        };
-        setI18nData(newI18nData);
+
+        setI18nData(prevData => prevData.map(item => (item.id === record.id ? { ...item, title: value } : item)));
     };
 
-    const onSave = async () => {
-        const data: Locales = {} as Locales;
-        const languages = getAvailableLanguages();
+    /**
+     * Removes a translation record from the data
+     * @param record - The record to remove
+     */
+    const handleRemoveRow = (record: II18n) => {
+        setI18nData(prevData => prevData.filter(item => item.id !== record.id));
+        message.success("Row removed successfully");
+    };
 
-        // Initialize language objects
-        languages.forEach(lang => {
-            data[lang] = {};
-        });
+    /**
+     * Saves all translation data to the server
+     */
+    const handleSave = async () => {
+        try {
+            setLoading(true);
+            const data: Locales = {} as Locales;
+            const languages = getAvailableLanguages();
 
-        i18nData.forEach(i18n => {
+            // Initialize language objects
             languages.forEach(lang => {
-                data[lang][i18n.title] = i18n[lang] || "";
+                data[lang] = {};
             });
-        });
 
-        const response = await fetch("/api/i18n", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                languages,
-                data,
-            }),
-        });
-        if (!response.ok) {
-            console.error("Failed to save i18n data");
-            return;
+            // Filter out entries with empty keys
+            const validEntries = i18nData.filter(entry => entry.title.trim() !== "");
+
+            // Populate data object
+            validEntries.forEach(i18n => {
+                languages.forEach(lang => {
+                    data[lang][i18n.title] = i18n[lang] || "";
+                });
+            });
+
+            const response = await fetch("/api/i18n", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    languages,
+                    data,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to save i18n data");
+            }
+
+            message.success("I18n data saved successfully");
+            setFetch(prev => prev + 1); // Refresh data after save
+        } catch (error) {
+            message.error(error instanceof Error ? error.message : "An error occurred while saving");
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
-
-        message.success("I18n data saved successfully");
     };
 
-    const onFilterReset = (e: any, clearFilters: any) => {
-        if (clearFilters) {
-            clearFilters();
-        }
-        setFetch(prev => prev + 1);
-    };
-
-    // Generate language columns dynamically
-    const generateLanguageColumns = () => {
-        const languages = getAvailableLanguages();
-
-        return languages
-            .filter((lang: string) => lang !== "key")
-            .map(lang => ({
-                title: lang === "en" ? "English" : lang === "bn" ? "বাংলা" : lang.toUpperCase(),
-                dataIndex: lang,
-                key: lang,
-                filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
-                    <div style={{ padding: 8 }}>
-                        <Input
-                            onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                            onPressEnter={() => confirm()}
-                            placeholder={`Search ${lang}`}
-                            style={{ marginBottom: 8, display: "block" }}
-                            value={selectedKeys[0]}
-                        />
-                        <Space>
-                            <Button onClick={() => confirm()} size="small" style={{ width: 90 }} type="primary">
-                                Search
-                            </Button>
-                            <Button onClick={e => onFilterReset(e, clearFilters)} size="small" style={{ width: 90 }}>
-                                Reset
-                            </Button>
-                        </Space>
-                    </div>
-                ),
-                onFilter: (value: any, record: any) =>
-                    record[lang] && record[lang].toLowerCase().includes(value.toLowerCase()),
-                render: (text: string, record: II18n) => (
-                    <Input
-                        allowClear
-                        key={record.id}
-                        name={lang}
-                        onChange={e => {
-                            onChange(e, record);
-                        }}
-                        type="text"
-                        value={text || ""}
-                    />
-                ),
-            }));
-    };
-
-    const columns = [
-        {
-            title: "Key",
-            dataIndex: "title",
-            key: "title",
-            filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }: any) => (
-                <div style={{ padding: 8 }}>
-                    <Input
-                        allowClear
-                        onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                        onClear={() => confirm()}
-                        onPressEnter={() => confirm()}
-                        placeholder="Search Key"
-                        style={{ marginBottom: 8, display: "block" }}
-                        value={selectedKeys[0]}
-                    />
-                    <Space>
-                        <Button onClick={() => confirm()} size="small" style={{ width: 90 }} type="primary">
-                            Search
-                        </Button>
-                        <Button onClick={e => onFilterReset(e, clearFilters)} size="small" style={{ width: 90 }}>
-                            Reset
-                        </Button>
-                    </Space>
-                </div>
-            ),
-            onFilter: (value: any, record: any) => record.title.toLowerCase().includes(value.toLowerCase()),
-            render: (text: string, record: II18n) => (
-                <Input
-                    allowClear
-                    key={record.id}
-                    name="title"
-                    onChange={e => {
-                        onChange(e, record);
-                    }}
-                    type="text"
-                    value={text}
-                />
-            ),
-        },
-        {
-            title: "Value",
-            dataIndex: "value",
-            key: "value",
-            children: generateLanguageColumns(),
-        },
-        {
-            title: "Action",
-            key: "action",
-            width: "5%",
-            render: (text: string, record: II18n) => (
-                <Button
-                    danger
-                    htmlType="button"
-                    onClick={() => {
-                        const newI18nData = i18nData.filter(i18n => i18n.title !== record.title);
-                        setI18nData(newI18nData);
-                    }}
-                    type="primary"
-                >
-                    Remove
-                </Button>
-            ),
-        },
-    ];
-
+    /**
+     * Formats raw translation data from the API into structured I18n objects
+     * @param res - Raw translation data from API
+     */
     const formatData = (res: Locales) => {
         if (!res || Object.keys(res).length === 0) {
             return [];
@@ -236,70 +191,386 @@ const I18n: FC = () => {
         });
     };
 
-    useEffect(() => {
-        // Fetch i18n data from the server
-        const fetchData = async () => {
-            const response = await fetch("/api/i18n", {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+    // Modal Operations
+
+    /**
+     * Opens the add/edit modal and populates form if editing
+     * @param record - Record to edit (null for adding new)
+     */
+    const handleAddOrEdit = (record: II18n | null = null) => {
+        if (record) {
+            // edit
+            setCurrentRecord(record);
+            setIsModalOpen(true);
+
+            const formValues: any = { title: record.title };
+            getAvailableLanguages().forEach(lang => {
+                formValues[lang] = record[lang] || "";
             });
-            if (!response.ok) {
-                console.error("Failed to fetch i18n data");
-                return;
+
+            editForm.setFieldsValue(formValues);
+        } else {
+            //add
+            setCurrentRecord(record);
+            setIsModalOpen(true);
+        }
+    };
+
+    /**
+     * Closes the modal and resets the form
+     */
+    const handleModalCancel = () => {
+        setIsModalOpen(false);
+        setCurrentRecord(null);
+        editForm.resetFields();
+    };
+
+    /**
+     * Processes form submission for adding or editing translations
+     */
+    const handleModalSubmit = () => {
+        editForm
+            .validateFields()
+            .then(values => {
+                const newTitle = values.title.trim();
+
+                // Validate the title
+                if (!newTitle) {
+                    message.error("Key cannot be empty!");
+                    return;
+                }
+
+                // Check for duplicates
+                const isDuplicate = i18nData.some(i18n => i18n.id !== currentRecord?.id && i18n.title === newTitle);
+
+                if (isDuplicate) {
+                    message.error("Key already exists!");
+                    return;
+                }
+
+                // Handle both adding new item and editing existing item
+                if (currentRecord) {
+                    // Edit existing record
+                    setI18nData(prevData =>
+                        prevData.map(item => {
+                            if (item.id === currentRecord.id) {
+                                const updatedItem = { ...item };
+                                updatedItem.title = newTitle;
+
+                                // Update all language values
+                                getAvailableLanguages().forEach(lang => {
+                                    updatedItem[lang] = values[lang] || "";
+                                });
+
+                                return updatedItem;
+                            }
+                            return item;
+                        }),
+                    );
+                    message.success("Entry updated successfully");
+                } else {
+                    // Add new record
+                    const newEntry: II18n = {
+                        id: `key_${Date.now()}`,
+                        title: newTitle,
+                        key: `key_${Date.now()}`,
+                    };
+
+                    // Add language values
+                    getAvailableLanguages().forEach(lang => {
+                        newEntry[lang] = values[lang] || "";
+                    });
+
+                    setI18nData(prevData => [newEntry, ...prevData]);
+                    message.success("New entry added successfully");
+                }
+
+                // Reset form and close modal
+                setIsModalOpen(false);
+                setCurrentRecord(null);
+                editForm.resetFields();
+            })
+            .catch(error => {
+                console.error("Validation failed:", error);
+            });
+    };
+
+    // Filtering Operations
+
+    /**
+     * Filters data based on search criteria
+     * @param values - Form values containing filter criteria
+     */
+    const handleFilter = (values: any) => {
+        let result = [...i18nData];
+
+        // Filter by key if provided
+        if (values.keyFilter) {
+            const keyFilter = values.keyFilter.trim().toLowerCase();
+            result = result.filter(item => item.title.toLowerCase().includes(keyFilter));
+        }
+
+        // Filter by language content if provided
+        getAvailableLanguages().forEach(lang => {
+            if (values[`${lang}Filter`]) {
+                const langFilter = values[`${lang}Filter`].trim().toLowerCase();
+                result = result.filter(item => item[lang] && item[lang].toLowerCase().includes(langFilter));
             }
-            const data = await response.json();
-            const formattedData = formatData(data)?.map((item: II18n) => ({
-                ...item,
-                key: item.title,
+        });
+
+        setFilteredData(result);
+        message.success(`Found ${result.length} matching entries`);
+    };
+
+    /**
+     * Resets all filters and restores original data
+     */
+    const resetFilter = () => {
+        filterForm.resetFields();
+        setFilteredData(i18nData);
+    };
+
+    // UI Generation
+
+    /**
+     * Generates table columns for each available language
+     */
+    const generateLanguageColumns = () => {
+        const languages = getAvailableLanguages();
+
+        return languages
+            .filter((lang: string) => lang !== "key")
+            .map(lang => ({
+                title: lang.toUpperCase(),
+                dataIndex: lang,
+                key: lang,
             }));
-            setI18nData(formattedData);
+    };
+
+    // Side Effects
+
+    /**
+     * Fetches translation data when component loads or refetch is triggered
+     */
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch("/api/i18n", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch i18n data");
+                }
+
+                const data = await response.json();
+                const formattedData = formatData(data)?.map((item: II18n) => ({
+                    ...item,
+                    key: item.title,
+                }));
+
+                setI18nData(formattedData);
+            } catch (error) {
+                console.error("Error fetching i18n data:", error);
+                message.error("Failed to load translations");
+            } finally {
+                setLoading(false);
+            }
         };
+
         fetchData();
     }, [refetch]);
 
+    /**
+     * Updates filtered data when the main data changes
+     */
+    useEffect(() => {
+        setFilteredData(i18nData);
+    }, [i18nData]);
+
+    // Table Configuration
+    const columns = [
+        {
+            title: "Key",
+            dataIndex: "title",
+            key: "title",
+        },
+        {
+            title: "Value",
+            dataIndex: "value",
+            key: "value",
+            children: generateLanguageColumns(),
+        },
+        {
+            title: "Action",
+            key: "action",
+            width: "15%",
+            render: (_: string, record: II18n) => (
+                <Space>
+                    <Button type="primary" onClick={() => handleAddOrEdit(record)} icon={<EditOutlined />}>
+                        Edit
+                    </Button>
+                    <Button
+                        danger
+                        htmlType="button"
+                        onClick={() => handleRemoveRow(record)}
+                        type="primary"
+                        icon={<DeleteOutlined />}
+                    >
+                        Remove
+                    </Button>
+                </Space>
+            ),
+        },
+    ];
+
     return (
-        <Card
-            title="Language"
-            extra={
-                <>
+        <App>
+            <Card
+                title="Language Configuration"
+                extra={
                     <Space>
-                        <Button htmlType="submit" onClick={onSave} type="primary">
-                            Save I18n
-                        </Button>
-                        <Button
-                            htmlType="button"
-                            onClick={() => {
-                                const languages = getAvailableLanguages();
-                                const newEntry: II18n = {
-                                    id: `${Date.now()}-${Math.random()}`,
-                                    title: "",
-                                };
-
-                                // Add empty values for each available language
-                                languages.forEach(lang => {
-                                    newEntry[lang] = "";
-                                });
-
-                                const newI18nData = [newEntry, ...i18nData];
-                                setI18nData(newI18nData);
-                            }}
-                            type="primary"
-                        >
-                            Add New Row
-                        </Button>
+                        <Tooltip title="Filter">
+                            <Button
+                                icon={<FilterOutlined />}
+                                onClick={() => setFilterVisible(!filterVisible)}
+                                type={filterVisible ? "primary" : "default"}
+                            />
+                        </Tooltip>
+                        <Tooltip title="Save to Database">
+                            <Button
+                                htmlType="submit"
+                                onClick={handleSave}
+                                type="primary"
+                                loading={loading}
+                                icon={<SaveOutlined />}
+                            >
+                                Submit
+                            </Button>
+                        </Tooltip>
+                        <Tooltip title="Add New Translation">
+                            <Button
+                                htmlType="button"
+                                onClick={() => handleAddOrEdit()}
+                                type="primary"
+                                icon={<PlusOutlined />}
+                            >
+                                Add
+                            </Button>
+                        </Tooltip>
                     </Space>
-                </>
-            }
-        >
-            <Row gutter={24} justify="end">
-                <Col span={24}>
-                    <Table id="i18n-table" bordered columns={columns} dataSource={i18nData} size="small" />
-                </Col>
-            </Row>
-        </Card>
+                }
+            >
+                {/* Filter Section */}
+                <Row gutter={24}>
+                    <Col span={24}>
+                        <Collapse
+                            defaultActiveKey={["1"]}
+                            style={{ marginBottom: 16 }}
+                            onChange={() => setFilterVisible(!filterVisible)}
+                            activeKey={filterVisible ? "1" : ""}
+                            items={[
+                                {
+                                    key: "1",
+                                    label: "Filter Options",
+                                    children: (
+                                        <Form form={filterForm} layout="vertical" onFinish={handleFilter}>
+                                            <Row gutter={16}>
+                                                <Col span={8}>
+                                                    <Form.Item name="keyFilter" label="Filter by Key">
+                                                        <Input placeholder="Search by key" />
+                                                    </Form.Item>
+                                                </Col>
+
+                                                {getAvailableLanguages().map(lang => (
+                                                    <Col span={8} key={`${lang}Filter`}>
+                                                        <Form.Item
+                                                            name={`${lang}Filter`}
+                                                            label={`Filter by ${lang.toUpperCase()}`}
+                                                        >
+                                                            <Input placeholder={`Search in ${lang.toUpperCase()}`} />
+                                                        </Form.Item>
+                                                    </Col>
+                                                ))}
+                                            </Row>
+
+                                            <Row>
+                                                <Col span={24} style={{ textAlign: "right" }}>
+                                                    <Space>
+                                                        <Button onClick={resetFilter}>Reset</Button>
+                                                        <Button type="primary" htmlType="submit">
+                                                            Apply Filter
+                                                        </Button>
+                                                    </Space>
+                                                </Col>
+                                            </Row>
+                                        </Form>
+                                    ),
+                                },
+                            ]}
+                        />
+                    </Col>
+
+                    {/* Table Section */}
+                    <Col span={24}>
+                        <Table
+                            id="i18n-table"
+                            bordered
+                            columns={columns}
+                            dataSource={filteredData}
+                            size="small"
+                            loading={loading}
+                            pagination={{
+                                pageSize: 10,
+                                showTotal: total => `Total ${total} items`,
+                                showSizeChanger: true,
+                                pageSizeOptions: ["10", "20", "50", "100"],
+                            }}
+                            rowKey="id"
+                        />
+                    </Col>
+                </Row>
+            </Card>
+
+            {/* Edit/Add Modal */}
+            <Modal
+                title={currentRecord ? "Edit Translation" : "Add New Translation"}
+                open={isModalOpen}
+                onCancel={handleModalCancel}
+                footer={[
+                    <Button key="back" onClick={handleModalCancel}>
+                        Cancel
+                    </Button>,
+                    <Button key="submit" type="primary" onClick={handleModalSubmit}>
+                        {currentRecord ? "Update" : "Add"}
+                    </Button>,
+                ]}
+            >
+                <Form form={editForm} layout="vertical" name="editTranslationForm">
+                    <Form.Item name="title" label="Key" rules={[{ required: true, message: "Please enter a key!" }]}>
+                        <Input />
+                    </Form.Item>
+
+                    {getAvailableLanguages().map(lang => (
+                        <Form.Item key={lang} name={lang} label={lang.toUpperCase()}>
+                            <Input />
+                        </Form.Item>
+                    ))}
+                </Form>
+            </Modal>
+        </App>
     );
 };
 
-export default I18n;
+// Wrap with App provider to provide message context
+const I18nWithApp: FC = () => (
+    <App>
+        <I18n />
+    </App>
+);
+
+export default I18nWithApp;

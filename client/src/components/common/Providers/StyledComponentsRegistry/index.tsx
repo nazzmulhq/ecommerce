@@ -3,7 +3,6 @@
 import { useServerInsertedHTML } from "next/navigation";
 import React, { useState } from "react";
 import { ServerStyleSheet, StyleSheetManager } from "styled-components";
-import { Normalize } from "styled-normalize";
 
 export default function StyledComponentsRegistry({ children }: { children: React.ReactNode }) {
     // Only create stylesheet once with lazy initial state
@@ -20,10 +19,5 @@ export default function StyledComponentsRegistry({ children }: { children: React
         return <>{children}</>;
     }
 
-    return (
-        <StyleSheetManager sheet={styledComponentsStyleSheet.instance}>
-            <Normalize />
-            {children}
-        </StyleSheetManager>
-    );
+    return <StyleSheetManager sheet={styledComponentsStyleSheet.instance}>{children}</StyleSheetManager>;
 }

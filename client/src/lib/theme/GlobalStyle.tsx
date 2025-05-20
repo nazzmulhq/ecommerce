@@ -4,8 +4,6 @@ import { darken, rgba } from "polished";
 import { createGlobalStyle } from "styled-components";
 
 export const GlobalStyles = createGlobalStyle`
-
-
   html,
   body,
   #root {
@@ -406,6 +404,12 @@ export const GlobalStyles = createGlobalStyle`
       }
     }
   }
+
+    .ant-tooltip {
+        & .ant-tooltip-arrow::before {
+            clip-path: var(--ant-tooltip-arrow-path) !important;
+        }
+    }
 
 
   .item-hover {

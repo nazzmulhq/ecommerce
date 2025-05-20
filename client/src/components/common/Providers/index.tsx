@@ -7,8 +7,10 @@ import { GlobalStyles } from "@lib/theme/GlobalStyle";
 import "antd/dist/reset.css";
 import { FC, ReactNode } from "react";
 import "simplebar-react/dist/simplebar.min.css";
+import { Normalize } from "styled-normalize";
 import "../../../../public/styles/index.css";
 import StyledComponentsRegistry from "./StyledComponentsRegistry";
+
 export interface IProviders {
     children: ReactNode;
 }
@@ -21,6 +23,7 @@ const Providers: FC<IProviders> = ({ children }) => {
                     <AntdRegistry>
                         <StyledComponentsRegistry>
                             <GlobalStyles />
+                            <Normalize />
                             {children}
                         </StyledComponentsRegistry>
                     </AntdRegistry>
