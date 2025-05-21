@@ -188,8 +188,8 @@ const HomePage = () => {
                                     </div>
                                 }
                                 hoverable
-                                bordered={false}
-                                bodyStyle={{ display: "none" }}
+                                variant="borderless"
+                                styles={{ body: { display: "none" } }}
                                 style={{ borderRadius: "8px", overflow: "hidden" }}
                                 className="category-card"
                             />
@@ -297,24 +297,6 @@ const HomePage = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Add CSS for hover effects */}
-            <style jsx global>{`
-                .category-card:hover .category-image {
-                    transform: scale(1.03);
-                }
-
-                .product-card {
-                    transition:
-                        transform 0.3s,
-                        box-shadow 0.3s;
-                }
-
-                .product-card:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
-                }
-            `}</style>
         </div>
     );
 };
