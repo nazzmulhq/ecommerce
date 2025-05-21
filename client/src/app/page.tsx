@@ -1,11 +1,12 @@
 "use client";
 
+import HomePage from "@components/modules/home";
 import { FC } from "react";
 
 export interface IComponent {}
 
-const Component: FC<IComponent> = () => {
-    return <>Home Page</>;
+const Page: FC<IComponent> = () => {
+    return <HomePage />;
 };
 
-export default Component;
+export default Page;
