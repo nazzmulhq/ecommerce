@@ -19,7 +19,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const { navStyle } = useLayoutContext();
 
     // Check if the navStyle exists in Layouts, otherwise use a default
-    const selectedNavStyle = navStyle && Layouts[navStyle] ? navStyle : NavStyle.STANDARD;
+    const selectedNavStyle = navStyle && Layouts[navStyle] ? navStyle : NavStyle.MINI_SIDEBAR_TOGGLE;
 
     // Log the navStyle to help with debugging
 
