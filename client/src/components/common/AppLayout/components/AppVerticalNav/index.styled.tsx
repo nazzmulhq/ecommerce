@@ -699,3 +699,35 @@ export const StyledVerticalNav = styled(Menu)`
         }
     }
 `;
+
+export const StyledStyledVerticalNavSkeleton = styled.div`
+    width: 100%;
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .skeleton-item {
+        height: 36px;
+        width: 90%;
+        margin: 0 auto;
+        border-radius: 8px;
+        background: linear-gradient(
+            90deg,
+            ${({ theme }) => theme.palette.background.default} 25%,
+            ${({ theme }) => theme.palette.background.paper} 50%,
+            ${({ theme }) => theme.palette.background.default} 75%
+        );
+        background-size: 200% 100%;
+        animation: vertical-nav-shimmer 1.6s infinite;
+    }
+
+    @keyframes vertical-nav-shimmer {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+`;

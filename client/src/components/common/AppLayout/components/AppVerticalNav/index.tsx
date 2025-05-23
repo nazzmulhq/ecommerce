@@ -8,7 +8,7 @@ import { RouterConfigData } from "@src/types/Apps";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { StyledVerticalNav } from "./index.styled";
+import { StyledStyledVerticalNavSkeleton, StyledVerticalNav } from "./index.styled";
 import { getMenuItems, TMenuItem } from "./VerticalMenuUtils";
 
 type Props = {
@@ -16,6 +16,7 @@ type Props = {
 };
 
 const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
+    const [isMenuItemsLoading, setIsMenuItemsLoading] = useState(true);
     const { menuStyle, sidebarColorSet } = useSidebarContext();
     const { themeMode } = useThemeContext();
     const pathname = usePathname();
@@ -60,11 +61,23 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
                 }
             } catch (error) {
                 console.error("Error fetching menu items:", error);
+            } finally {
+                setIsMenuItemsLoading(false);
             }
         };
 
         fetchMenuItems();
     }, []);
+
+    if (isMenuItemsLoading) {
+        return (
+            <StyledStyledVerticalNavSkeleton>
+                {Array.from({ length: 15 }, (_, index) => (
+                    <div key={index} className="skeleton-item" />
+                ))}
+            </StyledStyledVerticalNavSkeleton>
+        );
+    }
 
     return (
         <StyledVerticalNav
