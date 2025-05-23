@@ -1,30 +1,44 @@
+"use client";
+import { TIconName } from "@src/types/iconName";
 import React from "react";
+import iconPacks from "./icons";
 
-// Icon map object that contains all available icons
-export const icons = {
-    IoSettingsSharp: React.lazy(() => import("react-icons/io5").then(module => ({ default: module.IoSettingsSharp }))),
-    MdAdminPanelSettings: React.lazy(() =>
-        import("react-icons/md").then(module => ({ default: module.MdAdminPanelSettings })),
-    ),
-};
-
-// Define the types for our props
 interface IconProps {
-    name: keyof typeof icons;
+    name: TIconName; // e.g., "IoSettingsSharp", "MdHome", "FaUserLock"
     size?: number;
     color?: string;
     className?: string;
 }
 
-const Icons: React.FC<IconProps> = ({ name, size = 20, color = "currentColor", className = "" }) => {
-    const IconComponent = icons[name];
+const Icons: React.FC<IconProps> = ({ name, size = 20, color = "currentColor", className = "", ...rest }) => {
+    // Extract prefix (first two letters, e.g., "Io", "Md", "Fa")
+    const prefix = name.slice(0, 2);
+    const [IconComponent, setIconComponent] = React.useState<React.ComponentType<any> | null>(null);
 
-    if (!IconComponent) {
-        console.warn(`Icon with name "${name}" not found`);
-        return null;
-    }
+    React.useEffect(() => {
+        let isMounted = true;
+        const loadIcon = async () => {
+            const importPack = iconPacks[prefix];
+            if (!importPack) {
+                console.warn(`Icon pack for prefix "${prefix}" not found`);
+                return;
+            }
+            const icons = await importPack();
+            const Component = icons[name];
+            if (!Component) {
+                console.warn(`Icon "${name}" not found in pack "${prefix}"`);
+                return;
+            }
+            if (isMounted) setIconComponent(() => Component);
+        };
+        loadIcon();
+        return () => {
+            isMounted = false;
+        };
+    }, [name, prefix]);
 
-    return <IconComponent size={size} color={color} className={className} />;
+    if (!IconComponent) return null;
+    return <IconComponent size={size} color={color} className={className} {...rest} />;
 };
 
 export default Icons;

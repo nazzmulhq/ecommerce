@@ -191,7 +191,7 @@ const defaultConfig = {
     footerType: FooterType.FLUID,
     navStyle: process.env.NEXT_PUBLIC_NAV_STYLE as string,
     layoutType: process.env.NEXT_PUBLIC_LAYOUT_TYPE as string,
-    footer: false,
+    footer: true,
     rtlLocale: ["ar"],
 };
 export default defaultConfig;
