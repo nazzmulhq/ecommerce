@@ -7,7 +7,7 @@
  * It allows users to add, edit, filter, and save language key-value pairs.
  */
 
-import { DeleteOutlined, EditOutlined, FilterOutlined, PlusOutlined, SaveOutlined } from "@ant-design/icons";
+import AppIcons from "@components/common/AppIcons";
 import { App, Button, Card, Col, Collapse, Form, Input, Modal, Row, Space, Table, Tooltip } from "antd";
 import { FC, useEffect, useState } from "react";
 
@@ -408,21 +408,21 @@ const I18n: FC = () => {
         {
             title: "Action",
             key: "action",
-            width: "15%",
+            width: "5%",
             render: (_: string, record: II18n) => (
                 <Space>
-                    <Button type="primary" onClick={() => handleAddOrEdit(record)} icon={<EditOutlined />}>
-                        Edit
-                    </Button>
+                    <Button
+                        type="primary"
+                        onClick={() => handleAddOrEdit(record)}
+                        icon={<AppIcons name="AiOutlineEdit" />}
+                    />
+
                     <Button
                         danger
                         htmlType="button"
                         onClick={() => handleRemoveRow(record)}
-                        type="primary"
-                        icon={<DeleteOutlined />}
-                    >
-                        Remove
-                    </Button>
+                        icon={<AppIcons name="AiOutlineDelete" />}
+                    />
                 </Space>
             ),
         },
@@ -436,7 +436,7 @@ const I18n: FC = () => {
                     <Space>
                         <Tooltip title="Filter">
                             <Button
-                                icon={<FilterOutlined />}
+                                icon={<AppIcons name="AiFillFilter" />}
                                 onClick={() => setFilterVisible(!filterVisible)}
                                 type={filterVisible ? "primary" : "default"}
                             />
@@ -447,7 +447,7 @@ const I18n: FC = () => {
                                 onClick={handleSave}
                                 type="primary"
                                 loading={loading}
-                                icon={<SaveOutlined />}
+                                icon={<AppIcons name="AiOutlineSave" />}
                             >
                                 Submit
                             </Button>
@@ -457,10 +457,8 @@ const I18n: FC = () => {
                                 htmlType="button"
                                 onClick={() => handleAddOrEdit()}
                                 type="primary"
-                                icon={<PlusOutlined />}
-                            >
-                                Add
-                            </Button>
+                                icon={<AppIcons name="AiOutlinePlus" />}
+                            />
                         </Tooltip>
                     </Space>
                 }
@@ -525,12 +523,27 @@ const I18n: FC = () => {
                             size="small"
                             loading={loading}
                             pagination={{
-                                pageSize: 10,
                                 showTotal: total => `Total ${total} items`,
                                 showSizeChanger: true,
                                 pageSizeOptions: ["10", "20", "50", "100"],
                             }}
                             rowKey="id"
+                            // Add table-level filtering for quick search
+                            onChange={(pagination, filters, sorter, extra) => {
+                                // Example: filter by key or any language value
+                                // You can customize this logic as needed
+                                if (filters && filters.search) {
+                                    const search = String(filters.search).toLowerCase();
+                                    const filtered = filteredData.filter(
+                                        item =>
+                                            item.title.toLowerCase().includes(search) ||
+                                            getAvailableLanguages().some(lang =>
+                                                (item[lang] || "").toLowerCase().includes(search),
+                                            ),
+                                    );
+                                    setFilteredData(filtered);
+                                }
+                            }}
                         />
                     </Col>
                 </Row>
