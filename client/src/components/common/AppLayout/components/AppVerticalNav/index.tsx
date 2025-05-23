@@ -8,7 +8,6 @@ import { RouterConfigData } from "@src/types/Apps";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { useIntl } from "react-intl";
 import { StyledVerticalNav } from "./index.styled";
 import { getMenuItems, TMenuItem } from "./VerticalMenuUtils";
 
@@ -48,8 +47,6 @@ const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
             }
         }
     };
-
-    const { messages } = useIntl();
 
     useEffect(() => {
         const fetchMenuItems = async () => {
