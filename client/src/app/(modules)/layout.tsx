@@ -1,4 +1,5 @@
 import AppLayout from "@components/common/AppLayout";
+import AppSuspense from "@components/common/AppSuspense";
 import React, { FC } from "react";
 
 export interface ILayout {
@@ -6,7 +7,11 @@ export interface ILayout {
 }
 
 const Layout: FC<ILayout> = ({ children }) => {
-    return <AppLayout>{children}</AppLayout>;
+    return (
+        <AppSuspense>
+            <AppLayout>{children}</AppLayout>
+        </AppSuspense>
+    );
 };
 
 export default Layout;
