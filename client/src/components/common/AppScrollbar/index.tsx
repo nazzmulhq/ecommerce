@@ -1,4 +1,6 @@
+"use client";
 import React, { ReactNode } from "react";
+// @ts-ignore
 import SimpleBarReact from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 

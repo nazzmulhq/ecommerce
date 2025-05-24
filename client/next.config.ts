@@ -5,9 +5,6 @@ const nextConfig: NextConfig = {
     compiler: {
         styledComponents: true,
     },
-    experimental: {
-        authInterrupts: true,
-    },
     env: {
         NEXT_PUBLIC_INITIAL_URL: "/configuration/permissions",
         NEXT_PUBLIC_STATE_TYPE: "context",

@@ -1,11 +1,12 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 
-import Icons, { icons } from "@components/common/AppIcons";
+import AppIcons from "@components/common/AppIcons";
 import { allowMultiLanguage } from "@lib/constants/AppConst";
 import { SidebarData } from "@lib/constants/defaultConfig";
 import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
 import { isArrayOrObjectEmpty } from "@lib/utils/Common";
 import { RouterConfigData } from "@src/types/Apps";
+import { TIconName } from "@src/types/iconName";
 import { Menu, MenuProps } from "antd";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -104,7 +105,7 @@ export const getRouteHorMenus = (routesConfig: RouterConfigData[]) => {
 interface IRouteItem {
     slug: string;
     name: string;
-    icon?: keyof typeof icons;
+    icon?: TIconName;
     message_id: string;
     path: string;
     type?: string;
@@ -142,7 +143,7 @@ export const getMenuItems = (routes: IRouteItem[]): TMenuItem[] => {
             // Create the icon element once to avoid repetition
             const iconElement = item.icon ? (
                 <span className="ant-menu-item-icon">
-                    <Icons name={item.icon} size={20} />
+                    <AppIcons name={item.icon} size={20} />
                 </span>
             ) : (
                 <span className="ant-menu-item-icon" />
