@@ -1,12 +1,12 @@
 interface LayoutProps {
     children: React.ReactNode;
-    list: React.ReactNode;
+    breadcrumb: React.ReactNode;
 }
 
-export default function Layout({ children, list }: LayoutProps) {
+export default function Layout({ children, breadcrumb }: LayoutProps) {
     return (
         <section>
-            {list}
+            {breadcrumb}
             {children}
         </section>
     );

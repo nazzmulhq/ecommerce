@@ -5,16 +5,17 @@ import { FC } from "react";
 
 // Fetch metadata from API
 export async function generateMetadata(): Promise<Metadata> {
-    return await getMetaData("permissions", {
-        title: "Permissions",
-        description: "Permissions",
-    });
+    return await getMetaData("permissions", {});
 }
 
 export interface IPage {}
 
 const Page: FC<IPage> = async () => {
-    return <Permissions />;
+    return (
+        <>
+            <Permissions />
+        </>
+    );
 };
 
 export default Page;

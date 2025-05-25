@@ -51,6 +51,17 @@ export async function middleware(req: NextRequest) {
 
         const token = req.cookies.get("token")?.value;
 
+        // Helper to forward pathname in headers
+        const nextWithPathname = () => {
+            const requestHeaders = new Headers(req.headers);
+            requestHeaders.set("x-pathname", pathname);
+            return NextResponse.next({
+                request: {
+                    headers: requestHeaders,
+                },
+            });
+        };
+
         // Redirect authenticated users away from auth pages
         if (token && afterLoginNotVisitedRoutes.includes(pathname)) {
             const redirectUrl = new URL(afterLoginRedirectRoute, req.url);
@@ -97,7 +108,7 @@ export async function middleware(req: NextRequest) {
             }
 
             // Allow the request to proceed if route exists
-            return NextResponse.next();
+            return nextWithPathname();
         }
         // User is logged in
         else {
@@ -114,7 +125,7 @@ export async function middleware(req: NextRequest) {
             }
 
             // Allow the request to proceed if route exists
-            return NextResponse.next();
+            return nextWithPathname();
         }
     } catch (error) {
         console.error("Middleware error:", error);
