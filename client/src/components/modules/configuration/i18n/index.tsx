@@ -429,7 +429,7 @@ const I18n: FC = () => {
     ];
 
     return (
-        <App>
+        <>
             <Card
                 title="Language Configuration"
                 extra={
@@ -575,15 +575,15 @@ const I18n: FC = () => {
                     ))}
                 </Form>
             </Modal>
-        </App>
+        </>
     );
 };
 
 // Wrap with App provider to provide message context
 const I18nWithApp: FC = () => (
-    <App>
+    <>
         <I18n />
-    </App>
+    </>
 );
 
 export default I18nWithApp;
