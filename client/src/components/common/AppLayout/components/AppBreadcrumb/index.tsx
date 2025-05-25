@@ -1,8 +1,8 @@
 import { HomeOutlined } from "@ant-design/icons";
-import { Breadcrumb } from "antd";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { StyledBreadcrumb } from "./index.styled";
 
 export interface IAppBreadcrumb {}
 
@@ -37,7 +37,7 @@ const AppBreadcrumb: React.FC<IAppBreadcrumb> = () => {
     ];
 
     return (
-        <Breadcrumb
+        <StyledBreadcrumb
             items={items.map(item =>
                 item.href ? { ...item, title: <Link href={item.href}>{item.title}</Link> } : item,
             )}
