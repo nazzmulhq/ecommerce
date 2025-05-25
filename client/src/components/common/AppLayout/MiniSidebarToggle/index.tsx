@@ -5,6 +5,7 @@ import clsx from "clsx";
 import React, { useState } from "react";
 import AppContentView from "../../AppContentView";
 import AppThemeSetting from "../../AppThemeSetting";
+import AppBreadcrumb from "../components/AppBreadcrumb";
 import AppFooter from "../components/AppFooter";
 import AppHeader from "./AppHeader";
 import AppSidebar from "./AppSidebar";
@@ -32,7 +33,10 @@ const MiniSidebarToggle: React.FC<Props> = ({ children, routesConfig }) => {
             <StyledAppLayoutMiniSidebarMain className="app-layout-mini-sidebar-main">
                 <AppHeader isCollapsed={isCollapsed} onToggleSidebar={onToggleSidebar} />
                 <StyledMainMiniScrollbar>
-                    <AppContentView>{children}</AppContentView>
+                    <AppContentView>
+                        <AppBreadcrumb />
+                        {children}
+                    </AppContentView>
                     <AppFooter />
                 </StyledMainMiniScrollbar>
             </StyledAppLayoutMiniSidebarMain>
