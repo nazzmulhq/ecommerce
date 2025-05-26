@@ -48,7 +48,7 @@ const AppSidebar = ({ visible, onClose, routesConfig }: AppSidebarProps) => {
             >
                 <UserInfo hasColor />
                 <StyledAppBitbucketScrollbar scrollToTop={false}>
-                    <AppVerticalNav routesConfig={routesConfig} />
+                    <AppVerticalNav />
                 </StyledAppBitbucketScrollbar>
             </StyledAppBitbucketSidebar>
         );

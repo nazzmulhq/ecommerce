@@ -40,7 +40,7 @@ const AppSidebar = ({ visible, onClose, routesConfig }: AppSidebarProps) => {
             >
                 <UserInfo />
                 <StyledAppSidebarHorScrollbar scrollToTop={false}>
-                    <AppVerticalMenu routesConfig={routesConfig} />
+                    <AppVerticalMenu />
                 </StyledAppSidebarHorScrollbar>
             </StyledHorMainSidebar>
         </StyledAppHorDrawer>

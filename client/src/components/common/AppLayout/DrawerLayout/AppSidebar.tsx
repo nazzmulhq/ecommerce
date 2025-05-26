@@ -40,7 +40,7 @@ const AppSidebar = ({ visible, onClose, routesConfig }: AppSidebarProps) => {
             >
                 <UserInfo hasColor />
                 <StyledAppDrawerSidebarScrollbar scrollToTop={false}>
-                    <AppVerticalNav routesConfig={routesConfig} />
+                    <AppVerticalNav />
                 </StyledAppDrawerSidebarScrollbar>
             </StyledAppDrawerLayoutSidebar>
         </StyledAppDrawer>

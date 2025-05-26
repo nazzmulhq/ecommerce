@@ -23,7 +23,7 @@ const AppSidebar = ({ isCollapsed, routesConfig }: AppSidebarProps) => {
         >
             <UserInfo hasColor />
             <StyledAppStandardScrollbar scrollToTop={false}>
-                <AppVerticalMenu routesConfig={routesConfig} />
+                <AppVerticalMenu />
             </StyledAppStandardScrollbar>
         </StyledStandardSidebar>
     );

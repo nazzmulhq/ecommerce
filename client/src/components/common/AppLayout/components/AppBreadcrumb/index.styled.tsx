@@ -6,7 +6,7 @@ export const StyledCard = styled(Card)`
     margin-bottom: 20px;
     .ant-card-body {
         /* display: none; */
-        padding: 8px 8px !important;
+        padding: 8px 20px !important;
     }
 
     @media (max-width: 600px) {

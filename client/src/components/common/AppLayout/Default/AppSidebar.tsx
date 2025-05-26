@@ -25,7 +25,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isCollapsed, routesConfig }) =>
         >
             <UserInfo hasColor />
             <StyledAppSidebarScrollbar scrollToTop={false}>
-                <AppVerticalMenu routesConfig={routesConfig} />
+                <AppVerticalMenu />
             </StyledAppSidebarScrollbar>
         </StyledAppMainSidebar>
     );

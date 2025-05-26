@@ -23,7 +23,7 @@ const AppSidebar = ({ routesConfig }: AppSidebarProps) => {
         >
             <UserInfo hasColor />
             <StyledAppSidebarMiniScrollbar scrollToTop={false}>
-                <AppVerticalMenu routesConfig={routesConfig} />
+                <AppVerticalMenu />
             </StyledAppSidebarMiniScrollbar>
         </StyledMiniSidebar>
     );

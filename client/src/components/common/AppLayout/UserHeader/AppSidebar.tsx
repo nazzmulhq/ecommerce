@@ -22,7 +22,7 @@ const AppSidebar = ({ isCollapsed, routesConfig }: AppSidebarProps) => {
             collapsible
         >
             <StyledUserSidebarScrollbar scrollToTop={false}>
-                <AppVerticalMenu routesConfig={routesConfig} />
+                <AppVerticalMenu />
             </StyledUserSidebarScrollbar>
         </StyledUserHeaderSidebar>
     );
