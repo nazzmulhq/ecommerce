@@ -33,7 +33,6 @@ export const StyledCard = styled(Card)`
     }
 
     .ant-card-body {
-        /* display: none; */
-        padding: 10px 20px !important;
+        padding: 10px 24px !important;
     }
 `;

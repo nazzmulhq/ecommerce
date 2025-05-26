@@ -4,29 +4,33 @@ import { RootState } from "../reducers";
 // Define a type for the slice state
 interface CounterState {
     isMenuCollapsed?: boolean;
+    isOpenFilterOption: boolean;
 }
 
 // Define the initial state using that type
 const initialState: CounterState = {
-    isMenuCollapsed: false, // Default value for menu collapse state
+    isMenuCollapsed: false,
+    isOpenFilterOption: false,
 };
 
 const slice = createSlice({
     name: "projectConfig",
-    // `createSlice` will infer the state type from the `initialState` argument
     initialState,
     reducers: {
-        // Toggle the menu collapse state
-        toggleMenuCollapse: state => {
+        toggleMenuCollapse: (state: CounterState) => {
             state.isMenuCollapsed = !state.isMenuCollapsed;
+        },
+        toggleFilterOption: (state: CounterState) => {
+            state.isOpenFilterOption = !state.isOpenFilterOption;
         },
     },
 });
 
-export const { toggleMenuCollapse } = slice.actions;
+export const { toggleMenuCollapse, toggleFilterOption } = slice.actions;
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectIsMenuCollapsed = (state: RootState) => state.projectConfig.isMenuCollapsed;
+export const selectIsOpenFilterOption = (state: RootState) => state.projectConfig.isOpenFilterOption;
 
 const projectConfigSliceReducer = slice.reducer;
 export default projectConfigSliceReducer;

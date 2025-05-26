@@ -2,11 +2,12 @@
 import AppIcons from "@components/common/AppIcons";
 import { getCookie } from "@lib/actions";
 import { getRoutes } from "@lib/actions/route";
-import { Breadcrumb, Flex } from "antd";
+import { Breadcrumb, Flex, Space } from "antd";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { BackButton } from "./BackButton";
+import FilterButton from "./FilterButton";
 import FormattedMessage from "./FormattedMessage";
 import { StyledCard } from "./index.styled";
 
@@ -101,7 +102,10 @@ const AppBreadcrumb: React.FC<IAppBreadcrumb> = () => {
         <StyledCard>
             <Flex justify="space-between" align="center">
                 <Breadcrumb items={items} />
-                <BackButton />
+                <Space>
+                    <FilterButton />
+                    <BackButton />
+                </Space>
             </Flex>
         </StyledCard>
     );
