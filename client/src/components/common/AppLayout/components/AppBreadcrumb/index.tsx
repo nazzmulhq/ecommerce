@@ -79,7 +79,18 @@ const AppBreadcrumb: React.FC<IAppBreadcrumb> = () => {
         return (
             <StyledCard>
                 <Flex justify="space-between" align="center">
-                    <Breadcrumb items={[]} />
+                    <Breadcrumb
+                        items={[
+                            {
+                                key: 1,
+                                title: (
+                                    <Link href="/" passHref>
+                                        <AppIcons name="AiFillHome" />
+                                    </Link>
+                                ),
+                            },
+                        ]}
+                    />
                     <BackButton />
                 </Flex>
             </StyledCard>

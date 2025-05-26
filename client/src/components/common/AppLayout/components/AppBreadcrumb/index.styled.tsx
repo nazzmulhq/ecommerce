@@ -4,15 +4,36 @@ import styled from "styled-components";
 
 export const StyledCard = styled(Card)`
     margin-bottom: 20px;
-    .ant-card-body {
-        /* display: none; */
-        padding: 8px 20px !important;
+
+    .ant-breadcrumb {
+        display: flex;
+        align-items: center;
     }
 
-    @media (max-width: 600px) {
-        margin-bottom: 12px;
-        .ant-card-body {
-            padding: 4px !important;
-        }
+    .ant-breadcrumb ol {
+        display: flex;
+        align-items: center;
+        margin: 0;
+    }
+
+    .ant-breadcrumb ol li {
+        height: 16px;
+        display: flex;
+        align-items: center;
+    }
+
+    .ant-breadcrumb-link {
+        display: flex;
+        align-items: center;
+    }
+
+    .ant-breadcrumb-separator {
+        display: flex;
+        align-items: center;
+    }
+
+    .ant-card-body {
+        /* display: none; */
+        padding: 10px 20px !important;
     }
 `;
