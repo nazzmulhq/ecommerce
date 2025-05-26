@@ -1,3 +1,4 @@
+"use client";
 import { FooterType, LayoutType } from "@lib/constants/AppEnums";
 import { useLayoutContext } from "@lib/context/AppContextProvider/LayoutContextProvider";
 import { RouterConfigData } from "@src/types/Apps";

@@ -1,3 +1,4 @@
+"use client";
 import { FooterType } from "@lib/constants/AppEnums";
 import { useLayoutContext } from "@lib/context/AppContextProvider/LayoutContextProvider";
 import { RouterConfigData } from "@src/types/Apps";
@@ -5,7 +6,6 @@ import clsx from "clsx";
 import React, { useState } from "react";
 import AppContentView from "../../AppContentView";
 import AppThemeSetting from "../../AppThemeSetting";
-import AppBreadcrumb from "../components/AppBreadcrumb";
 import AppFooter from "../components/AppFooter";
 import AppHeader from "./AppHeader";
 import AppSidebar from "./AppSidebar";
@@ -33,10 +33,7 @@ const MiniSidebarToggle: React.FC<Props> = ({ children, routesConfig }) => {
             <StyledAppLayoutMiniSidebarMain className="app-layout-mini-sidebar-main">
                 <AppHeader isCollapsed={isCollapsed} onToggleSidebar={onToggleSidebar} />
                 <StyledMainMiniScrollbar>
-                    <AppContentView>
-                        <AppBreadcrumb />
-                        {children}
-                    </AppContentView>
+                    <AppContentView>{children}</AppContentView>
                     <AppFooter />
                 </StyledMainMiniScrollbar>
             </StyledAppLayoutMiniSidebarMain>

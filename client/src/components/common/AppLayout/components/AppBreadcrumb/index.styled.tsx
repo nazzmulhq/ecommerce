@@ -5,13 +5,13 @@ import styled from "styled-components";
 export const StyledCard = styled(Card)`
     margin-bottom: 20px;
     .ant-card-body {
-        padding: 8px 12px !important;
+        display: none;
     }
 
     @media (max-width: 600px) {
         margin-bottom: 12px;
         .ant-card-body {
-            padding: 6px 4px !important;
+            padding: 4px !important;
         }
     }
 `;

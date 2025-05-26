@@ -1,3 +1,4 @@
+"use client";
 import { FooterType } from "@lib/constants/AppEnums";
 import { useLayoutContext } from "@lib/context/AppContextProvider/LayoutContextProvider";
 import { isEmpty } from "@lib/utils/Common";

@@ -1,3 +1,4 @@
+"use client";
 import AppContentView from "@components/common/AppContentView";
 import AppThemeSetting from "@components/common/AppThemeSetting";
 import { FooterType } from "@lib/constants/AppEnums";
