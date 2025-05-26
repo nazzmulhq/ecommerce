@@ -10,6 +10,7 @@ import { FC, ReactNode } from "react";
 import "simplebar-react/dist/simplebar.min.css";
 import { Normalize } from "styled-normalize";
 import "../../../../public/styles/index.css";
+import StoreProvider from "./StoreProvider";
 import StyledComponentsRegistry from "./StyledComponentsRegistry";
 
 export interface IProviders {
@@ -18,19 +19,21 @@ export interface IProviders {
 
 const Providers: FC<IProviders> = ({ children }) => {
     return (
-        <AppContextProvider>
-            <AppThemeProvider>
-                <AppLocaleProvider>
-                    <AntdRegistry>
-                        <StyledComponentsRegistry>
-                            <GlobalStyles />
-                            <Normalize />
-                            <App>{children}</App>
-                        </StyledComponentsRegistry>
-                    </AntdRegistry>
-                </AppLocaleProvider>
-            </AppThemeProvider>
-        </AppContextProvider>
+        <StoreProvider>
+            <AppContextProvider>
+                <AppThemeProvider>
+                    <AppLocaleProvider>
+                        <AntdRegistry>
+                            <StyledComponentsRegistry>
+                                <GlobalStyles />
+                                <Normalize />
+                                <App>{children}</App>
+                            </StyledComponentsRegistry>
+                        </AntdRegistry>
+                    </AppLocaleProvider>
+                </AppThemeProvider>
+            </AppContextProvider>
+        </StoreProvider>
     );
 };
 

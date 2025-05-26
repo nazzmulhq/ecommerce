@@ -7,6 +7,8 @@ import { useIntl } from "react-intl";
 import AppHeaderMessages from "@components/common/AppHeaderMessages";
 import AppLanguageSwitcher from "@components/common/AppLanguageSwitcher";
 import AppNotifications from "@components/common/AppNotifications";
+import { selectIsMenuCollapsed, toggleMenuCollapse } from "@lib/redux/config/projectConfig";
+import { useAppDispatch, useAppSelector } from "@lib/redux/store";
 import AppLogo from "../components/AppLogo";
 import { StyledDropdownWrapper } from "../index.styled";
 import {
@@ -22,19 +24,18 @@ const items = [
     { key: 3, label: <AppLanguageSwitcher /> },
 ];
 
-type AppHeaderProps = {
-    isCollapsed: boolean;
-    onToggleSidebar: () => void;
-};
+type AppHeaderProps = {};
 
-const AppHeader = ({ isCollapsed, onToggleSidebar }: AppHeaderProps) => {
+const AppHeader = () => {
+    const isMenuCollapsed = useAppSelector(selectIsMenuCollapsed);
+    const dispatch = useAppDispatch();
     const { messages } = useIntl();
 
     return (
         <StyledHeaderMiniSidebar className="app-header-mini-sidebar">
-            {React.createElement(isCollapsed ? AiOutlineMenuUnfold : AiOutlineMenuFold, {
+            {React.createElement(isMenuCollapsed ? AiOutlineMenuUnfold : AiOutlineMenuFold, {
                 className: "trigger",
-                onClick: onToggleSidebar,
+                onClick: () => dispatch(toggleMenuCollapse()),
             })}
             <AppLogo />
 

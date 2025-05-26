@@ -1,21 +1,19 @@
+"use client";
 import { getCookie } from "@lib/actions";
 import { getRoutes } from "@lib/actions/auth/login";
 import { MenuStyle, ThemeMode } from "@lib/constants/AppEnums";
 import defaultConfig from "@lib/constants/defaultConfig";
 import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
 import { useThemeContext } from "@lib/context/AppContextProvider/ThemeContextProvider";
-import { RouterConfigData } from "@src/types/Apps";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { StyledStyledVerticalNavSkeleton, StyledVerticalNav } from "./index.styled";
 import { getMenuItems, TMenuItem } from "./VerticalMenuUtils";
 
-type Props = {
-    routesConfig: RouterConfigData[];
-};
+type Props = {};
 
-const AppVerticalNav: React.FC<Props> = ({ routesConfig }) => {
+const AppVerticalNav: React.FC<Props> = () => {
     const [isMenuItemsLoading, setIsMenuItemsLoading] = useState(true);
     const { menuStyle, sidebarColorSet } = useSidebarContext();
     const { themeMode } = useThemeContext();

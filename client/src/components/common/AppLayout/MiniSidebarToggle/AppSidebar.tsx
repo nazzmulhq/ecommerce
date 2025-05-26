@@ -1,31 +1,28 @@
-import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
-import { RouterConfigData } from "@src/types/Apps";
-import clsx from "clsx";
+import { selectIsMenuCollapsed } from "@lib/redux/config/projectConfig";
+import { useAppSelector } from "@lib/redux/store";
 import AppVerticalMenu from "../components/AppVerticalNav";
 import UserInfo from "../components/UserInfo";
 import { StyledMiniSidebarScrollbar, StyledMiniSidebarToggle } from "./index.styled";
 
-type AppSidebarProps = {
-    isCollapsed: boolean;
-    routesConfig: RouterConfigData[];
-};
+type AppSidebarProps = {};
 
-const AppSidebar = ({ isCollapsed, routesConfig }: AppSidebarProps) => {
-    const { allowSidebarBgImage } = useSidebarContext();
+const AppSidebar = () => {
+    const isMenuCollapsed = useAppSelector(selectIsMenuCollapsed);
+    // const { allowSidebarBgImage } = useSidebarContext();
 
     return (
         <StyledMiniSidebarToggle
             breakpoint="xl"
-            className={clsx({
-                "mini-sidebar-toggle-img-background": allowSidebarBgImage,
-            })}
-            collapsed={isCollapsed}
+            // className={clsx({
+            //     "mini-sidebar-toggle-img-background": allowSidebarBgImage,
+            // })}
+            collapsed={isMenuCollapsed}
             collapsedWidth="0"
             collapsible
         >
             <UserInfo hasColor />
             <StyledMiniSidebarScrollbar scrollToTop={false}>
-                <AppVerticalMenu routesConfig={routesConfig} />
+                <AppVerticalMenu />
             </StyledMiniSidebarScrollbar>
         </StyledMiniSidebarToggle>
     );

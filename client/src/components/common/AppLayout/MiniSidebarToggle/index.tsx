@@ -1,9 +1,5 @@
-"use client";
-import { FooterType } from "@lib/constants/AppEnums";
-import { useLayoutContext } from "@lib/context/AppContextProvider/LayoutContextProvider";
 import { RouterConfigData } from "@src/types/Apps";
-import clsx from "clsx";
-import React, { useState } from "react";
+import React from "react";
 import AppContentView from "../../AppContentView";
 import AppThemeSetting from "../../AppThemeSetting";
 import AppFooter from "../components/AppFooter";
@@ -15,23 +11,19 @@ type Props = {
     children: React.ReactNode;
     routesConfig: RouterConfigData[];
 };
-const MiniSidebarToggle: React.FC<Props> = ({ children, routesConfig }) => {
-    const [isCollapsed, setCollapsed] = useState(false);
-    const { footer, footerType } = useLayoutContext();
+const MiniSidebarToggle: React.FC<Props> = ({ children }) => {
+    // const { footer, footerType } = useLayoutContext();
 
-    const onToggleSidebar = () => {
-        setCollapsed(!isCollapsed);
-    };
     return (
         <StyledAppLayoutMiniSidebar
-            className={clsx({
-                appMainFooter: footer && footerType === FooterType.FLUID,
-                appMainFixedFooter: footer && footerType === FooterType.FIXED,
-            })}
+        // className={clsx({
+        //     appMainFooter: footer && footerType === FooterType.FLUID,
+        //     appMainFixedFooter: footer && footerType === FooterType.FIXED,
+        // })}
         >
-            <AppSidebar isCollapsed={isCollapsed} routesConfig={routesConfig} />
+            <AppSidebar />
             <StyledAppLayoutMiniSidebarMain className="app-layout-mini-sidebar-main">
-                <AppHeader isCollapsed={isCollapsed} onToggleSidebar={onToggleSidebar} />
+                <AppHeader />
                 <StyledMainMiniScrollbar>
                     <AppContentView>{children}</AppContentView>
                     <AppFooter />
