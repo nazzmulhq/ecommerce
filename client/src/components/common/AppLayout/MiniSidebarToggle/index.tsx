@@ -2,6 +2,7 @@ import { RouterConfigData } from "@src/types/Apps";
 import React from "react";
 import AppContentView from "../../AppContentView";
 import AppThemeSetting from "../../AppThemeSetting";
+import AppBreadcrumb from "../components/AppBreadcrumb";
 import AppFooter from "../components/AppFooter";
 import AppHeader from "./AppHeader";
 import AppSidebar from "./AppSidebar";
@@ -25,7 +26,10 @@ const MiniSidebarToggle: React.FC<Props> = ({ children }) => {
             <StyledAppLayoutMiniSidebarMain className="app-layout-mini-sidebar-main">
                 <AppHeader />
                 <StyledMainMiniScrollbar>
-                    <AppContentView>{children}</AppContentView>
+                    <AppContentView>
+                        <AppBreadcrumb />
+                        {children}
+                    </AppContentView>
                     <AppFooter />
                 </StyledMainMiniScrollbar>
             </StyledAppLayoutMiniSidebarMain>
