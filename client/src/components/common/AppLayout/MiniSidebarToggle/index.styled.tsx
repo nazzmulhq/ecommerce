@@ -1,3 +1,4 @@
+"use client";
 import AppScrollbar from "@components/common/AppScrollbar";
 import { Input, Layout } from "antd";
 import styled from "styled-components";

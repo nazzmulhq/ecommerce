@@ -1,3 +1,4 @@
+"use client";
 import { ThemeMode } from "@lib/constants/AppEnums";
 import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
 import { useThemeContext } from "@lib/context/AppContextProvider/ThemeContextProvider";

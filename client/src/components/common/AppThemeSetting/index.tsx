@@ -1,3 +1,4 @@
+"use client";
 import { CheckOutlined } from "@ant-design/icons";
 
 import clsx from "clsx";

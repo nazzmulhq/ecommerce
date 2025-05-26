@@ -1,3 +1,4 @@
+"use client";
 import React, { ErrorInfo, ReactNode } from "react";
 import ErrorIcon from "./ErrorIcon";
 import { StyledAppBoundary } from "./index.styled";

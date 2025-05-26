@@ -9,7 +9,7 @@ import { StyledAppLayoutMiniSidebar, StyledAppLayoutMiniSidebarMain, StyledMainM
 
 type Props = {
     children: React.ReactNode;
-    routesConfig: RouterConfigData[];
+    routesConfig?: RouterConfigData[];
 };
 const MiniSidebarToggle: React.FC<Props> = ({ children }) => {
     // const { footer, footerType } = useLayoutContext();

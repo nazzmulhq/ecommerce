@@ -1,3 +1,4 @@
+"use client";
 import { Button, Layout } from "antd";
 import styled from "styled-components";
 

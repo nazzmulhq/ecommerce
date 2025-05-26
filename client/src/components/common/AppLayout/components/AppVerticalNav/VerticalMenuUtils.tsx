@@ -1,3 +1,4 @@
+"use client";
 import AppIcons from "@components/common/AppIcons";
 import { isArrayOrObjectEmpty } from "@lib/utils/Common";
 import { RouterConfigData } from "@src/types/Apps";

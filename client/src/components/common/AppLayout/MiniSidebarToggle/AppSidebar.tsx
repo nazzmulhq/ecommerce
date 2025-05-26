@@ -1,3 +1,4 @@
+"use client";
 import { selectIsMenuCollapsed } from "@lib/redux/config/projectConfig";
 import { useAppSelector } from "@lib/redux/store";
 import AppVerticalMenu from "../components/AppVerticalNav";

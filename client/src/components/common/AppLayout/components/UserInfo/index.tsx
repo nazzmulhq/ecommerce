@@ -1,3 +1,4 @@
+"use client";
 import { useSidebarContext } from "@lib/context/AppContextProvider/SidebarContextProvider";
 import { useThemeContext } from "@lib/context/AppContextProvider/ThemeContextProvider";
 import { Dropdown } from "antd";

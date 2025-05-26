@@ -1,3 +1,4 @@
+"use client";
 import { Dropdown } from "antd";
 import React from "react";
 import { AiOutlineMenuFold, AiOutlineMenuUnfold } from "react-icons/ai";

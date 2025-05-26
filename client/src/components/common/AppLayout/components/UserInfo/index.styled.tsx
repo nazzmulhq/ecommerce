@@ -1,3 +1,4 @@
+"use client";
 import { Avatar, List } from "antd";
 import { darken } from "polished";
 import styled from "styled-components";

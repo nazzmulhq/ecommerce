@@ -1,3 +1,4 @@
+"use client";
 import { useLayoutContext } from "@lib/context/AppContextProvider/LayoutContextProvider";
 import { StyledMainFooter } from "./AppFooter.styled";
 
