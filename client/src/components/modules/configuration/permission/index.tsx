@@ -1,4 +1,5 @@
 import AppContainer from "@components/common/AppContainer";
+import AppForm from "@components/common/AppForm";
 import { FC } from "react";
 
 export interface IPermissions {}
@@ -15,7 +16,7 @@ const Permissions: FC<IPermissions> = () => {
                 },
             ]}
         >
-            ok
+            <AppForm />
         </AppContainer>
     );
 };
