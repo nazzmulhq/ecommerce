@@ -1,6 +1,4 @@
 {
-  "route.demo": "Demo",
-  "route.settings": "Settings",
   "route.configuration.roles": "Roles",
   "route.configuration.permissions": "Permissions",
   "route.configuration.users": "Users",

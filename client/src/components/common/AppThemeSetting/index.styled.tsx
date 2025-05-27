@@ -4,7 +4,7 @@ import styled from "styled-components";
 export const StyledCustomizerOption = styled.div`
     position: fixed;
     right: 0;
-    top: 85px;
+    top: 50%;
     z-index: 9;
 
     [dir="rtl"] & {
