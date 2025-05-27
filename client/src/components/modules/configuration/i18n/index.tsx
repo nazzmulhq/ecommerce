@@ -433,42 +433,29 @@ const I18n: FC = () => {
         <>
             <AppContainer
                 title="Language Configuration"
-                // extra={
-                //     <Space>
-                //         <Tooltip title="Filter">
-                //             <Button
-                //                 icon={<AppIcons name="AiFillFilter" />}
-                //                 onClick={() => setFilterVisible(!filterVisible)}
-                //                 type={filterVisible ? "primary" : "default"}
-                //             />
-                //         </Tooltip>
-                //         <Tooltip title="Save to Database">
-                //             <Button
-                //                 htmlType="submit"
-                //                 onClick={handleSave}
-                //                 type="primary"
-                //                 loading={loading}
-                //                 icon={<AppIcons name="AiOutlineSave" />}
-                //             >
-                //                 Submit
-                //             </Button>
-                //         </Tooltip>
-                //         <Tooltip title="Add New Translation">
-                //             <Button
-                //                 htmlType="button"
-                //                 onClick={() => handleAddOrEdit()}
-                //                 type="primary"
-                //                 icon={<AppIcons name="AiOutlinePlus" />}
-                //             />
-                //         </Tooltip>
-                //     </Space>
-                // }
                 extra={[
                     {
                         key: 1,
                         position: 1,
                         icon: <AppIcons name="AiFillFilter" />,
                         type: filterVisible ? "primary" : "default",
+                    },
+                    {
+                        key: 2,
+                        position: 2,
+                        icon: <AppIcons name="AiOutlineSave" />,
+                        type: "primary",
+                        onClick: handleSave,
+                        loading: loading,
+                    },
+                    {
+                        key: 3,
+                        position: 3,
+                        icon: <AppIcons name="AiOutlinePlus" />,
+                        type: "primary",
+                        onClick: () => handleAddOrEdit(),
+                        tooltipTitle: "Add New Translation",
+                        htmlType: "button",
                     },
                 ]}
             >

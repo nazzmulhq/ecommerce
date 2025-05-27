@@ -1,4 +1,5 @@
 "use client";
+import AppContainer from "@components/common/AppContainer";
 import type { TreeDataNode, TreeProps } from "antd";
 import React, { useState } from "react";
 import { StyledRoutesTree } from "./index.styled";
@@ -97,15 +98,26 @@ const RoutesTree: React.FC = () => {
     };
 
     return (
-        <StyledRoutesTree
-            className="draggable-tree"
-            defaultExpandedKeys={expandedKeys}
-            draggable
-            blockNode
-            onDragEnter={onDragEnter}
-            onDrop={onDrop}
-            treeData={gData}
-        />
+        <AppContainer
+            title="Routes Tree"
+            extra={[
+                {
+                    key: 1,
+                    position: 1,
+                    children: "View",
+                },
+            ]}
+        >
+            <StyledRoutesTree
+                className="draggable-tree"
+                defaultExpandedKeys={expandedKeys}
+                draggable
+                blockNode
+                onDragEnter={onDragEnter}
+                onDrop={onDrop}
+                treeData={gData}
+            />
+        </AppContainer>
     );
 };
 
