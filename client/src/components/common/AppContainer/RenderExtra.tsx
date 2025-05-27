@@ -19,11 +19,10 @@ const RenderExtra: FC<IRenderExtra> = ({ extra }) => {
                 })
                 .map((buttonProps, index) => {
                     const { key, ...restProps } = buttonProps;
+                    // Ensure unique key for Tooltip
+                    const tooltipKey = key ?? `tooltip-${index}`;
                     return (
-                        <Tooltip
-                            key={`tooltip-${restProps?.tooltipTitle}`}
-                            title={restProps?.tooltipTitle || restProps.children}
-                        >
+                        <Tooltip key={tooltipKey} title={restProps?.tooltipTitle || restProps.children}>
                             <Button key={key || `btn-${index}`} {...restProps} />
                         </Tooltip>
                     );

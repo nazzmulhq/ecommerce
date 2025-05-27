@@ -9,6 +9,8 @@ import AppContainer from "@components/common/AppContainer";
  */
 
 import AppIcons from "@components/common/AppIcons";
+import { selectIsOpenFilterOption, toggleFilterOption } from "@lib/redux/config/projectConfig";
+import { useAppDispatch, useAppSelector } from "@lib/redux/store";
 import { App, Button, Col, Collapse, Form, Input, Modal, Row, Space, Table } from "antd";
 import { FC, useEffect, useState } from "react";
 
@@ -39,11 +41,12 @@ const I18n: FC = () => {
     const [i18nData, setI18nData] = useState<II18n[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [refetch, setFetch] = useState(0);
-    const [editingKey, setEditingKey] = useState<string>("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentRecord, setCurrentRecord] = useState<II18n | null>(null);
-    const [filterVisible, setFilterVisible] = useState(false);
     const [filteredData, setFilteredData] = useState<II18n[]>([]);
+    const isOpenFilterOption = useAppSelector(selectIsOpenFilterOption);
+
+    const dispatch = useAppDispatch();
 
     // Get message from App
     const { message } = App.useApp();
@@ -435,12 +438,6 @@ const I18n: FC = () => {
                 title="Language Configuration"
                 extra={[
                     {
-                        key: 1,
-                        position: 1,
-                        icon: <AppIcons name="AiFillFilter" />,
-                        type: filterVisible ? "primary" : "default",
-                    },
-                    {
                         key: 2,
                         position: 2,
                         icon: <AppIcons name="AiOutlineSave" />,
@@ -465,8 +462,8 @@ const I18n: FC = () => {
                         <Collapse
                             defaultActiveKey={["1"]}
                             style={{ marginBottom: 16 }}
-                            onChange={() => setFilterVisible(!filterVisible)}
-                            activeKey={filterVisible ? "1" : ""}
+                            onChange={() => dispatch(toggleFilterOption())}
+                            activeKey={isOpenFilterOption ? "1" : ""}
                             items={[
                                 {
                                     key: "1",
