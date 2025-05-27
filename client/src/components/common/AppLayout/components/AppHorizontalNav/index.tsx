@@ -1,5 +1,5 @@
 import { getCookie } from "@lib/actions";
-import { getRoutes } from "@lib/actions/route";
+import { getRoutes } from "@lib/actions/modules/route";
 import { RouterConfigData } from "@src/types/Apps";
 import { Menu } from "antd";
 import { usePathname } from "next/navigation";

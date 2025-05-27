@@ -1,7 +1,7 @@
 "use client";
 import AppIcons from "@components/common/AppIcons";
 import { getCookie } from "@lib/actions";
-import { getRoutes } from "@lib/actions/route";
+import { getRoutes } from "@lib/actions/modules/route";
 import { Breadcrumb, Flex, Space } from "antd";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
