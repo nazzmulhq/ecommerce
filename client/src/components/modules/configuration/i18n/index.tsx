@@ -1,5 +1,6 @@
 "use client";
 
+import AppContainer from "@components/common/AppContainer";
 /**
  * I18n Configuration Module
  *
@@ -8,7 +9,7 @@
  */
 
 import AppIcons from "@components/common/AppIcons";
-import { App, Button, Card, Col, Collapse, Form, Input, Modal, Row, Space, Table, Tooltip } from "antd";
+import { App, Button, Col, Collapse, Form, Input, Modal, Row, Space, Table } from "antd";
 import { FC, useEffect, useState } from "react";
 
 // Type Definitions
@@ -430,38 +431,46 @@ const I18n: FC = () => {
 
     return (
         <>
-            <Card
+            <AppContainer
                 title="Language Configuration"
-                extra={
-                    <Space>
-                        <Tooltip title="Filter">
-                            <Button
-                                icon={<AppIcons name="AiFillFilter" />}
-                                onClick={() => setFilterVisible(!filterVisible)}
-                                type={filterVisible ? "primary" : "default"}
-                            />
-                        </Tooltip>
-                        <Tooltip title="Save to Database">
-                            <Button
-                                htmlType="submit"
-                                onClick={handleSave}
-                                type="primary"
-                                loading={loading}
-                                icon={<AppIcons name="AiOutlineSave" />}
-                            >
-                                Submit
-                            </Button>
-                        </Tooltip>
-                        <Tooltip title="Add New Translation">
-                            <Button
-                                htmlType="button"
-                                onClick={() => handleAddOrEdit()}
-                                type="primary"
-                                icon={<AppIcons name="AiOutlinePlus" />}
-                            />
-                        </Tooltip>
-                    </Space>
-                }
+                // extra={
+                //     <Space>
+                //         <Tooltip title="Filter">
+                //             <Button
+                //                 icon={<AppIcons name="AiFillFilter" />}
+                //                 onClick={() => setFilterVisible(!filterVisible)}
+                //                 type={filterVisible ? "primary" : "default"}
+                //             />
+                //         </Tooltip>
+                //         <Tooltip title="Save to Database">
+                //             <Button
+                //                 htmlType="submit"
+                //                 onClick={handleSave}
+                //                 type="primary"
+                //                 loading={loading}
+                //                 icon={<AppIcons name="AiOutlineSave" />}
+                //             >
+                //                 Submit
+                //             </Button>
+                //         </Tooltip>
+                //         <Tooltip title="Add New Translation">
+                //             <Button
+                //                 htmlType="button"
+                //                 onClick={() => handleAddOrEdit()}
+                //                 type="primary"
+                //                 icon={<AppIcons name="AiOutlinePlus" />}
+                //             />
+                //         </Tooltip>
+                //     </Space>
+                // }
+                extra={[
+                    {
+                        key: 1,
+                        position: 1,
+                        icon: <AppIcons name="AiFillFilter" />,
+                        type: filterVisible ? "primary" : "default",
+                    },
+                ]}
             >
                 {/* Filter Section */}
                 <Row gutter={24}>
@@ -547,7 +556,7 @@ const I18n: FC = () => {
                         />
                     </Col>
                 </Row>
-            </Card>
+            </AppContainer>
 
             {/* Edit/Add Modal */}
             <Modal

@@ -1,6 +1,9 @@
+"use client";
+
 import { isArrayOrObjectEmpty } from "@lib/utils/Common";
-import { Button, ButtonProps, Card, Space, Typography } from "antd";
+import { ButtonProps, Card, Typography } from "antd";
 import React, { isValidElement, ReactNode } from "react";
+import RenderExtra from "./RenderExtra";
 
 type TitleConfig = {
     children: string;
@@ -12,7 +15,7 @@ type TitleConfig = {
 type AppContainerProps = {
     children: React.ReactNode;
     title?: ReactNode | string | TitleConfig;
-    extra?: (ButtonProps & { key?: string | number; position: string | number })[];
+    extra?: (ButtonProps & { key?: string | number; position: string | number; tooltipTitle?: string })[];
 };
 
 const { Title } = Typography;
@@ -47,29 +50,8 @@ const AppContainer: React.FC<AppContainerProps> = ({ children, title = "", extra
         return null;
     };
 
-    const renderExtra = (): ReactNode => {
-        if (!extra || extra.length === 0) {
-            return null;
-        }
-
-        return (
-            <Space size="small">
-                {extra
-                    .sort((a, b) => {
-                        if (a.position < b.position) return 1;
-                        if (a.position > b.position) return -1;
-                        return 0;
-                    })
-                    .map((buttonProps, index) => {
-                        const { key, ...restProps } = buttonProps;
-                        return <Button key={key || `btn-${index}`} {...restProps} />;
-                    })}
-            </Space>
-        );
-    };
-
     const leftHeader = title ? renderTitle() : null;
-    const rightExtra = renderExtra();
+    const rightExtra = <RenderExtra extra={extra} />;
 
     return (
         <Card title={leftHeader} extra={rightExtra}>

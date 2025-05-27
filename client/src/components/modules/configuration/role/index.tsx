@@ -1,23 +1,25 @@
+"use client";
 import AppContainer from "@components/common/AppContainer";
 import { FC } from "react";
 
-export interface IPermissions {}
+export interface IRole {}
 
-const Permissions: FC<IPermissions> = () => {
+const Role: FC<IRole> = () => {
     return (
         <AppContainer
-            title="Permissions Management"
+            title="Role Management"
             extra={[
                 {
                     key: 1,
                     position: 1,
                     children: "View",
+                    onClick: () => console.log("op"),
                 },
             ]}
         >
-            ok
+            Role
         </AppContainer>
     );
 };
 
-export default Permissions;
+export default Role;

@@ -12,9 +12,9 @@ export interface IPage {}
 
 const Page: FC<IPage> = async () => {
     return (
-        <>
+        <section>
             <Permissions />
-        </>
+        </section>
     );
 };
 
