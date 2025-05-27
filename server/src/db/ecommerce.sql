@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Generation Time: May 12, 2025 at 11:14 PM
+-- Generation Time: May 27, 2025 at 12:29 AM
 -- Server version: 8.0.42
 -- PHP Version: 8.2.27
 
@@ -115,32 +115,31 @@ CREATE TABLE `route` (
   `deleted_at` datetime DEFAULT NULL,
   `deleted` int NOT NULL DEFAULT '0',
   `type` enum('guest','shared','protected','devOnly') NOT NULL DEFAULT 'guest',
-  `path` varchar(255) NOT NULL,
+  `path` varchar(255) DEFAULT NULL,
   `icon` varchar(255) DEFAULT NULL,
   `position` int NOT NULL DEFAULT '0',
-  `is_menu` tinyint NOT NULL DEFAULT '0',
-  `is_sub_menu` tinyint NOT NULL DEFAULT '0',
   `is_dynamic_route` tinyint NOT NULL DEFAULT '0',
   `metadata` json DEFAULT NULL,
   `nsleft` int NOT NULL DEFAULT '1',
   `nsright` int NOT NULL DEFAULT '2',
-  `parentId` int DEFAULT NULL
+  `parentId` int DEFAULT NULL,
+  `not_show_in_menu` tinyint NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `route`
 --
 
-INSERT INTO `route` (`id`, `slug`, `name`, `message_id`, `status`, `created_by`, `updated_by`, `deleted_by`, `created_at`, `updated_at`, `deleted_at`, `deleted`, `type`, `path`, `icon`, `position`, `is_menu`, `is_sub_menu`, `is_dynamic_route`, `metadata`, `nsleft`, `nsright`, `parentId`) VALUES
-(1, 'root', 'Root', 'root', 1, 1, 0, 0, '2025-05-12 21:43:42.303013', '2025-05-13 05:13:09.601308', NULL, 0, 'guest', '', NULL, 0, 1, 0, 0, '{\"title\": {\"default\": \"Root\", \"absolute\": \"https://example.com\", \"template\": \"Root - {{title}}\"}, \"description\": \"This is the root page\"}', 1, 18, NULL),
-(2, 'login', 'Login', 'route.login', 1, 1, 0, 0, '2025-05-12 21:45:25.759794', '2025-05-13 05:12:57.252201', NULL, 0, 'guest', '/login', NULL, 0, 0, 1, 0, '{\"title\": {\"default\": \"Login\", \"absolute\": \"https://example.com\", \"template\": \"Login - {{title}}\"}, \"description\": \"This is the login page\"}', 2, 3, 1),
-(3, 'home', 'Home', 'route.home', 1, 1, 0, 0, '2025-05-12 21:45:55.704812', '2025-05-13 05:12:43.573797', NULL, 0, 'guest', '/', NULL, 0, 0, 1, 0, '{\"title\": {\"default\": \"Home\", \"absolute\": \"https://example.com\", \"template\": \"Home - {{title}}\"}, \"description\": \"This is the home page\"}', 4, 5, 1),
-(4, 'configuration', 'Configuration', 'route.configuration', 1, 1, 0, 0, '2025-05-12 21:47:14.692540', '2025-05-13 05:12:33.490006', NULL, 0, 'protected', 'configuration', NULL, 0, 0, 1, 0, '{\"title\": {\"default\": \"Configuration\", \"absolute\": \"https://example.com\", \"template\": \"Configuration - {{title}}\"}, \"description\": \"This is the configuration page\"}', 6, 17, 1),
-(5, 'permissions', 'Permissions', 'route.configuration.permissions', 1, 1, 0, 0, '2025-05-12 21:50:08.426987', '2025-05-13 04:53:06.174934', NULL, 0, 'protected', '/configuration/permissions', NULL, 1, 0, 1, 0, '{\"title\": {\"default\": \"Permissions\", \"absolute\": \"https://example.com\", \"template\": \"Permissions - {{title}}\"}, \"description\": \"This is the permissions page\"}', 7, 8, 4),
-(6, 'roles', 'Roles', 'route.configuration.roles', 1, 1, 0, 0, '2025-05-12 21:50:53.986689', '2025-05-13 04:53:11.501374', NULL, 0, 'protected', '/configuration/roles', NULL, 2, 0, 1, 0, '{\"title\": {\"default\": \"Roles\", \"absolute\": \"https://example.com\", \"template\": \"Roles - {{title}}\"}, \"description\": \"This is the roles page\"}', 9, 10, 4),
-(7, 'users', 'Users', 'route.configuration.users', 1, 1, 0, 0, '2025-05-12 21:51:31.645938', '2025-05-13 04:53:17.833888', NULL, 0, 'protected', '/configuration/users', NULL, 3, 0, 1, 0, '{\"title\": {\"default\": \"Users\", \"absolute\": \"https://example.com\", \"template\": \"Users - {{title}}\"}, \"description\": \"This is the roles page\"}', 11, 12, 4),
-(8, 'routes', 'Routes', 'route.configuration.routes', 1, 1, 0, 0, '2025-05-12 21:52:20.061097', '2025-05-13 04:53:22.511711', NULL, 0, 'protected', '/configuration/routes', NULL, 4, 0, 1, 0, '{\"title\": {\"default\": \"Routes\", \"absolute\": \"https://example.com\", \"template\": \"Routes - {{title}}\"}, \"description\": \"This is the routes page\"}', 13, 14, 4),
-(9, 'i18n', 'I18n', 'route.configuration.i18n', 1, 1, 0, 0, '2025-05-12 21:53:16.103579', '2025-05-13 04:53:27.018603', NULL, 0, 'protected', '/configuration/i18n', NULL, 5, 0, 1, 0, '{\"title\": {\"default\": \"I18n\", \"absolute\": \"https://example.com\", \"template\": \"I18n - {{title}}\"}, \"description\": \"This is the i18n page\"}', 15, 16, 4);
+INSERT INTO `route` (`id`, `slug`, `name`, `message_id`, `status`, `created_by`, `updated_by`, `deleted_by`, `created_at`, `updated_at`, `deleted_at`, `deleted`, `type`, `path`, `icon`, `position`, `is_dynamic_route`, `metadata`, `nsleft`, `nsright`, `parentId`, `not_show_in_menu`) VALUES
+(1, 'root', 'Root', 'root', 1, 1, 0, 0, '2025-05-12 21:43:42.303013', '2025-05-17 19:09:11.848364', NULL, 0, 'guest', NULL, NULL, 0, 0, '{\"title\": {\"default\": \"Root\", \"absolute\": \"https://example.com\", \"template\": \"Root - {{title}}\"}, \"description\": \"This is the root page\"}', 1, 30, NULL, 1),
+(2, 'login', 'Login', 'route.login', 1, 1, 0, 0, '2025-05-12 21:45:25.759794', '2025-05-17 19:09:14.961281', NULL, 0, 'guest', '/login', NULL, 0, 0, '{\"title\": {\"default\": \"Login\", \"absolute\": \"https://example.com\", \"template\": \"Login - {{title}}\"}, \"description\": \"This is the login page\"}', 2, 3, 1, 1),
+(3, 'home', 'Home', 'route.home', 1, 1, 0, 0, '2025-05-12 21:45:55.704812', '2025-05-17 19:09:20.463111', NULL, 0, 'guest', '/', NULL, 0, 0, '{\"title\": {\"default\": \"Home\", \"absolute\": \"https://example.com\", \"template\": \"Home - {{title}}\"}, \"description\": \"This is the home page\"}', 4, 5, 1, 1),
+(4, 'configuration', 'Configuration', 'route.configuration', 1, 1, 0, 0, '2025-05-12 21:47:14.692540', '2025-05-23 23:11:52.382852', NULL, 0, 'protected', '/configuration', 'IoMdSettings', 1, 0, '{\"title\": {\"default\": \"Configuration\", \"absolute\": \"https://example.com\", \"template\": \"Configuration - {{title}}\"}, \"description\": \"This is the configuration page\"}', 6, 29, 1, 0),
+(5, 'permissions', 'Permissions', 'route.configuration.permissions', 1, 1, 0, 0, '2025-05-12 21:50:08.426987', '2025-05-27 05:51:52.810393', NULL, 0, 'protected', '/configuration/permissions', 'FaUserLock', 1, 0, '{\"title\": \"Permissions\", \"keywords\": [\"permissions\", \"access control\", \"user rights\", \"configuration\"], \"description\": \"This is the permissions page\"}', 7, 8, 4, 0),
+(6, 'roles', 'Roles', 'route.configuration.roles', 1, 1, 0, 0, '2025-05-12 21:50:53.986689', '2025-05-27 05:52:19.627073', NULL, 0, 'protected', '/configuration/roles', 'FaUserFriends', 2, 0, '{\"title\": \"Roles\", \"description\": \"This is the roles page\"}', 9, 10, 4, 0),
+(7, 'users', 'Users', 'route.configuration.users', 1, 1, 0, 0, '2025-05-12 21:51:31.645938', '2025-05-23 12:12:28.231239', NULL, 0, 'protected', '/configuration/users', 'FaUser', 3, 0, '{\"title\": {\"default\": \"Users\", \"absolute\": \"https://example.com\", \"template\": \"Users - {{title}}\"}, \"description\": \"This is the roles page\"}', 11, 12, 4, 0),
+(8, 'routes', 'Routes', 'route.configuration.routes', 1, 1, 0, 0, '2025-05-12 21:52:20.061097', '2025-05-23 12:05:29.477019', NULL, 0, 'protected', '/configuration/routes', 'TbRouteAltRight', 4, 0, '{\"title\": {\"default\": \"Routes\", \"absolute\": \"https://example.com\", \"template\": \"Routes - {{title}}\"}, \"description\": \"This is the routes page\"}', 13, 14, 4, 0),
+(9, 'i18n', 'I18n', 'route.configuration.i18n', 1, 1, 0, 0, '2025-05-12 21:53:16.103579', '2025-05-23 23:12:58.320311', NULL, 0, 'protected', '/configuration/i18n', 'FaLanguage', 5, 0, '{\"title\": {\"default\": \"I18n\", \"absolute\": \"https://example.com\", \"template\": \"I18n - {{title}}\"}, \"description\": \"This is the i18n page\"}', 15, 16, 4, 0);
 
 -- --------------------------------------------------------
 
@@ -304,7 +303,7 @@ ALTER TABLE `role`
 -- AUTO_INCREMENT for table `route`
 --
 ALTER TABLE `route`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `user`
