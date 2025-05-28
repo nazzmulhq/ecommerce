@@ -26,9 +26,9 @@ const AppIcons: React.FC<IconProps> = ({ name, size = 20, color = "currentColor"
         }
         // Dynamically import the icon pack
         importPack().then(icons => {
-            console.log(`Loaded icon pack "${prefix}"`);
-            console.log(`icons`, icons);
-            const Component = icons[name];
+            // For local icon packs (hi, io, fa), icons are under .default
+            const iconsObj = icons.default ? icons.default : icons;
+            const Component = iconsObj[name];
             if (!Component) {
                 console.warn(`Icon "${name}" not found in pack "${prefix}"`);
                 if (isMounted) setIconComponent(null);

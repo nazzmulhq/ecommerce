@@ -15,13 +15,13 @@ interface LangLayoutProps {
 
 export default async function RootLayout({ children, params }: LangLayoutProps) {
     // const token = (await cookies()).get("token")?.value;
-    const { lang } = await params;
+    // const { lang } = await params;
 
     const primaryColor = process.env.NEXT_PUBLIC_PRIMARY_COLOR || "#2299DD";
 
     return (
         <html>
-            <body className={inter.className} lang={lang}>
+            <body className={inter.className}>
                 <NextTopLoader
                     color={primaryColor}
                     crawl={true}

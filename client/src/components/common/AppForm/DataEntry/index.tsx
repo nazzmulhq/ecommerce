@@ -30,8 +30,7 @@ import { DataEntryFieldTypes, DependencyType, FieldGroup, FormConfig, isFieldGro
 
 const { RangePicker } = DatePicker;
 const { TextArea, Password } = Input;
-const { Panel } = Collapse;
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 /**
  * Dynamic Data Entry Component that renders different form fields based on configuration
@@ -290,11 +289,17 @@ const DataEntry: React.FC<{ config: FormConfig }> = ({ config }) => {
                             </Divider>
                         )}
                         {field.collapsible ? (
-                            <Collapse defaultActiveKey={field.collapsed ? [] : [field.key]}>
-                                <Panel header={field.title} key={field.key} extra={field.extra}>
-                                    {renderFields(field.fields)}
-                                </Panel>
-                            </Collapse>
+                            <Collapse
+                                defaultActiveKey={field.collapsed ? [] : [field.key]}
+                                items={[
+                                    {
+                                        key: field.key,
+                                        label: field.title,
+                                        children: renderFields(field.fields),
+                                        extra: field.extra,
+                                    },
+                                ]}
+                            />
                         ) : (
                             renderFields(field.fields)
                         )}
