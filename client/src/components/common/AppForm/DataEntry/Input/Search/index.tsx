@@ -1,9 +1,9 @@
-import { Input } from 'antd';
-import { SearchProps } from 'antd/es/input';
-import React, { FC } from 'react';
-import { INPUT_SEARCH } from '../../../Types';
+import { Input } from "antd";
+import { SearchProps } from "antd/es/input";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 export interface IInputSearch {
-    ctype: typeof INPUT_SEARCH;
+    ctype: typeof DataEntryFieldTypes.INPUT_SEARCH;
     props: SearchProps;
 }
 

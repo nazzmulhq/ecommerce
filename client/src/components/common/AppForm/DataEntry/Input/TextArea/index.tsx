@@ -1,10 +1,10 @@
-import { Input } from 'antd';
-import { TextAreaProps } from 'antd/es/input';
-import React, { FC } from 'react';
-import { INPUT_TEXT_AREA } from '../../../Types';
+import { Input } from "antd";
+import { TextAreaProps } from "antd/es/input";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 
 export interface IInputTextArea {
-    ctype: typeof INPUT_TEXT_AREA;
+    ctype: typeof DataEntryFieldTypes.INPUT_TEXT_AREA;
     props: TextAreaProps;
 }
 

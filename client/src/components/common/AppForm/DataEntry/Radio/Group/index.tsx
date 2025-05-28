@@ -1,9 +1,9 @@
-import { Radio, RadioGroupProps } from 'antd';
-import React, { FC } from 'react';
-import { RADIO_GROUP } from '../../../Types';
+import { Radio, RadioGroupProps } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 
 export interface IRadioGroup {
-    ctype: typeof RADIO_GROUP;
+    ctype: typeof DataEntryFieldTypes.RADIO_GROUP;
     props: RadioGroupProps;
 }
 

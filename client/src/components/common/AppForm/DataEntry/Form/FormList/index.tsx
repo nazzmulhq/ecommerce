@@ -1,9 +1,10 @@
-import { Form } from 'antd';
-import { FormListProps } from 'antd/es/form';
-import React, { FC } from 'react';
-import { FROM_LIST } from '../../../Types';
+import { Form } from "antd";
+import { FormListProps } from "antd/es/form";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
+
 export interface IFormList {
-    ctype: typeof FROM_LIST;
+    ctype: typeof DataEntryFieldTypes.FROM_LIST;
     props: FormListProps;
 }
 

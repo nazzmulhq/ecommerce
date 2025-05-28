@@ -1,9 +1,9 @@
-import { SelectProps, Select as Selects } from 'antd';
-import React, { FC } from 'react';
-import { SELECT } from '../../Types';
+import { SelectProps, Select as Selects } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface ISelect {
-    ctype: typeof SELECT;
+    ctype: typeof DataEntryFieldTypes.SELECT;
     props: SelectProps;
 }
 

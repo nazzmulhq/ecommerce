@@ -1,9 +1,9 @@
-import { TreeSelectProps, TreeSelect as TreeSelects } from 'antd';
-import React, { FC } from 'react';
-import { TREE_SELECT } from '../../Types';
+import { TreeSelectProps, TreeSelect as TreeSelects } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface ITreeSelect {
-    ctype: typeof TREE_SELECT;
+    ctype: typeof DataEntryFieldTypes.TREE_SELECT;
     props: TreeSelectProps;
 }
 

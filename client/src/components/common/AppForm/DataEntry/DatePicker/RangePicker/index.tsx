@@ -1,10 +1,10 @@
-import { DatePicker } from 'antd';
-import { RangePickerProps } from 'antd/es/date-picker';
-import React, { FC } from 'react';
-import { DATE_PICKER_RANGE } from '../../../Types';
+import { DatePicker } from "antd";
+import { RangePickerProps } from "antd/es/date-picker";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 
 export interface IRangePicker {
-    ctype: typeof DATE_PICKER_RANGE;
+    ctype: typeof DataEntryFieldTypes.DATE_PICKER_RANGE;
     props: RangePickerProps;
 }
 

@@ -1,9 +1,9 @@
-import { SwitchProps, Switch as Switchs } from 'antd';
-import React, { FC } from 'react';
-import { SWITCH } from '../../Types';
+import { SwitchProps, Switch as Switchs } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface ISwitch {
-    ctype: typeof SWITCH;
+    ctype: typeof DataEntryFieldTypes.SWITCH;
     props: SwitchProps;
 }
 

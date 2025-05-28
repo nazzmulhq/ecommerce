@@ -1,9 +1,9 @@
-import { CascaderProps, Cascader as Cascaders } from 'antd';
-import React, { FC } from 'react';
-import { CASCADER } from '../../Types';
+import { CascaderProps, Cascader as Cascaders } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface ICascader {
-    ctype: typeof CASCADER;
+    ctype: typeof DataEntryFieldTypes.CASCADER;
     props: CascaderProps;
 }
 

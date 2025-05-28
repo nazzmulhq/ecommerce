@@ -1,9 +1,9 @@
-import { CheckboxProps, Checkbox as Checkboxs } from 'antd';
-import React, { FC } from 'react';
-import { CHECKBOX } from '../../Types';
+import { CheckboxProps, Checkbox as Checkboxs } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface ICheckbox {
-    ctype: typeof CHECKBOX;
+    ctype: typeof DataEntryFieldTypes.CHECKBOX;
     props: CheckboxProps;
 }
 

@@ -1,14 +1,14 @@
-import { FormProps, Form as Forms } from 'antd';
-import React, { FC } from 'react';
-import { renderComponent } from '../../Render';
-import { FORM, TQuickUIProps } from '../../Types';
+import { FormProps, Form as Forms } from "antd";
+import { FC } from "react";
 
-interface IChildren extends Omit<FormProps, 'children'> {
+import { DataEntryFieldTypes } from "../types";
+
+interface IChildren extends Omit<FormProps, "children"> {
     children: TQuickUIProps[];
 }
 
 export interface IForm {
-    ctype: typeof FORM;
+    ctype: typeof DataEntryFieldTypes.FORM;
     props: IChildren;
 }
 

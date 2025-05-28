@@ -1,8 +1,8 @@
-import { AutoCompleteProps, AutoComplete as AutoCompletes } from 'antd';
-import React, { FC } from 'react';
-import { AUTO_COMPLETE } from '../../Types';
+import { AutoCompleteProps, AutoComplete as AutoCompletes } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 export interface IAutoComplete {
-    ctype: typeof AUTO_COMPLETE;
+    ctype: typeof DataEntryFieldTypes.AUTO_COMPLETE;
     props: AutoCompleteProps;
 }
 

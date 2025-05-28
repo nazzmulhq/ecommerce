@@ -1,13 +1,13 @@
-import { TimePickerProps, TimePicker as TimePickers } from 'antd';
-import React, { FC } from 'react';
-import { TIME_PICKER } from '../../Types';
+import { TimePickerProps, TimePicker as TimePickers } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface ITimePicker {
-    ctype: typeof TIME_PICKER;
+    ctype: typeof DataEntryFieldTypes.TIME_PICKER;
     props: TimePickerProps;
 }
 
-const TimePicker: FC<ITimePicker> = ({props}) => {
+const TimePicker: FC<ITimePicker> = ({ props }) => {
     return <TimePickers {...props} />;
 };
 

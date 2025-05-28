@@ -1,9 +1,9 @@
-import { ColorPickerProps, ColorPicker as ColorPickers } from 'antd';
-import React, { FC } from 'react';
-import { COLOR_PICKER } from '../../Types';
+import { ColorPickerProps, ColorPicker as ColorPickers } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface IColorPicker {
-    ctype: typeof COLOR_PICKER;
+    ctype: typeof DataEntryFieldTypes.COLOR_PICKER;
     props: ColorPickerProps;
 }
 

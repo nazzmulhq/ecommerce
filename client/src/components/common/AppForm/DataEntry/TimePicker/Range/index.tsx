@@ -1,9 +1,9 @@
-import { TimePicker, TimeRangePickerProps } from 'antd';
-import React, { FC } from 'react';
-import { TIME_PICKER_RANGE } from '../../../Types';
+import { TimePicker, TimeRangePickerProps } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 
 export interface ITimeRangePicker {
-    ctype: typeof TIME_PICKER_RANGE;
+    ctype: typeof DataEntryFieldTypes.TIME_PICKER_RANGE;
     props: TimeRangePickerProps;
 }
 

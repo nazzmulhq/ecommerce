@@ -1,10 +1,10 @@
-import { Form } from 'antd';
-import { FormProviderProps } from 'antd/es/form/context';
-import React, { FC } from 'react';
-import { FORM_PROVIDER } from '../../../Types';
+import { Form } from "antd";
+import { FormProviderProps } from "antd/es/form/context";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 
 export interface IFormProvider {
-    ctype: typeof FORM_PROVIDER;
+    ctype: typeof DataEntryFieldTypes.FORM_PROVIDER;
     props: FormProviderProps;
 }
 

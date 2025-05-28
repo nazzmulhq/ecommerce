@@ -1,9 +1,9 @@
-import { RadioProps, Radio as Radios } from 'antd';
-import React, { FC } from 'react';
-import { RADIO } from '../../Types';
+import { RadioProps, Radio as Radios } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface IRadio {
-    ctype: typeof RADIO;
+    ctype: typeof DataEntryFieldTypes.RADIO;
     props: RadioProps;
 }
 

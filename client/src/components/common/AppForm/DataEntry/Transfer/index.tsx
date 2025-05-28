@@ -1,9 +1,8 @@
-import { TransferProps, Transfer as Transfers } from 'antd';
-import React, { FC } from 'react';
-import { TRANSFER } from '../../Types';
+import { TransferProps, Transfer as Transfers } from "antd";
+import { FC } from "react";
 
 export interface ITransfer {
-    ctype: typeof TRANSFER;
+    ctype: typeof DataEntryFieldTypes.TRANSFER;
     props: TransferProps;
 }
 

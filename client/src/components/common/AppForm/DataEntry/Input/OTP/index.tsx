@@ -1,10 +1,10 @@
-import { Input } from 'antd';
-import { OTPProps } from 'antd/es/input/OTP';
-import React, { FC } from 'react';
-import { INPUT_OTP } from '../../../Types';
+import { Input } from "antd";
+import { OTPProps } from "antd/es/input/OTP";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 
 export interface IInputOTP {
-    ctype: typeof INPUT_OTP;
+    ctype: typeof DataEntryFieldTypes.INPUT_OTP;
     props: OTPProps;
 }
 

@@ -1,10 +1,10 @@
-import { Input } from 'antd';
-import { GroupProps } from 'antd/es/input';
-import React, { FC } from 'react';
-import { INPUT_GROUP } from '../../../Types';
+import { Input } from "antd";
+import { GroupProps } from "antd/es/input";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 
 export interface IInputGroup {
-    ctype: typeof INPUT_GROUP;
+    ctype: typeof DataEntryFieldTypes.INPUT_GROUP;
     props: GroupProps;
 }
 

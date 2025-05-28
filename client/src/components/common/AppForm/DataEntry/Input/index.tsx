@@ -1,9 +1,9 @@
-import { InputProps, Input as Inputs } from 'antd';
-import React, { FC } from 'react';
-import { INPUT } from '../../Types';
+import { InputProps, Input as Inputs } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface IInput {
-    ctype: typeof INPUT;
+    ctype: typeof DataEntryFieldTypes.INPUT;
     props: InputProps;
 }
 

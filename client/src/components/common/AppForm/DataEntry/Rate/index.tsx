@@ -1,9 +1,9 @@
-import { RateProps, Rate as Rates } from 'antd';
-import React, { FC } from 'react';
-import { RATE } from '../../Types';
+import { RateProps, Rate as Rates } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface IRate {
-    ctype: typeof RATE;
+    ctype: typeof DataEntryFieldTypes.RATE;
     props: RateProps;
 }
 

@@ -1,9 +1,9 @@
-import { InputNumberProps, InputNumber as InputNumbers } from 'antd';
-import React, { FC } from 'react';
-import { INPUT_NUMBER } from '../../Types';
+import { InputNumberProps, InputNumber as InputNumbers } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface IInputNumber {
-    ctype: typeof INPUT_NUMBER;
+    ctype: typeof DataEntryFieldTypes.INPUT_NUMBER;
     props: InputNumberProps;
 }
 

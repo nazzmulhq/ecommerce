@@ -1,9 +1,9 @@
-import { MentionProps, Mentions as Mentionss } from 'antd';
-import React, { FC } from 'react';
-import { MENTION } from '../../Types';
+import { MentionProps, Mentions as Mentionss } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface IMentions {
-    ctype: typeof MENTION;
+    ctype: typeof DataEntryFieldTypes.MENTION;
     props: MentionProps;
 }
 

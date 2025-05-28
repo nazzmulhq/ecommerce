@@ -1,9 +1,9 @@
-import { Input } from 'antd';
-import { PasswordProps } from 'antd/es/input';
-import React, { FC } from 'react';
-import { INPUT_PASSWORD } from '../../../Types';
+import { Input } from "antd";
+import { PasswordProps } from "antd/es/input";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 export interface IInputPassword {
-    ctype: typeof INPUT_PASSWORD;
+    ctype: typeof DataEntryFieldTypes.INPUT_PASSWORD;
     props: PasswordProps;
 }
 

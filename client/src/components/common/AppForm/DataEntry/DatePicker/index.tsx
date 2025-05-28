@@ -1,9 +1,9 @@
-import { DatePickerProps, DatePicker as DatePickers } from 'antd';
-import React, { FC } from 'react';
-import { DATE_PICKER } from '../../Types';
+import { DatePickerProps, DatePicker as DatePickers } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface IDatePicker {
-    ctype: typeof DATE_PICKER;
+    ctype: typeof DataEntryFieldTypes.DATE_PICKER;
     props: DatePickerProps;
 }
 

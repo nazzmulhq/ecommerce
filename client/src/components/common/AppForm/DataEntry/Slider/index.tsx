@@ -1,11 +1,11 @@
-import { SliderSingleProps, Slider as Sliders } from 'antd';
+import { SliderSingleProps, Slider as Sliders } from "antd";
 
-import { SliderRangeProps } from 'antd/es/slider';
-import React, { FC } from 'react';
-import { SLIDER } from '../../Types';
+import { SliderRangeProps } from "antd/es/slider";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface ISlider {
-    ctype: typeof SLIDER;
+    ctype: typeof DataEntryFieldTypes.SLIDER;
     props: SliderSingleProps | SliderRangeProps;
 }
 

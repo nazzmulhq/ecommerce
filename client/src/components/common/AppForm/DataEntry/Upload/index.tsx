@@ -1,9 +1,9 @@
-import { UploadProps, Upload as Uploads } from 'antd';
-import React, { FC } from 'react';
-import { UPLOAD } from '../../Types';
+import { UploadProps, Upload as Uploads } from "antd";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../types";
 
 export interface IUpload {
-    ctype: typeof UPLOAD;
+    ctype: typeof DataEntryFieldTypes.UPLOAD;
     props: UploadProps;
 }
 

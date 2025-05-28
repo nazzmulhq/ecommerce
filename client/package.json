@@ -16,6 +16,7 @@
         "@reduxjs/toolkit": "^2.8.2",
         "@xyflow/react": "^12.6.4",
         "antd": "^5.25.1",
+        "antd-img-crop": "^4.25.0",
         "clsx": "^2.1.1",
         "js-cookie": "^3.0.5",
         "next": "^15.3.2",

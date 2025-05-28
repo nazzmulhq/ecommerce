@@ -1,14 +1,14 @@
-import { Upload, UploadProps } from 'antd';
-import ImgCrop, { ImgCropProps } from 'antd-img-crop';
-import React, { FC } from 'react';
-import { UPLOAD_IMG_CROP } from '../../../Types';
+import { Upload, UploadProps } from "antd";
+import ImgCrop, { ImgCropProps } from "antd-img-crop";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 
-interface IChildren extends Omit<ImgCropProps, 'children'> {
+interface IChildren extends Omit<ImgCropProps, "children"> {
     upload: UploadProps;
 }
 
 export interface IUploadImgCrop {
-    ctype: typeof UPLOAD_IMG_CROP;
+    ctype: typeof DataEntryFieldTypes.UPLOAD_IMG_CROP;
     props: IChildren;
 }
 

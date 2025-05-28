@@ -1,10 +1,10 @@
-import { Radio } from 'antd';
-import { RadioButtonProps } from 'antd/es/radio/radioButton';
-import React, { FC } from 'react';
-import { RADIO_BUTTON } from '../../../Types';
+import { Radio } from "antd";
+import { RadioButtonProps } from "antd/es/radio/radioButton";
+import { FC } from "react";
+import { DataEntryFieldTypes } from "../../types";
 
 export interface IRadioButton {
-    ctype: typeof RADIO_BUTTON;
+    ctype: typeof DataEntryFieldTypes.RADIO_BUTTON;
     props: RadioButtonProps;
 }
 
