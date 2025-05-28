@@ -1,14 +1,10 @@
 "use client";
 import AppContainer from "@components/common/AppContainer";
-import DataEntry from "@components/common/AppForm/DataEntry";
-import { FormConfig } from "@components/common/AppForm/DataEntry/types";
 import { FC } from "react";
 
 export interface IPermissions {}
 
 const Permissions: FC<IPermissions> = () => {
-    const formConfig: FormConfig = {};
-
     return (
         <AppContainer
             title="Permissions Management"
@@ -20,7 +16,7 @@ const Permissions: FC<IPermissions> = () => {
                 },
             ]}
         >
-            <DataEntry config={formConfig} />
+            ok
         </AppContainer>
     );
 };
