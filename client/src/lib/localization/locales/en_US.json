@@ -1,4 +1,5 @@
 {
+  "common.filter": "Filter",
   "route.configuration.roles": "Roles",
   "route.configuration.permissions": "Permissions",
   "route.configuration.users": "Users",

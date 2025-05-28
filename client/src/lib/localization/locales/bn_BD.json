@@ -1,4 +1,5 @@
 {
+  "common.filter": "ফিল্টার",
   "route.configuration.roles": "রোলেস",
   "route.configuration.permissions": "পার্মিশন্স",
   "route.configuration.users": "ইউজার",
