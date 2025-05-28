@@ -1,10 +1,11 @@
 import { FormProps, Form as Forms } from "antd";
 import { FC } from "react";
 
-import { DataEntryFieldTypes } from "../types";
+import FieldRender from "../FieldReader";
+import { DataEntryFieldTypes, TDataEntryField } from "../types";
 
 interface IChildren extends Omit<FormProps, "children"> {
-    children: TQuickUIProps[];
+    children: TDataEntryField[];
 }
 
 export interface IForm {
@@ -14,7 +15,13 @@ export interface IForm {
 
 const Form: FC<IForm> = ({ props }) => {
     const { children, ...rest } = props;
-    return <Forms {...rest}>{renderComponent(children)}</Forms>;
+    return (
+        <Forms {...rest}>
+            {children.map((child, index) => (
+                <FieldRender key={index} field={child} />
+            ))}
+        </Forms>
+    );
 };
 
 export default Form;

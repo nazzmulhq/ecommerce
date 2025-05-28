@@ -4,7 +4,7 @@ import { FC } from "react";
 import { DataEntryFieldTypes } from "../../types";
 
 export interface IFormList {
-    ctype: typeof DataEntryFieldTypes.FROM_LIST;
+    ctype: typeof DataEntryFieldTypes.FORM_LIST;
     props: FormListProps;
 }
 

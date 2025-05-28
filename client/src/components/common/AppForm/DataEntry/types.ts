@@ -85,7 +85,7 @@ export enum DataEntryFieldTypes {
 }
 
 // Export type for component interfaces
-export type TDataEntryFields =
+export type TDataEntryField =
     | IAutoComplete
     | ICascader
     | ICheckbox
@@ -119,87 +119,3 @@ export type TDataEntryFields =
     | IUpload
     | IUploadImgCrop
     | IUploadImageDraggable;
-
-// Define dependency types for more granular control
-export enum DependencyType {
-    SHOW = "show", // Controls field visibility
-    DISABLE = "disable", // Controls field disabled state
-    RULES = "rules", // Controls dynamic validation rules
-}
-
-// Enhanced dependency configuration
-export interface FieldDependency {
-    type: DependencyType;
-    name: string | string[]; // Dependent field name(s)
-    cb: (values: any, field?: any) => boolean | any[] | object; // Callback function
-}
-
-// Base field configuration that all field types will extend
-export interface BaseFieldConfig {
-    name: string;
-    label?: string;
-    type: DataEntryFieldTypes;
-    value?: any;
-    placeholder?: string;
-    defaultValue?: any;
-    dependencies?: FieldDependency[];
-    rules?: any[];
-    props?: any;
-    hidden?: boolean;
-    disabled?: boolean;
-    required?: boolean;
-    readOnly?: boolean;
-    tooltip?: string;
-    extra?: string | React.ReactNode;
-    className?: string;
-    style?: React.CSSProperties;
-    fieldKey?: string | number | (string | number)[];
-    shouldUpdate?: boolean | ((prevValues: any, currentValues: any) => boolean);
-    noStyle?: boolean;
-    help?: string | React.ReactNode;
-    validateStatus?: "success" | "warning" | "error" | "validating";
-    hasFeedback?: boolean;
-}
-
-// Extend TDataEntryFields with the enhanced field config
-export type TDataEntryField = BaseFieldConfig & TDataEntryFields;
-
-// Define a form field group/section
-export interface FieldGroup {
-    title?: string;
-    key: string;
-    fields: TDataEntryField[];
-    collapsed?: boolean;
-    collapsible?: boolean;
-    className?: string;
-    style?: React.CSSProperties;
-    extra?: React.ReactNode;
-}
-
-// Form configuration with advanced options
-export interface FormConfig {
-    fields: (TDataEntryField | FieldGroup)[];
-    layout?: "horizontal" | "vertical" | "inline";
-    labelCol?: object;
-    wrapperCol?: object;
-    initialValues?: object;
-    onFinish?: (values: any) => void;
-    onFinishFailed?: (errorInfo: any) => void;
-    onValuesChange?: (changedValues: any, allValues: any) => void;
-    onFieldsChange?: (changedFields: any[], allFields: any[]) => void;
-    validateMessages?: object;
-    validateTrigger?: string | string[];
-    size?: "small" | "middle" | "large";
-    preserve?: boolean;
-    scrollToFirstError?: boolean | object;
-}
-
-// Helper function to check if a field is a field group
-export const isFieldGroup = (field: any): field is FieldGroup => {
-    return field && "fields" in field && Array.isArray(field.fields);
-};
-
-// Helper function to check component type
-export const isComponentType = (type: string): type is DataEntryFieldTypes => {
-    return Object.values(DataEntryFieldTypes).includes(type as DataEntryFieldTypes);
-};
