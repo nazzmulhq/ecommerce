@@ -1,92 +1,3 @@
-// Data Entry ANTD Form Components
-// export const AUTO_COMPLETE = 'auto_complete';
-// export const CASCADER = 'cascader';
-// export const CHECKBOX = 'checkbox';
-// export const CHECKBOX_GROUP = 'checkbox_group';
-// export const COLOR_PICKER = 'color_picker';
-// export const DATE_PICKER = 'date_picker';
-// export const DATE_PICKER_RANGE = 'date_picker_range';
-// export const FORM = 'form';
-// export const FORM_ITEM = 'form.item';
-// export const FROM_LIST = 'from.list';
-// export const FORM_PROVIDER = 'form.provider';
-// export const INPUT = 'input';
-// export const INPUT_PASSWORD = 'input.password';
-// export const INPUT_SEARCH = 'input.search';
-// export const INPUT_TEXT_AREA = 'input.text_area';
-// export const INPUT_OTP = 'input.otp';
-// export const INPUT_GROUP = 'input_group';
-// export const INPUT_NUMBER = 'input_number';
-// export const MENTION = 'mention';
-// export const RATE = 'rate';
-// export const RADIO = 'radio';
-// export const RADIO_BUTTON = 'radio.button';
-// export const RADIO_GROUP = 'radio.group';
-// export const SELECT = 'select';
-// export const SLIDER = 'slider';
-// export const SWITCH = 'switch';
-// export const TIME_PICKER = 'time_picker';
-// export const TIME_PICKER_RANGE = 'time_picker_range';
-// export const TRANSFER = 'transfer';
-// export const TREE_SELECT = 'tree_select';
-// export const UPLOAD = 'upload';
-// export const UPLOAD_DRAGGER = 'upload.dragger';
-// export const UPLOAD_IMG_CROP = 'upload.img_crop';
-
-/**
- * This file is part of the Generated dynamic form generate. also known as AppForm.
-Key Features:
-1. Form Field Types
-
-All Ant Design form components (input, select, date picker, upload, etc.)
-Organized by categories: basic inputs, selections, choices, date/time, interactive, file types
-
-2. Comprehensive Dependency Types
-
-Visibility: show, hide, show_if, hide_if
-State: enable, disable, enable_if, disable_if
-Validation: required, optional, required_if, optional_if
-Value: set_value, clear_value, set_options, filter_options
-Style: set_class, remove_class, set_style
-Complex: custom, chain, group
-if you can more options add ...
-
-3. Dependency Operators
-
-Comparison: equals, not_equals, greater_than, less_than, etc.
-String operations: contains, starts_with, ends_with, regex
-Array operations: in, not_in
-State checks: is_empty, is_not_empty
-Range operations: between, not_between
-if you can more options add ...
-
-4. Extra Button Types
-
-Standard actions: delete, edit, copy, clear, reset
-List operations: move_up, move_down, add, remove
-File operations: upload, download, preview
-Custom actions with callbacks
-
-5. Validation System
-
-Ant Design validation rules (required, type, pattern, etc.)
-Custom validation functions with error messages
-// Custom validation logic for complex conditions
-// Integration with form state for real-time feedback
-// Support for async validations (e.g., checking username availability)
-// Integration with form state for real-time feedback
-// Support for async validations (e.g., checking username availability)
-// Integration with form state for real-time feedback
-
-6. Complete Schema Structure
-
-Form-level configuration (layout, styling, permissions)
-Field-level configuration (props, dependencies, validations, extras)
-Grid system support for responsive layouts
-Meta information for tracking and organization
-
- */
-
 import {
     CopyOutlined,
     DeleteOutlined,
@@ -348,11 +259,12 @@ interface ExtraButton {
     loading?: boolean;
 }
 
-interface ValidationRule extends FormRule {
+// Use type intersection instead of interface extension for ValidationRule
+type ValidationRule = FormRule & {
     asyncValidator?: (rule: any, value: any, callback: (error?: string) => void) => Promise<void> | void;
     dependencies?: string[];
     crossField?: boolean;
-}
+};
 
 interface FormListConfig {
     min?: number;
@@ -567,7 +479,7 @@ const AppForm: React.FC<AppFormProps> = ({
     onFormReady,
     renderHeader,
     renderFooter,
-    renderField: customRenderField, // Rename the prop to avoid conflict
+    renderField,
     plugins = [],
     middleware = [],
 }) => {
@@ -624,16 +536,20 @@ const AppForm: React.FC<AppFormProps> = ({
             case "is_not_empty":
                 return fieldValue && fieldValue !== "" && (!Array.isArray(fieldValue) || fieldValue.length > 0);
             case "between":
-                return (
+                // Make sure we return false if condition.values is undefined
+                return !!(
                     condition.values &&
+                    condition.values.length >= 2 &&
                     Number(fieldValue) >= Number(condition.values[0]) &&
                     Number(fieldValue) <= Number(condition.values[1])
                 );
             case "not_between":
+                // Make sure we return true if condition.values is undefined
                 return (
-                    condition.values &&
-                    (Number(fieldValue) < Number(condition.values[0]) ||
-                        Number(fieldValue) > Number(condition.values[1]))
+                    !condition.values ||
+                    condition.values.length < 2 ||
+                    Number(fieldValue) < Number(condition.values[0]) ||
+                    Number(fieldValue) > Number(condition.values[1])
                 );
             case "length_equals":
                 return String(fieldValue).length === Number(condition.value);
@@ -927,11 +843,35 @@ const AppForm: React.FC<AppFormProps> = ({
             case "date_picker":
                 return <DatePicker {...commonProps} style={{ width: "100%" }} />;
             case "date_picker_range":
-                return <DatePicker.RangePicker {...commonProps} style={{ width: "100%" }} />;
+                return (
+                    <DatePicker.RangePicker
+                        {...commonProps}
+                        placeholder={
+                            Array.isArray(commonProps.placeholder) && commonProps.placeholder.length === 2
+                                ? [String(commonProps.placeholder[0]), String(commonProps.placeholder[1])]
+                                : typeof commonProps.placeholder === "string"
+                                  ? [commonProps.placeholder, commonProps.placeholder]
+                                  : undefined
+                        }
+                        style={{ width: "100%" }}
+                    />
+                );
             case "time_picker":
                 return <TimePicker {...commonProps} style={{ width: "100%" }} />;
             case "time_picker_range":
-                return <TimePicker.RangePicker {...commonProps} style={{ width: "100%" }} />;
+                return (
+                    <TimePicker.RangePicker
+                        {...commonProps}
+                        placeholder={
+                            Array.isArray(commonProps.placeholder) && commonProps.placeholder.length === 2
+                                ? [String(commonProps.placeholder[0]), String(commonProps.placeholder[1])]
+                                : typeof commonProps.placeholder === "string"
+                                  ? [commonProps.placeholder, commonProps.placeholder]
+                                  : undefined
+                        }
+                        style={{ width: "100%" }}
+                    />
+                );
             case "switch":
                 return <Switch {...commonProps} />;
             case "slider":
@@ -941,7 +881,8 @@ const AppForm: React.FC<AppFormProps> = ({
             case "color_picker":
                 return <ColorPicker {...commonProps} />;
             case "segmented":
-                return <Segmented {...commonProps} options={field.options} />;
+                // Ensure we always have an array of options for Segmented component
+                return <Segmented {...commonProps} options={fieldState.options || field.options || []} />;
             case "radio.group":
                 return (
                     <Radio.Group {...commonProps}>
@@ -1097,7 +1038,7 @@ const AppForm: React.FC<AppFormProps> = ({
         );
     };
 
-    // Rename this function to avoid conflict with the prop
+    // Render individual field
     const renderFieldItem = (field: FieldConfig, values?: any) => {
         const fieldState = fieldStates[field.name] || {};
         const isDisabled = disabled || readonly || field.disabled || fieldState.disabled;
@@ -1172,7 +1113,8 @@ const AppForm: React.FC<AppFormProps> = ({
             </Col>
         );
 
-        return customRenderField ? customRenderField(field, renderedField) : renderedField;
+        // Use the renderField prop if provided, otherwise return the default rendering
+        return renderField ? renderField(field, renderedField) : renderedField;
     };
 
     // Render form sections
@@ -1227,9 +1169,9 @@ const AppForm: React.FC<AppFormProps> = ({
                             onClick={async () => {
                                 if (currentStep < schema.steps!.length - 1) {
                                     // Validate current step
-                                    const currentStep = schema.steps![currentStep];
-                                    if (currentStep.validation) {
-                                        const isValid = await currentStep.validation();
+                                    const stepObj = schema.steps![currentStep];
+                                    if (stepObj.validation) {
+                                        const isValid = await stepObj.validation();
                                         if (!isValid) return;
                                     }
                                     setCurrentStep(currentStep + 1);
