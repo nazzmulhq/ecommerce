@@ -1,6 +1,7 @@
 "use client";
 import AppContainer from "@components/common/AppContainer";
-import AppForm, { conditionalFormSchema } from "@components/common/AppForm";
+import AppForm from "@components/common/AppForm";
+import { basicFormSchema } from "@components/common/AppForm/example";
 import { FC } from "react";
 
 export interface IPermissions {}
@@ -18,7 +19,7 @@ const Permissions: FC<IPermissions> = () => {
             ]}
         >
             <AppForm
-                schema={conditionalFormSchema}
+                schema={basicFormSchema}
                 onFinish={values => console.log("Form submitted:", values)}
                 onValuesChange={(changed, all) => console.log("Values changed:", changed)}
             />

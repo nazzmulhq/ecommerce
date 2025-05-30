@@ -1,92 +1,3 @@
-// Data Entry ANTD Form Components
-// export const AUTO_COMPLETE = 'auto_complete';
-// export const CASCADER = 'cascader';
-// export const CHECKBOX = 'checkbox';
-// export const CHECKBOX_GROUP = 'checkbox_group';
-// export const COLOR_PICKER = 'color_picker';
-// export const DATE_PICKER = 'date_picker';
-// export const DATE_PICKER_RANGE = 'date_picker_range';
-// export const FORM = 'form';
-// export const FORM_ITEM = 'form.item';
-// export const FROM_LIST = 'from.list';
-// export const FORM_PROVIDER = 'form.provider';
-// export const INPUT = 'input';
-// export const INPUT_PASSWORD = 'input.password';
-// export const INPUT_SEARCH = 'input.search';
-// export const INPUT_TEXT_AREA = 'input.text_area';
-// export const INPUT_OTP = 'input.otp';
-// export const INPUT_GROUP = 'input_group';
-// export const INPUT_NUMBER = 'input_number';
-// export const MENTION = 'mention';
-// export const RATE = 'rate';
-// export const RADIO = 'radio';
-// export const RADIO_BUTTON = 'radio.button';
-// export const RADIO_GROUP = 'radio.group';
-// export const SELECT = 'select';
-// export const SLIDER = 'slider';
-// export const SWITCH = 'switch';
-// export const TIME_PICKER = 'time_picker';
-// export const TIME_PICKER_RANGE = 'time_picker_range';
-// export const TRANSFER = 'transfer';
-// export const TREE_SELECT = 'tree_select';
-// export const UPLOAD = 'upload';
-// export const UPLOAD_DRAGGER = 'upload.dragger';
-// export const UPLOAD_IMG_CROP = 'upload.img_crop';
-
-/**
- * This file is part of the Generated dynamic form generate. also known as AppForm.
-Key Features:
-1. Form Field Types
-
-All Ant Design form components (input, select, date picker, upload, etc.)
-Organized by categories: basic inputs, selections, choices, date/time, interactive, file types
-
-2. Comprehensive Dependency Types
-
-Visibility: show, hide, show_if, hide_if
-State: enable, disable, enable_if, disable_if
-Validation: required, optional, required_if, optional_if
-Value: set_value, clear_value, set_options, filter_options
-Style: set_class, remove_class, set_style
-Complex: custom, chain, group
-if you can more options add ...
-
-3. Dependency Operators
-
-Comparison: equals, not_equals, greater_than, less_than, etc.
-String operations: contains, starts_with, ends_with, regex
-Array operations: in, not_in
-State checks: is_empty, is_not_empty
-Range operations: between, not_between
-if you can more options add ...
-
-4. Extra Button Types
-
-Standard actions: delete, edit, copy, clear, reset
-List operations: move_up, move_down, add, remove
-File operations: upload, download, preview
-Custom actions with callbacks
-
-5. Validation System
-
-Ant Design validation rules (required, type, pattern, etc.)
-Custom validation functions with error messages
-// Custom validation logic for complex conditions
-// Integration with form state for real-time feedback
-// Support for async validations (e.g., checking username availability)
-// Integration with form state for real-time feedback
-// Support for async validations (e.g., checking username availability)
-// Integration with form state for real-time feedback
-
-6. Complete Schema Structure
-
-Form-level configuration (layout, styling, permissions)
-Field-level configuration (props, dependencies, validations, extras)
-Grid system support for responsive layouts
-Meta information for tracking and organization
-
- */
-
 import {
     CopyOutlined,
     DeleteOutlined,
@@ -111,7 +22,6 @@ import {
     Divider,
     FloatButton,
     Form,
-    FormRule,
     Input,
     InputNumber,
     Mentions,
@@ -133,418 +43,15 @@ import {
     Typography,
     Upload,
 } from "antd";
-import type { ColProps } from "antd/es/col";
-import type { FormInstance, FormListFieldData, FormListOperation } from "antd/es/form";
-import type { DefaultOptionType } from "antd/es/select";
 import type { UploadChangeParam, UploadFile } from "antd/es/upload/interface";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { AppFormProps, DependencyCondition, FieldConfig, Option, ValidationRule } from "./form.type";
 
 const { TextArea, Password, Search } = Input;
 const { Title, Text } = Typography;
 const { Step } = Steps;
 const { TabPane } = Tabs;
 const { Panel } = Collapse;
-
-// Enhanced Field Types
-export const FIELD_TYPES = {
-    // Basic Inputs
-    INPUT: "input",
-    INPUT_PASSWORD: "input.password",
-    INPUT_SEARCH: "input.search",
-    INPUT_TEXT_AREA: "input.text_area",
-    INPUT_OTP: "input.otp",
-    INPUT_NUMBER: "input_number",
-
-    // Selections
-    SELECT: "select",
-    AUTO_COMPLETE: "auto_complete",
-    CASCADER: "cascader",
-    TREE_SELECT: "tree_select",
-
-    // Choices
-    RADIO: "radio",
-    RADIO_BUTTON: "radio.button",
-    RADIO_GROUP: "radio.group",
-    CHECKBOX: "checkbox",
-    CHECKBOX_GROUP: "checkbox_group",
-    SEGMENTED: "segmented",
-
-    // Date/Time
-    DATE_PICKER: "date_picker",
-    DATE_PICKER_RANGE: "date_picker_range",
-    TIME_PICKER: "time_picker",
-    TIME_PICKER_RANGE: "time_picker_range",
-
-    // Interactive
-    SWITCH: "switch",
-    SLIDER: "slider",
-    RATE: "rate",
-    COLOR_PICKER: "color_picker",
-
-    // File
-    UPLOAD: "upload",
-    UPLOAD_DRAGGER: "upload.dragger",
-    UPLOAD_IMG_CROP: "upload.img_crop",
-
-    // Special
-    TRANSFER: "transfer",
-    MENTION: "mention",
-
-    // Layout & Structure
-    FORM_LIST: "form.list",
-    FORM_ITEM: "form.item",
-    DIVIDER: "divider",
-    TITLE: "title",
-    TEXT: "text",
-    ALERT: "alert",
-    STEPS: "steps",
-    TABS: "tabs",
-    COLLAPSE: "collapse",
-    TABLE: "table",
-
-    // Custom Components
-    CUSTOM: "custom",
-    NESTED_FORM: "nested_form",
-    CONDITIONAL_GROUP: "conditional_group",
-} as const;
-
-// Enhanced Dependency Types
-export const DEPENDENCY_TYPES = {
-    // Visibility
-    SHOW: "show",
-    HIDE: "hide",
-    SHOW_IF: "show_if",
-    HIDE_IF: "hide_if",
-
-    // State
-    ENABLE: "enable",
-    DISABLE: "disable",
-    ENABLE_IF: "enable_if",
-    DISABLE_IF: "disable_if",
-
-    // Validation
-    REQUIRED: "required",
-    OPTIONAL: "optional",
-    REQUIRED_IF: "required_if",
-    OPTIONAL_IF: "optional_if",
-
-    // Value
-    SET_VALUE: "set_value",
-    CLEAR_VALUE: "clear_value",
-    SET_OPTIONS: "set_options",
-    FILTER_OPTIONS: "filter_options",
-    CALCULATE: "calculate",
-    SYNC_VALUE: "sync_value",
-
-    // Style
-    SET_CLASS: "set_class",
-    REMOVE_CLASS: "remove_class",
-    SET_STYLE: "set_style",
-
-    // Complex
-    CUSTOM: "custom",
-    CHAIN: "chain",
-    GROUP: "group",
-    ASYNC: "async",
-
-    // Form Structure
-    ADD_FIELD: "add_field",
-    REMOVE_FIELD: "remove_field",
-    REORDER_FIELDS: "reorder_fields",
-} as const;
-
-// Enhanced Operators
-export const OPERATORS = {
-    EQUALS: "equals",
-    NOT_EQUALS: "not_equals",
-    GREATER_THAN: "greater_than",
-    LESS_THAN: "less_than",
-    GREATER_EQUAL: "greater_equal",
-    LESS_EQUAL: "less_equal",
-    CONTAINS: "contains",
-    NOT_CONTAINS: "not_contains",
-    STARTS_WITH: "starts_with",
-    ENDS_WITH: "ends_with",
-    REGEX: "regex",
-    IN: "in",
-    NOT_IN: "not_in",
-    IS_EMPTY: "is_empty",
-    IS_NOT_EMPTY: "is_not_empty",
-    BETWEEN: "between",
-    NOT_BETWEEN: "not_between",
-    LENGTH_EQUALS: "length_equals",
-    LENGTH_GREATER: "length_greater",
-    LENGTH_LESS: "length_less",
-    HAS_KEY: "has_key",
-    ARRAY_INCLUDES: "array_includes",
-    DEEP_EQUALS: "deep_equals",
-} as const;
-
-// Enhanced Button Types
-export const BUTTON_TYPES = {
-    DELETE: "delete",
-    EDIT: "edit",
-    COPY: "copy",
-    CLEAR: "clear",
-    RESET: "reset",
-    MOVE_UP: "move_up",
-    MOVE_DOWN: "move_down",
-    ADD: "add",
-    REMOVE: "remove",
-    UPLOAD: "upload",
-    DOWNLOAD: "download",
-    PREVIEW: "preview",
-    DUPLICATE: "duplicate",
-    EXPORT: "export",
-    IMPORT: "import",
-    VALIDATE: "validate",
-    SAVE_DRAFT: "save_draft",
-    LOAD_TEMPLATE: "load_template",
-    CUSTOM: "custom",
-} as const;
-
-// Enhanced Type Definitions
-interface Option extends DefaultOptionType {
-    label: string;
-    value: any;
-    children?: Option[];
-    disabled?: boolean;
-    icon?: React.ReactNode;
-    description?: string;
-    group?: string;
-}
-
-interface DependencyCondition {
-    field: string;
-    operator: (typeof OPERATORS)[keyof typeof OPERATORS];
-    value: any;
-    values?: any[];
-    path?: string; // For nested field access
-}
-
-interface FormDependency {
-    type: (typeof DEPENDENCY_TYPES)[keyof typeof DEPENDENCY_TYPES];
-    conditions: DependencyCondition[];
-    logic?: "AND" | "OR";
-    target?: any;
-    callback?: (form: FormInstance, values: any, fieldName?: string) => void | Promise<void>;
-    debounce?: number;
-    async?: boolean;
-}
-
-interface ExtraButton {
-    type: (typeof BUTTON_TYPES)[keyof typeof BUTTON_TYPES];
-    label?: string;
-    icon?: React.ReactNode;
-    position?: "before" | "after" | "inline";
-    callback?: (fieldName: string, form: FormInstance, fieldData?: any) => void | Promise<void>;
-    visible?: boolean | ((values: any) => boolean);
-    disabled?: boolean | ((values: any) => boolean);
-    confirm?: {
-        title: string;
-        description?: string;
-    };
-    tooltip?: string;
-    loading?: boolean;
-}
-
-interface ValidationRule extends FormRule {
-    asyncValidator?: (rule: any, value: any, callback: (error?: string) => void) => Promise<void> | void;
-    dependencies?: string[];
-    crossField?: boolean;
-}
-
-interface FormListConfig {
-    min?: number;
-    max?: number;
-    addText?: string;
-    removeText?: string;
-    allowReorder?: boolean;
-    allowDuplicate?: boolean;
-    template?: FieldConfig[];
-    renderItem?: (field: FormListFieldData, operations: FormListOperation, index: number) => React.ReactNode;
-    itemProps?: Record<string, any>;
-}
-
-interface ConditionalGroup {
-    condition: DependencyCondition;
-    fields: FieldConfig[];
-    layout?: "horizontal" | "vertical" | "inline";
-}
-
-interface NestedFormConfig {
-    schema: FormSchema;
-    isolateValues?: boolean;
-    prefix?: string;
-}
-
-interface FieldConfig {
-    name: string;
-    type: (typeof FIELD_TYPES)[keyof typeof FIELD_TYPES];
-    label?: string;
-    placeholder?: string;
-    tooltip?: string;
-    description?: string;
-    required?: boolean;
-    disabled?: boolean;
-    hidden?: boolean;
-    readOnly?: boolean;
-    options?: Option[];
-    props?: Record<string, any>;
-    dependencies?: FormDependency[];
-    validations?: ValidationRule[];
-    extras?: ExtraButton[];
-    grid?: ColProps;
-    style?: React.CSSProperties;
-    className?: string;
-
-    // Enhanced properties
-    formList?: FormListConfig;
-    conditionalGroups?: ConditionalGroup[];
-    nestedForm?: NestedFormConfig;
-    customComponent?: React.ComponentType<any>;
-    dataSource?: any[];
-    formatter?: (value: any) => any;
-    parser?: (value: any) => any;
-
-    // Layout properties
-    span?: number;
-    offset?: number;
-    order?: number;
-    flex?: string | number;
-
-    // Advanced features
-    debounce?: number;
-    lazy?: boolean;
-    memoize?: boolean;
-    transform?: (value: any, allValues: any) => any;
-}
-
-interface FormSection {
-    title?: string;
-    description?: string;
-    fields: FieldConfig[];
-    collapsible?: boolean;
-    defaultCollapsed?: boolean;
-    icon?: React.ReactNode;
-    extra?: React.ReactNode;
-}
-
-interface FormStep {
-    title: string;
-    description?: string;
-    fields: FieldConfig[];
-    icon?: React.ReactNode;
-    status?: "wait" | "process" | "finish" | "error";
-    validation?: () => Promise<boolean>;
-}
-
-interface FormTab {
-    key: string;
-    tab: string;
-    fields: FieldConfig[];
-    icon?: React.ReactNode;
-    disabled?: boolean;
-    closable?: boolean;
-}
-
-interface FormSchema {
-    layout?: "horizontal" | "vertical" | "inline";
-    size?: "small" | "middle" | "large";
-    colon?: boolean;
-    labelAlign?: "left" | "right";
-    labelCol?: object;
-    wrapperCol?: object;
-
-    // Structure
-    fields?: FieldConfig[];
-    sections?: FormSection[];
-    steps?: FormStep[];
-    tabs?: FormTab[];
-
-    // Permissions & Security
-    permissions?: {
-        read?: boolean;
-        write?: boolean;
-        delete?: boolean;
-        fields?: Record<string, { read?: boolean; write?: boolean }>;
-    };
-
-    // Meta information
-    meta?: {
-        version?: string;
-        createdAt?: string;
-        updatedAt?: string;
-        createdBy?: string;
-        title?: string;
-        description?: string;
-        category?: string;
-        tags?: string[];
-    };
-
-    // Advanced features
-    autoSave?: {
-        enabled: boolean;
-        interval?: number;
-        key?: string;
-    };
-
-    validation?: {
-        validateOnChange?: boolean;
-        validateOnBlur?: boolean;
-        validateTrigger?: string | string[];
-        scrollToError?: boolean;
-    };
-
-    ui?: {
-        theme?: "default" | "compact" | "comfortable";
-        showProgress?: boolean;
-        showFieldCount?: boolean;
-        compactMode?: boolean;
-        floatingLabels?: boolean;
-    };
-
-    hooks?: {
-        beforeSubmit?: (values: any) => Promise<any> | any;
-        afterSubmit?: (values: any, result: any) => void;
-        beforeReset?: () => Promise<boolean> | boolean;
-        afterReset?: () => void;
-        onFieldChange?: (field: string, value: any, allValues: any) => void;
-    };
-}
-
-interface AppFormProps {
-    schema: FormSchema;
-    initialValues?: Record<string, any>;
-    onFinish?: (values: any) => void | Promise<void>;
-    onFinishFailed?: (errorInfo: any) => void;
-    onValuesChange?: (changedValues: any, allValues: any) => void;
-    form?: FormInstance;
-    loading?: boolean;
-    disabled?: boolean;
-    readonly?: boolean;
-
-    // Enhanced props
-    mode?: "create" | "edit" | "view";
-    autoSave?: boolean;
-    validateOnMount?: boolean;
-    preserveFormData?: boolean;
-    formKey?: string;
-
-    // Event handlers
-    onAutoSave?: (values: any) => void;
-    onValidationChange?: (errors: any[]) => void;
-    onFormReady?: (form: FormInstance) => void;
-
-    // UI customization
-    renderHeader?: () => React.ReactNode;
-    renderFooter?: (form: FormInstance, loading: boolean) => React.ReactNode;
-    renderField?: (field: FieldConfig, defaultRender: React.ReactNode) => React.ReactNode;
-
-    // Advanced features
-    plugins?: Array<(form: FormInstance, schema: FormSchema) => void>;
-    middleware?: Array<(values: any) => any>;
-}
 
 // Enhanced AppForm Component
 const AppForm: React.FC<AppFormProps> = ({
@@ -567,7 +74,7 @@ const AppForm: React.FC<AppFormProps> = ({
     onFormReady,
     renderHeader,
     renderFooter,
-    renderField: customRenderField, // Rename the prop to avoid conflict
+    renderField,
     plugins = [],
     middleware = [],
 }) => {
@@ -624,16 +131,20 @@ const AppForm: React.FC<AppFormProps> = ({
             case "is_not_empty":
                 return fieldValue && fieldValue !== "" && (!Array.isArray(fieldValue) || fieldValue.length > 0);
             case "between":
-                return (
+                // Make sure we return false if condition.values is undefined
+                return !!(
                     condition.values &&
+                    condition.values.length >= 2 &&
                     Number(fieldValue) >= Number(condition.values[0]) &&
                     Number(fieldValue) <= Number(condition.values[1])
                 );
             case "not_between":
+                // Make sure we return true if condition.values is undefined
                 return (
-                    condition.values &&
-                    (Number(fieldValue) < Number(condition.values[0]) ||
-                        Number(fieldValue) > Number(condition.values[1]))
+                    !condition.values ||
+                    condition.values.length < 2 ||
+                    Number(fieldValue) < Number(condition.values[0]) ||
+                    Number(fieldValue) > Number(condition.values[1])
                 );
             case "length_equals":
                 return String(fieldValue).length === Number(condition.value);
@@ -862,7 +373,7 @@ const AppForm: React.FC<AppFormProps> = ({
                                                 {...listField}
                                                 name={[listField.name, templateField.name]}
                                                 label={templateField.label}
-                                                rules={templateField.validations}
+                                                rules={templateField.rules}
                                             >
                                                 {renderFieldComponent(templateField)}
                                             </Form.Item>
@@ -927,11 +438,35 @@ const AppForm: React.FC<AppFormProps> = ({
             case "date_picker":
                 return <DatePicker {...commonProps} style={{ width: "100%" }} />;
             case "date_picker_range":
-                return <DatePicker.RangePicker {...commonProps} style={{ width: "100%" }} />;
+                return (
+                    <DatePicker.RangePicker
+                        {...commonProps}
+                        placeholder={
+                            Array.isArray(commonProps.placeholder) && commonProps.placeholder.length === 2
+                                ? [String(commonProps.placeholder[0]), String(commonProps.placeholder[1])]
+                                : typeof commonProps.placeholder === "string"
+                                  ? [commonProps.placeholder, commonProps.placeholder]
+                                  : undefined
+                        }
+                        style={{ width: "100%" }}
+                    />
+                );
             case "time_picker":
                 return <TimePicker {...commonProps} style={{ width: "100%" }} />;
             case "time_picker_range":
-                return <TimePicker.RangePicker {...commonProps} style={{ width: "100%" }} />;
+                return (
+                    <TimePicker.RangePicker
+                        {...commonProps}
+                        placeholder={
+                            Array.isArray(commonProps.placeholder) && commonProps.placeholder.length === 2
+                                ? [String(commonProps.placeholder[0]), String(commonProps.placeholder[1])]
+                                : typeof commonProps.placeholder === "string"
+                                  ? [commonProps.placeholder, commonProps.placeholder]
+                                  : undefined
+                        }
+                        style={{ width: "100%" }}
+                    />
+                );
             case "switch":
                 return <Switch {...commonProps} />;
             case "slider":
@@ -941,7 +476,8 @@ const AppForm: React.FC<AppFormProps> = ({
             case "color_picker":
                 return <ColorPicker {...commonProps} />;
             case "segmented":
-                return <Segmented {...commonProps} options={field.options} />;
+                // Ensure we always have an array of options for Segmented component
+                return <Segmented {...commonProps} options={fieldState.options || field.options || []} />;
             case "radio.group":
                 return (
                     <Radio.Group {...commonProps}>
@@ -1097,7 +633,7 @@ const AppForm: React.FC<AppFormProps> = ({
         );
     };
 
-    // Rename this function to avoid conflict with the prop
+    // Render individual field
     const renderFieldItem = (field: FieldConfig, values?: any) => {
         const fieldState = fieldStates[field.name] || {};
         const isDisabled = disabled || readonly || field.disabled || fieldState.disabled;
@@ -1148,8 +684,8 @@ const AppForm: React.FC<AppFormProps> = ({
         if (isRequired) {
             rules.push({ required: true, message: `${field.label || field.name} is required` });
         }
-        if (field.validations) {
-            rules.push(...field.validations);
+        if (field.rules) {
+            rules.push(...field.rules);
         }
 
         const component = renderFieldComponent(field);
@@ -1172,7 +708,8 @@ const AppForm: React.FC<AppFormProps> = ({
             </Col>
         );
 
-        return customRenderField ? customRenderField(field, renderedField) : renderedField;
+        // Use the renderField prop if provided, otherwise return the default rendering
+        return renderField ? renderField(field, renderedField) : renderedField;
     };
 
     // Render form sections
@@ -1227,9 +764,9 @@ const AppForm: React.FC<AppFormProps> = ({
                             onClick={async () => {
                                 if (currentStep < schema.steps!.length - 1) {
                                     // Validate current step
-                                    const currentStep = schema.steps![currentStep];
-                                    if (currentStep.validation) {
-                                        const isValid = await currentStep.validation();
+                                    const stepObj = schema.steps![currentStep];
+                                    if (stepObj.validation) {
+                                        const isValid = await stepObj.validation();
                                         if (!isValid) return;
                                     }
                                     setCurrentStep(currentStep + 1);
@@ -1419,383 +956,3 @@ const AppForm: React.FC<AppFormProps> = ({
 };
 
 export default AppForm;
-
-// Enhanced Example Schemas
-export const basicFormSchema: FormSchema = {
-    layout: "vertical",
-    size: "middle",
-    fields: [
-        {
-            name: "name",
-            type: FIELD_TYPES.INPUT,
-            label: "Full Name",
-            placeholder: "Enter your full name",
-            required: true,
-            grid: { xs: 24, md: 12 },
-            tooltip: "Enter your legal name as it appears on documents",
-        },
-        {
-            name: "email",
-            type: FIELD_TYPES.INPUT,
-            label: "Email Address",
-            placeholder: "Enter your email",
-            required: true,
-            grid: { xs: 24, md: 12 },
-            validations: [{ type: "email", message: "Please enter a valid email" }],
-            extras: [
-                {
-                    type: BUTTON_TYPES.CUSTOM,
-                    label: "Verify",
-                    icon: <EyeOutlined />,
-                    callback: (fieldName, form) => {
-                        const email = form.getFieldValue(fieldName);
-                        alert(`Verifying email: ${email}`);
-                    },
-                },
-            ],
-        },
-        {
-            name: "age",
-            type: FIELD_TYPES.INPUT_NUMBER,
-            label: "Age",
-            grid: { xs: 24, md: 8 },
-            props: { min: 0, max: 120 },
-        },
-        {
-            name: "country",
-            type: FIELD_TYPES.SELECT,
-            label: "Country",
-            grid: { xs: 24, md: 16 },
-            options: [
-                { label: "USA", value: "usa" },
-                { label: "Canada", value: "canada" },
-                { label: "UK", value: "uk" },
-                { label: "Australia", value: "australia" },
-            ],
-        },
-    ],
-};
-
-export const advancedFormSchema: FormSchema = {
-    layout: "vertical",
-    size: "middle",
-    autoSave: {
-        enabled: true,
-        interval: 3000,
-    },
-    validation: {
-        validateOnChange: true,
-        scrollToError: true,
-    },
-    sections: [
-        {
-            title: "Personal Information",
-            description: "Basic personal details",
-            fields: [
-                {
-                    name: "firstName",
-                    type: FIELD_TYPES.INPUT,
-                    label: "First Name",
-                    required: true,
-                    grid: { xs: 24, md: 12 },
-                },
-                {
-                    name: "lastName",
-                    type: FIELD_TYPES.INPUT,
-                    label: "Last Name",
-                    required: true,
-                    grid: { xs: 24, md: 12 },
-                },
-                {
-                    name: "birthDate",
-                    type: FIELD_TYPES.DATE_PICKER,
-                    label: "Birth Date",
-                    grid: { xs: 24, md: 8 },
-                },
-                {
-                    name: "gender",
-                    type: FIELD_TYPES.SEGMENTED,
-                    label: "Gender",
-                    grid: { xs: 24, md: 16 },
-                    options: [
-                        { label: "Male", value: "male" },
-                        { label: "Female", value: "female" },
-                        { label: "Other", value: "other" },
-                    ],
-                },
-            ],
-        },
-        {
-            title: "Contact Information",
-            fields: [
-                {
-                    name: "contacts",
-                    type: FIELD_TYPES.FORM_LIST,
-                    label: "Contact Methods",
-                    grid: { xs: 24 },
-                    formList: {
-                        min: 1,
-                        max: 5,
-                        addText: "Add Contact",
-                        allowReorder: true,
-                        allowDuplicate: true,
-                        template: [
-                            {
-                                name: "type",
-                                type: FIELD_TYPES.SELECT,
-                                label: "Type",
-                                options: [
-                                    { label: "Email", value: "email" },
-                                    { label: "Phone", value: "phone" },
-                                    { label: "Address", value: "address" },
-                                ],
-                                grid: { xs: 24, md: 8 },
-                            },
-                            {
-                                name: "value",
-                                type: FIELD_TYPES.INPUT,
-                                label: "Value",
-                                grid: { xs: 24, md: 12 },
-                            },
-                            {
-                                name: "primary",
-                                type: FIELD_TYPES.SWITCH,
-                                label: "Primary",
-                                grid: { xs: 24, md: 4 },
-                            },
-                        ],
-                    },
-                },
-            ],
-        },
-    ],
-};
-
-export const stepFormSchema: FormSchema = {
-    layout: "vertical",
-    size: "middle",
-    steps: [
-        {
-            title: "Basic Info",
-            description: "Enter your basic information",
-            fields: [
-                {
-                    name: "name",
-                    type: FIELD_TYPES.INPUT,
-                    label: "Full Name",
-                    required: true,
-                    grid: { xs: 24 },
-                },
-                {
-                    name: "email",
-                    type: FIELD_TYPES.INPUT,
-                    label: "Email",
-                    required: true,
-                    validations: [{ type: "email" }],
-                    grid: { xs: 24 },
-                },
-            ],
-            validation: async () => {
-                // Custom step validation
-                return true;
-            },
-        },
-        {
-            title: "Preferences",
-            description: "Set your preferences",
-            fields: [
-                {
-                    name: "notifications",
-                    type: FIELD_TYPES.CHECKBOX_GROUP,
-                    label: "Notification Preferences",
-                    options: [
-                        { label: "Email Notifications", value: "email" },
-                        { label: "SMS Notifications", value: "sms" },
-                        { label: "Push Notifications", value: "push" },
-                    ],
-                    grid: { xs: 24 },
-                },
-                {
-                    name: "theme",
-                    type: FIELD_TYPES.RADIO_GROUP,
-                    label: "Theme Preference",
-                    options: [
-                        { label: "Light", value: "light" },
-                        { label: "Dark", value: "dark" },
-                        { label: "Auto", value: "auto" },
-                    ],
-                    grid: { xs: 24 },
-                },
-            ],
-        },
-        {
-            title: "Confirmation",
-            description: "Review and submit",
-            fields: [
-                {
-                    name: "terms",
-                    type: FIELD_TYPES.CHECKBOX,
-                    label: "I agree to the terms and conditions",
-                    required: true,
-                    grid: { xs: 24 },
-                },
-            ],
-        },
-    ],
-};
-
-export const tabFormSchema: FormSchema = {
-    layout: "vertical",
-    size: "middle",
-    tabs: [
-        {
-            key: "personal",
-            tab: "Personal",
-            icon: <EditOutlined />,
-            fields: [
-                {
-                    name: "name",
-                    type: FIELD_TYPES.INPUT,
-                    label: "Name",
-                    required: true,
-                    grid: { xs: 24 },
-                },
-                {
-                    name: "bio",
-                    type: FIELD_TYPES.INPUT_TEXT_AREA,
-                    label: "Biography",
-                    grid: { xs: 24 },
-                    props: { rows: 4 },
-                },
-            ],
-        },
-        {
-            key: "professional",
-            tab: "Professional",
-            icon: <UploadOutlined />,
-            fields: [
-                {
-                    name: "company",
-                    type: FIELD_TYPES.INPUT,
-                    label: "Company",
-                    grid: { xs: 24, md: 12 },
-                },
-                {
-                    name: "position",
-                    type: FIELD_TYPES.INPUT,
-                    label: "Position",
-                    grid: { xs: 24, md: 12 },
-                },
-                {
-                    name: "resume",
-                    type: FIELD_TYPES.UPLOAD,
-                    label: "Resume",
-                    grid: { xs: 24 },
-                    props: {
-                        accept: ".pdf,.doc,.docx",
-                        maxCount: 1,
-                    },
-                },
-            ],
-        },
-    ],
-};
-
-export const conditionalFormSchema: FormSchema = {
-    layout: "vertical",
-    size: "middle",
-    fields: [
-        {
-            name: "userType",
-            type: FIELD_TYPES.RADIO_GROUP,
-            label: "User Type",
-            required: true,
-            options: [
-                { label: "Individual", value: "individual" },
-                { label: "Business", value: "business" },
-            ],
-            grid: { xs: 24 },
-        },
-        {
-            name: "personalName",
-            type: FIELD_TYPES.INPUT,
-            label: "Full Name",
-            grid: { xs: 24 },
-            dependencies: [
-                {
-                    type: DEPENDENCY_TYPES.SHOW_IF,
-                    conditions: [{ field: "userType", operator: OPERATORS.EQUALS, value: "individual" }],
-                },
-                {
-                    type: DEPENDENCY_TYPES.REQUIRED_IF,
-                    conditions: [{ field: "userType", operator: OPERATORS.EQUALS, value: "individual" }],
-                },
-            ],
-        },
-        {
-            name: "companyName",
-            type: FIELD_TYPES.INPUT,
-            label: "Company Name",
-            grid: { xs: 24, md: 12 },
-            dependencies: [
-                {
-                    type: DEPENDENCY_TYPES.SHOW_IF,
-                    conditions: [{ field: "userType", operator: OPERATORS.EQUALS, value: "business" }],
-                },
-                {
-                    type: DEPENDENCY_TYPES.REQUIRED_IF,
-                    conditions: [{ field: "userType", operator: OPERATORS.EQUALS, value: "business" }],
-                },
-            ],
-        },
-        {
-            name: "taxId",
-            type: FIELD_TYPES.INPUT,
-            label: "Tax ID",
-            grid: { xs: 24, md: 12 },
-            dependencies: [
-                {
-                    type: DEPENDENCY_TYPES.SHOW_IF,
-                    conditions: [{ field: "userType", operator: OPERATORS.EQUALS, value: "business" }],
-                },
-            ],
-        },
-        {
-            name: "hasEmployees",
-            type: FIELD_TYPES.SWITCH,
-            label: "Has Employees",
-            grid: { xs: 24 },
-            dependencies: [
-                {
-                    type: DEPENDENCY_TYPES.SHOW_IF,
-                    conditions: [{ field: "userType", operator: OPERATORS.EQUALS, value: "business" }],
-                },
-            ],
-        },
-        {
-            name: "employeeCount",
-            type: FIELD_TYPES.INPUT_NUMBER,
-            label: "Number of Employees",
-            grid: { xs: 24 },
-            props: { min: 1, max: 10000 },
-            dependencies: [
-                {
-                    type: DEPENDENCY_TYPES.SHOW_IF,
-                    conditions: [
-                        { field: "userType", operator: OPERATORS.EQUALS, value: "business" },
-                        { field: "hasEmployees", operator: OPERATORS.EQUALS, value: true },
-                    ],
-                    logic: "AND",
-                },
-                {
-                    type: DEPENDENCY_TYPES.REQUIRED_IF,
-                    conditions: [
-                        { field: "userType", operator: OPERATORS.EQUALS, value: "business" },
-                        { field: "hasEmployees", operator: OPERATORS.EQUALS, value: true },
-                    ],
-                    logic: "AND",
-                },
-            ],
-        },
-    ],
-};
