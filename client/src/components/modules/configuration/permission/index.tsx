@@ -1,141 +1,141 @@
 "use client";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { TeamOutlined } from "@ant-design/icons";
 import AppContainer from "@components/common/AppContainer";
-import AppForm from "@components/common/AppForm";
 import { FormSchema } from "@components/common/AppForm/form.type";
-import { Button, message, Modal, Space, Table } from "antd";
-import { ColumnsType } from "antd/es/table";
-import { FC, useState } from "react";
+import EnhancedCrud from "@components/common/EnhancedCrud";
+import { useState } from "react";
 
-// Define Permission interface
-interface Permission {
-    id: string;
-    name: string;
-}
+// Sample permissions data
+const initialPermissions = [
+    { id: "1", name: "create", description: "Can create resources", module: "products", isActive: true },
+    { id: "2", name: "read", description: "Can read resources", module: "products", isActive: true },
+    { id: "3", name: "update", description: "Can update resources", module: "products", isActive: true },
+    { id: "4", name: "delete", description: "Can delete resources", module: "products", isActive: false },
+    { id: "5", name: "manage_users", description: "Can manage users", module: "users", isActive: true },
+];
 
-export interface IPermissions {}
-
-// Create a form schema specific for permissions
+// Define form schema using AppForm's schema format
 const permissionFormSchema: FormSchema = {
-    fields: [
+    layout: "vertical",
+    size: "middle",
+    sections: [
         {
-            name: "name",
-            label: "Permission Name",
-            type: "input",
-            rules: [{ required: true, message: "Please input the permission name!" }],
-            placeholder: "Enter permission name",
+            title: "Basic Information",
+            fields: [
+                {
+                    name: "name",
+                    label: "Permission Name",
+                    type: "input",
+                    rules: [{ required: true, message: "Please input permission name!" }],
+                    grid: { xs: 24, sm: 12 },
+                    // searchable: true,
+                },
+                {
+                    name: "module",
+                    label: "Module",
+                    type: "select",
+                    options: [
+                        { value: "products", label: "Products" },
+                        { value: "orders", label: "Orders" },
+                        { value: "users", label: "Users" },
+                        { value: "settings", label: "Settings" },
+                    ],
+                    rules: [{ required: true, message: "Please select a module!" }],
+                    grid: { xs: 24, sm: 12 },
+                    // filterable: true,
+                },
+            ],
+        },
+        {
+            title: "Additional Settings",
+            fields: [
+                {
+                    name: "description",
+                    label: "Description",
+                    type: "input.text_area",
+                    grid: { xs: 24 },
+                    // searchable: true,
+                },
+                {
+                    name: "isActive",
+                    label: "Active",
+                    type: "switch",
+                    rules: [{ required: true }],
+                    grid: { xs: 24, sm: 12 },
+                    // filterable: true,
+                    // defaultValue: true,
+                },
+            ],
         },
     ],
+    validation: {
+        validateTrigger: ["onChange", "onBlur"],
+        scrollToError: true,
+    },
 };
 
-const Permissions: FC<IPermissions> = () => {
-    // State for permissions list
-    const [permissions, setPermissions] = useState<Permission[]>([{ id: "1", name: "create" }]);
-    const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
-    const [isFormVisible, setIsFormVisible] = useState(false);
+const PermissionPage = () => {
+    const [permissions, setPermissions] = useState(initialPermissions);
 
-    // CRUD operations
-    const createPermission = (permission: Omit<Permission, "id">) => {
-        const newPermission = {
-            id: Date.now().toString(),
-            ...permission,
-        };
-        setPermissions([...permissions, newPermission]);
-        message.success("Permission created successfully");
-        setIsFormVisible(false);
+    // Handle API calls (simulated)
+    const handleCreate = async record => {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const newData = [...permissions, record];
+        setPermissions(newData);
+        return record;
     };
 
-    const updatePermission = (values: Partial<Permission>) => {
-        if (!editingPermission) return;
-
-        setPermissions(permissions.map(p => (p.id === editingPermission.id ? { ...p, ...values } : p)));
-        message.success("Permission updated successfully");
-        setEditingPermission(null);
-        setIsFormVisible(false);
+    const handleUpdate = async record => {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const newData = permissions.map(item => (item.id === record.id ? record : item));
+        setPermissions(newData);
+        return record;
     };
 
-    const deletePermission = (id: string) => {
-        setPermissions(permissions.filter(p => p.id !== id));
-        message.success("Permission deleted successfully");
-    };
-
-    // Table columns
-    const columns: ColumnsType = [
-        {
-            title: "ID",
-            dataIndex: "id",
-            key: "id",
-        },
-        {
-            title: "Name",
-            dataIndex: "name",
-            key: "name",
-        },
-        {
-            title: "Actions",
-            key: "actions",
-            width: 150,
-            fixed: "right",
-            render: (_, record: Permission) => (
-                <Space>
-                    <Button
-                        icon={<EditOutlined />}
-                        onClick={() => {
-                            setEditingPermission(record);
-                            setIsFormVisible(true);
-                        }}
-                        type="primary"
-                    />
-                    <Button danger icon={<DeleteOutlined />} onClick={() => deletePermission(record.id)} />
-                </Space>
-            ),
-        },
-    ];
-
-    const handleFormSubmit = (values: any) => {
-        if (editingPermission) {
-            updatePermission(values);
-        } else {
-            createPermission(values);
-        }
+    const handleDelete = async record => {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const newData = permissions.filter(item => item.id !== record.id);
+        setPermissions(newData);
+        return record;
     };
 
     return (
-        <AppContainer
-            title="Permissions Management"
-            extra={[
-                {
-                    key: 1,
-                    position: 1,
-                    title: "Add Permission",
-                    type: "primary",
-                    children: "Add Permission",
-                    onClick: () => {
-                        setEditingPermission(null);
-                        setIsFormVisible(true);
+        <AppContainer title="Permissions Management">
+            <EnhancedCrud
+                title="Permissions"
+                formSchema={permissionFormSchema}
+                crudType="drawer"
+                icon={<TeamOutlined />}
+                initialData={permissions}
+                onRecordCreate={handleCreate}
+                onRecordUpdate={handleUpdate}
+                onRecordDelete={handleDelete}
+                showToggleCrudType={true}
+                statistics={[
+                    { key: "total", label: "Total Permissions", value: permissions.length, color: "#1890ff" },
+                    {
+                        key: "active",
+                        label: "Active Permissions",
+                        value: permissions.filter(p => p.isActive).length,
+                        color: "#52c41a",
                     },
-                },
-            ]}
-        >
-            <Modal
-                title={editingPermission ? "Edit Permission" : "Add Permission"}
-                open={isFormVisible}
-                onCancel={() => {
-                    setIsFormVisible(false);
-                    setEditingPermission(null);
+                ]}
+                successMessages={{
+                    create: "Permission created successfully",
+                    update: "Permission updated successfully",
+                    delete: "Permission deleted successfully",
                 }}
-                footer={null}
-            >
-                <AppForm
-                    schema={permissionFormSchema}
-                    onFinish={handleFormSubmit}
-                    initialValues={editingPermission || undefined}
-                />
-            </Modal>
-
-            <Table dataSource={permissions} columns={columns} rowKey="id" />
+                tableProps={{
+                    bordered: true,
+                    size: "middle",
+                    pagination: { pageSize: 5 },
+                }}
+            />
         </AppContainer>
     );
 };
 
-export default Permissions;
+export default PermissionPage;

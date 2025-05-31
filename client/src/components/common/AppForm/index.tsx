@@ -204,12 +204,20 @@ const AppForm: React.FC<AppFormProps> = ({
                         break;
                     case "set_value":
                         if (conditionsMet && dependency.target !== undefined) {
-                            form.setFieldValue(field.name, dependency.target);
+                            // Check if the value is different before setting to avoid loops
+                            const currentValue = form.getFieldValue(field.name);
+                            if (currentValue !== dependency.target) {
+                                form.setFieldValue(field.name, dependency.target);
+                            }
                         }
                         break;
                     case "clear_value":
                         if (conditionsMet) {
-                            form.setFieldValue(field.name, undefined);
+                            // Check if the field has a value before clearing
+                            const currentValue = form.getFieldValue(field.name);
+                            if (currentValue !== undefined && currentValue !== null && currentValue !== "") {
+                                form.setFieldValue(field.name, undefined);
+                            }
                         }
                         break;
                     case "set_options":
@@ -226,7 +234,11 @@ const AppForm: React.FC<AppFormProps> = ({
                         if (conditionsMet && dependency.callback) {
                             const calculatedValue = dependency.callback(form, values, field.name);
                             if (calculatedValue !== undefined) {
-                                form.setFieldValue(field.name, calculatedValue);
+                                // Check if the value is different before setting to avoid loops
+                                const currentValue = form.getFieldValue(field.name);
+                                if (JSON.stringify(currentValue) !== JSON.stringify(calculatedValue)) {
+                                    form.setFieldValue(field.name, calculatedValue);
+                                }
                             }
                         }
                         break;
@@ -264,6 +276,11 @@ const AppForm: React.FC<AppFormProps> = ({
     // Enhanced form values change handler
     const handleValuesChange = useCallback(
         async (changedValues: any, allValues: any) => {
+            // Prevent unnecessary updates if values haven't actually changed
+            if (JSON.stringify(previousValues.current) === JSON.stringify(allValues)) {
+                return;
+            }
+
             const newFieldStates: Record<string, any> = {};
             const allFields = [
                 ...(schema.fields || []),
@@ -273,9 +290,17 @@ const AppForm: React.FC<AppFormProps> = ({
             ];
 
             // Process dependencies for all fields
+            let hasStateChanges = false;
             for (const field of allFields) {
                 const state = await processDependencies(field, allValues);
-                newFieldStates[field.name] = { ...fieldStates[field.name], ...state };
+
+                // Only update state if there are actual changes
+                if (JSON.stringify(fieldStates[field.name]) !== JSON.stringify(state)) {
+                    newFieldStates[field.name] = { ...fieldStates[field.name], ...state };
+                    hasStateChanges = true;
+                } else {
+                    newFieldStates[field.name] = fieldStates[field.name];
+                }
 
                 // Handle field-specific hooks
                 if (changedValues[field.name] !== undefined && schema.hooks?.onFieldChange) {
@@ -283,7 +308,10 @@ const AppForm: React.FC<AppFormProps> = ({
                 }
             }
 
-            setFieldStates(newFieldStates);
+            // Only update field states if there are actual changes
+            if (hasStateChanges) {
+                setFieldStates(newFieldStates);
+            }
 
             // Handle auto-save
             if (autoSave) {
@@ -297,7 +325,7 @@ const AppForm: React.FC<AppFormProps> = ({
             }
 
             onValuesChange?.(changedValues, processedValues);
-            previousValues.current = allValues;
+            previousValues.current = { ...allValues };
         },
         [schema, fieldStates, processDependencies, onValuesChange, autoSave, handleAutoSave, middleware],
     );
@@ -716,20 +744,22 @@ const AppForm: React.FC<AppFormProps> = ({
     const renderSections = () => {
         if (!schema.sections?.length) return null;
 
-        return (
-            <Collapse defaultActiveKey={schema.sections.map((_, index) => index.toString())}>
-                {schema.sections.map((section, index) => (
-                    <Panel header={section.title} key={index.toString()} extra={section.extra}>
-                        {section.description && (
-                            <Alert message={section.description} type="info" style={{ marginBottom: 16 }} />
-                        )}
-                        <Row gutter={24}>
-                            {section.fields.map(field => renderFieldItem(field, form.getFieldsValue()))}
-                        </Row>
-                    </Panel>
-                ))}
-            </Collapse>
-        );
+        // Convert sections to items format for Collapse
+        const items = schema.sections.map((section, index) => ({
+            key: index.toString(),
+            label: section.title,
+            children: (
+                <>
+                    {section.description && (
+                        <Alert message={section.description} type="info" style={{ marginBottom: 16 }} />
+                    )}
+                    <Row gutter={24}>{section.fields.map(field => renderFieldItem(field, form.getFieldsValue()))}</Row>
+                </>
+            ),
+            extra: section.extra,
+        }));
+
+        return <Collapse defaultActiveKey={schema.sections.map((_, index) => index.toString())} items={items} />;
     };
 
     // Render form steps
