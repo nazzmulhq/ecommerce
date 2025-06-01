@@ -64,6 +64,7 @@ const PermissionPage = () => {
 
     // Handle API calls (simulated)
     const handleCreate = async (record: Permission): Promise<Permission> => {
+        console.log("Creating permission:", record);
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 500));
         const newData = [...permissions, record];
@@ -72,6 +73,7 @@ const PermissionPage = () => {
     };
 
     const handleUpdate = async (record: Permission): Promise<Permission> => {
+        console.log("Updating permission:", record);
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 500));
         const newData = permissions.map(item => (item.id === record.id ? record : item));
@@ -80,6 +82,7 @@ const PermissionPage = () => {
     };
 
     const handleDelete = async (record: Permission): Promise<Permission> => {
+        console.log("Deleting permission:", record);
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 500));
         const newData = permissions.filter(item => item.id !== record.id);
