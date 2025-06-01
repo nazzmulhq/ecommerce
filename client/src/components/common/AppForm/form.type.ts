@@ -250,6 +250,9 @@ export interface FieldConfig {
     hidden?: boolean;
     readOnly?: boolean;
     options?: Option[];
+    filterable?: boolean;
+    defaultValue?: any;
+    initialValue?: any;
     props?: Record<string, any>;
     dependencies?: FormDependency[];
     rules?: ValidationRule[];

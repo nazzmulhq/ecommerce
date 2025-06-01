@@ -7,11 +7,13 @@ import {
     PlusOutlined,
     SearchOutlined,
 } from "@ant-design/icons";
+import { TIconName } from "@src/types/iconName";
 import {
     Button,
     Card,
     Col,
     Drawer,
+    Flex,
     Form,
     Modal,
     Popconfirm,
@@ -28,6 +30,7 @@ import { ColumnType } from "antd/lib/table";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import AppForm from "./AppForm";
 import { FormSchema } from "./AppForm/form.type";
+import AppIcons from "./AppIcons";
 
 const { Title, Text } = Typography;
 
@@ -50,7 +53,7 @@ export interface CrudProps {
     formSchema: FormSchema;
     crudType?: CrudType;
     initialData?: any[];
-    icon?: ReactNode;
+    icon?: TIconName;
 
     // Action handlers
     onDataChange?: (data: any[]) => void;
@@ -586,7 +589,7 @@ const Crud = ({
                     onFinish={handleFilterSubmit}
                     initialValues={{ _search: searchText, ...filters }}
                     renderFooter={form => (
-                        <div style={{ marginTop: 16 }}>
+                        <Flex justify="end" style={{ marginTop: 8 }}>
                             <Space>
                                 <Button type="primary" onClick={() => form.submit()} icon={<SearchOutlined />}>
                                     Apply Filters
@@ -601,7 +604,7 @@ const Crud = ({
                                     Clear
                                 </Button>
                             </Space>
-                        </div>
+                        </Flex>
                     )}
                 />
             </Card>
@@ -674,10 +677,13 @@ const Crud = ({
                 <div>
                     <Card
                         title={
-                            <Space>
-                                {icon}
-                                <span>{`${editingRecord ? "Edit" : "Add"} ${title}`}</span>
-                            </Space>
+                            <Flex justify="end">
+                                <Space size="small">
+                                    {icon ? <AppIcons name={icon} /> : null}
+
+                                    <span>{`${editingRecord ? "Edit" : "Add"} ${title}`}</span>
+                                </Space>
+                            </Flex>
                         }
                         extra={<Button onClick={handleCancel}>Back to List</Button>}
                     >
@@ -690,7 +696,7 @@ const Crud = ({
                             validateOnMount={validateOnMount}
                             preserveFormData={preserveFormData}
                             renderFooter={(form, loading) => (
-                                <div style={{ marginTop: 16 }}>
+                                <Flex justify="end" style={{ marginTop: 8 }}>
                                     <Space>
                                         <Button type="primary" onClick={() => form.submit()} loading={loading}>
                                             {editingRecord ? confirmTexts.update : confirmTexts.create}
@@ -698,7 +704,7 @@ const Crud = ({
                                         <Button onClick={handleCancel}>Cancel</Button>
                                         {renderExtraFormActions && renderExtraFormActions(form, editingRecord)}
                                     </Space>
-                                </div>
+                                </Flex>
                             )}
                             {...formProps}
                         />
@@ -745,7 +751,7 @@ const Crud = ({
             <Card
                 title={
                     <Space>
-                        {icon}
+                        {icon ? <AppIcons name={icon} /> : null}
                         <span>{title}</span>
                     </Space>
                 }
@@ -821,7 +827,7 @@ const Crud = ({
                     validateOnMount={validateOnMount}
                     preserveFormData={preserveFormData}
                     renderFooter={(form, loading) => (
-                        <div style={{ marginTop: 16 }}>
+                        <Flex justify="end" style={{ marginTop: 8 }}>
                             <Space>
                                 <Button type="primary" onClick={() => form.submit()} loading={loading}>
                                     {editingRecord ? confirmTexts.update : confirmTexts.create}
@@ -829,7 +835,7 @@ const Crud = ({
                                 <Button onClick={handleCancel}>Cancel</Button>
                                 {renderExtraFormActions && renderExtraFormActions(form, editingRecord)}
                             </Space>
-                        </div>
+                        </Flex>
                     )}
                     {...formProps}
                 />
@@ -852,7 +858,7 @@ const Crud = ({
                     validateOnMount={validateOnMount}
                     preserveFormData={preserveFormData}
                     renderFooter={(form, loading) => (
-                        <div style={{ marginTop: 16 }}>
+                        <Flex style={{ marginTop: 8 }}>
                             <Space>
                                 <Button type="primary" onClick={() => form.submit()} loading={loading}>
                                     {editingRecord ? confirmTexts.update : confirmTexts.create}
@@ -860,7 +866,7 @@ const Crud = ({
                                 <Button onClick={handleCancel}>Cancel</Button>
                                 {renderExtraFormActions && renderExtraFormActions(form, editingRecord)}
                             </Space>
-                        </div>
+                        </Flex>
                     )}
                     {...formProps}
                 />

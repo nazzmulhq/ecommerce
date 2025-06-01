@@ -1,5 +1,4 @@
 "use client";
-import { TeamOutlined } from "@ant-design/icons";
 import { FormSchema } from "@components/common/AppForm/form.type";
 import Crud from "@components/common/Crud";
 import { useState } from "react";
@@ -27,7 +26,7 @@ const permissionFormSchema: FormSchema = {
                     type: "input",
                     rules: [{ required: true, message: "Please input permission name!" }],
                     grid: { xs: 24, sm: 12 },
-                    // searchable: true,
+                    filterable: true,
                 },
                 {
                     name: "module",
@@ -41,7 +40,7 @@ const permissionFormSchema: FormSchema = {
                     ],
                     rules: [{ required: true, message: "Please select a module!" }],
                     grid: { xs: 24, sm: 12 },
-                    // filterable: true,
+                    filterable: true,
                 },
             ],
         },
@@ -53,7 +52,7 @@ const permissionFormSchema: FormSchema = {
                     label: "Description",
                     type: "input.text_area",
                     grid: { xs: 24 },
-                    // searchable: true,
+                    filterable: false,
                 },
                 {
                     name: "isActive",
@@ -61,8 +60,8 @@ const permissionFormSchema: FormSchema = {
                     type: "switch",
                     rules: [{ required: true }],
                     grid: { xs: 24, sm: 12 },
-                    // filterable: true,
-                    // defaultValue: true,
+                    filterable: true,
+                    defaultValue: true,
                 },
             ],
         },
@@ -106,7 +105,7 @@ const PermissionPage = () => {
             title="Permissions"
             formSchema={permissionFormSchema}
             crudType="drawer"
-            icon={<TeamOutlined />}
+            icon="AiOutlineTeam"
             initialData={permissions}
             onRecordCreate={handleCreate}
             onRecordUpdate={handleUpdate}
