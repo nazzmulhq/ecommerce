@@ -1,6 +1,5 @@
 "use client";
 import { TeamOutlined } from "@ant-design/icons";
-import AppContainer from "@components/common/AppContainer";
 import { FormSchema } from "@components/common/AppForm/form.type";
 import Crud from "@components/common/Crud";
 import { useState } from "react";
@@ -103,38 +102,36 @@ const PermissionPage = () => {
     };
 
     return (
-        <AppContainer title="Permissions Management">
-            <Crud
-                title="Permissions"
-                formSchema={permissionFormSchema}
-                crudType="drawer"
-                icon={<TeamOutlined />}
-                initialData={permissions}
-                onRecordCreate={handleCreate}
-                onRecordUpdate={handleUpdate}
-                onRecordDelete={handleDelete}
-                showToggleCrudType={true}
-                statistics={[
-                    { key: "total", label: "Total Permissions", value: permissions.length, color: "#1890ff" },
-                    {
-                        key: "active",
-                        label: "Active Permissions",
-                        value: permissions.filter(p => p.isActive).length,
-                        color: "#52c41a",
-                    },
-                ]}
-                successMessages={{
-                    create: "Permission created successfully",
-                    update: "Permission updated successfully",
-                    delete: "Permission deleted successfully",
-                }}
-                tableProps={{
-                    bordered: true,
-                    size: "middle",
-                    pagination: { pageSize: 5 },
-                }}
-            />
-        </AppContainer>
+        <Crud
+            title="Permissions"
+            formSchema={permissionFormSchema}
+            crudType="drawer"
+            icon={<TeamOutlined />}
+            initialData={permissions}
+            onRecordCreate={handleCreate}
+            onRecordUpdate={handleUpdate}
+            onRecordDelete={handleDelete}
+            showToggleCrudType={true}
+            statistics={[
+                { key: "total", label: "Total Permissions", value: permissions.length, color: "#1890ff" },
+                {
+                    key: "active",
+                    label: "Active Permissions",
+                    value: permissions.filter(p => p.isActive).length,
+                    color: "#52c41a",
+                },
+            ]}
+            successMessages={{
+                create: "Permission created successfully",
+                update: "Permission updated successfully",
+                delete: "Permission deleted successfully",
+            }}
+            tableProps={{
+                bordered: true,
+                size: "middle",
+                pagination: { pageSize: 5 },
+            }}
+        />
     );
 };
 

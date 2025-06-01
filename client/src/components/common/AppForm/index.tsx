@@ -921,54 +921,50 @@ const AppForm: React.FC<AppFormProps> = ({
         <div>
             {renderHeader && renderHeader()}
 
-            <Card>
-                <Form
-                    form={form}
-                    layout={schema.layout || "vertical"}
-                    size={schema.size || "middle"}
-                    colon={schema.colon}
-                    labelAlign={schema.labelAlign}
-                    labelCol={schema.labelCol}
-                    wrapperCol={schema.wrapperCol}
-                    onFinish={handleFinish}
-                    onFinishFailed={onFinishFailed}
-                    onValuesChange={handleValuesChange}
-                    disabled={loading || disabled}
-                    initialValues={initialValues}
-                    validateTrigger={schema.validation?.validateTrigger}
-                    scrollToFirstError={schema.validation?.scrollToError}
-                >
-                    {/* Render based on structure type */}
-                    {schema.steps ? (
-                        renderSteps()
-                    ) : schema.tabs ? (
-                        renderTabs()
-                    ) : schema.sections ? (
-                        renderSections()
-                    ) : (
-                        <Row gutter={24}>
-                            {schema.fields?.map(field => renderFieldItem(field, form.getFieldsValue()))}
-                        </Row>
-                    )}
+            <Form
+                form={form}
+                layout={schema.layout || "vertical"}
+                size={schema.size || "middle"}
+                colon={schema.colon}
+                labelAlign={schema.labelAlign}
+                labelCol={schema.labelCol}
+                wrapperCol={schema.wrapperCol}
+                onFinish={handleFinish}
+                onFinishFailed={onFinishFailed}
+                onValuesChange={handleValuesChange}
+                disabled={loading || disabled}
+                initialValues={initialValues}
+                validateTrigger={schema.validation?.validateTrigger}
+                scrollToFirstError={schema.validation?.scrollToError}
+            >
+                {/* Render based on structure type */}
+                {schema.steps ? (
+                    renderSteps()
+                ) : schema.tabs ? (
+                    renderTabs()
+                ) : schema.sections ? (
+                    renderSections()
+                ) : (
+                    <Row gutter={24}>{schema.fields?.map(field => renderFieldItem(field, form.getFieldsValue()))}</Row>
+                )}
 
-                    {/* Custom footer or default buttons */}
-                    {renderFooter
-                        ? renderFooter(form, loading)
-                        : !schema.steps && (
-                              <Form.Item style={{ marginTop: 24 }}>
-                                  <Space>
-                                      <Button type="primary" htmlType="submit" loading={loading} disabled={readonly}>
-                                          {mode === "edit" ? "Update" : "Submit"}
-                                      </Button>
-                                      <Button onClick={handleReset} disabled={loading || readonly}>
-                                          Reset
-                                      </Button>
-                                      {autoSave && <Text type="secondary">Auto-save enabled</Text>}
-                                  </Space>
-                              </Form.Item>
-                          )}
-                </Form>
-            </Card>
+                {/* Custom footer or default buttons */}
+                {renderFooter
+                    ? renderFooter(form, loading)
+                    : !schema.steps && (
+                          <Form.Item style={{ marginTop: 24 }}>
+                              <Space>
+                                  <Button type="primary" htmlType="submit" loading={loading} disabled={readonly}>
+                                      {mode === "edit" ? "Update" : "Submit"}
+                                  </Button>
+                                  <Button onClick={handleReset} disabled={loading || readonly}>
+                                      Reset
+                                  </Button>
+                                  {autoSave && <Text type="secondary">Auto-save enabled</Text>}
+                              </Space>
+                          </Form.Item>
+                      )}
+            </Form>
 
             {/* Floating buttons for advanced features */}
             {schema.ui?.showProgress && (

@@ -586,7 +586,7 @@ const Crud = ({
                     onFinish={handleFilterSubmit}
                     initialValues={{ _search: searchText, ...filters }}
                     renderFooter={form => (
-                        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <div style={{ marginTop: 16 }}>
                             <Space>
                                 <Button type="primary" onClick={() => form.submit()} icon={<SearchOutlined />}>
                                     Apply Filters
@@ -690,7 +690,7 @@ const Crud = ({
                             validateOnMount={validateOnMount}
                             preserveFormData={preserveFormData}
                             renderFooter={(form, loading) => (
-                                <div>
+                                <div style={{ marginTop: 16 }}>
                                     <Space>
                                         <Button type="primary" onClick={() => form.submit()} loading={loading}>
                                             {editingRecord ? confirmTexts.update : confirmTexts.create}
@@ -821,7 +821,7 @@ const Crud = ({
                     validateOnMount={validateOnMount}
                     preserveFormData={preserveFormData}
                     renderFooter={(form, loading) => (
-                        <div>
+                        <div style={{ marginTop: 16 }}>
                             <Space>
                                 <Button type="primary" onClick={() => form.submit()} loading={loading}>
                                     {editingRecord ? confirmTexts.update : confirmTexts.create}
@@ -852,7 +852,7 @@ const Crud = ({
                     validateOnMount={validateOnMount}
                     preserveFormData={preserveFormData}
                     renderFooter={(form, loading) => (
-                        <div>
+                        <div style={{ marginTop: 16 }}>
                             <Space>
                                 <Button type="primary" onClick={() => form.submit()} loading={loading}>
                                     {editingRecord ? confirmTexts.update : confirmTexts.create}

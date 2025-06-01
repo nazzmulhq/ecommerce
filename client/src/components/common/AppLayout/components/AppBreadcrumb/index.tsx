@@ -7,7 +7,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { BackButton } from "./BackButton";
-import FilterButton from "./FilterButton";
 import FormattedMessage from "./FormattedMessage";
 import { StyledCard } from "./index.styled";
 
@@ -103,7 +102,7 @@ const AppBreadcrumb: React.FC<IAppBreadcrumb> = () => {
             <Flex justify="space-between" align="center">
                 <Breadcrumb items={items} />
                 <Space>
-                    <FilterButton />
+                    {/* <FilterButton /> */}
                     <BackButton />
                 </Space>
             </Flex>
