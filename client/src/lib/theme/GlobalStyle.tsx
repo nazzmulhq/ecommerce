@@ -405,12 +405,54 @@ export const GlobalStyles = createGlobalStyle`
     }
   }
 
-    .ant-tooltip {
-        & .ant-tooltip-arrow::before {
-            clip-path: var(--ant-tooltip-arrow-path) !important;
-        }
+  // Fix for all Ant Design component arrows
+  .ant-tooltip {
+    & .ant-tooltip-arrow::before {
+        clip-path: var(--ant-arrow-path) !important;
     }
+  }
 
+  .ant-popover {
+    & .ant-popover-arrow::before {
+        clip-path: var(--ant-arrow-path) !important;
+    }
+  }
+
+  .ant-dropdown {
+    & .ant-dropdown-arrow::before {
+        clip-path: var(--ant-arrow-path) !important;
+    }
+  }
+
+  .ant-picker-dropdown {
+    & .ant-picker-arrow::before {
+        clip-path: var(--ant-arrow-path) !important;
+    }
+  }
+
+  .ant-select-dropdown {
+    & .ant-select-arrow::before {
+        clip-path: var(--ant-arrow-path) !important;
+    }
+  }
+
+  .ant-menu-submenu {
+    & .ant-menu-submenu-arrow::before {
+        clip-path: var(--ant-arrow-path) !important;
+    }
+  }
+
+  .ant-mentions-dropdown {
+    & .ant-mentions-dropdown-arrow::before {
+        clip-path: var(--ant-arrow-path) !important;
+    }
+  }
+
+  .ant-notification {
+    & .ant-notification-arrow::before {
+        clip-path: var(--ant-arrow-path) !important;
+    }
+  }
 
   .item-hover {
     transition: all .2s ease;
