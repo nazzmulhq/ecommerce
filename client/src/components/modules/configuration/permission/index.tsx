@@ -1,6 +1,6 @@
 "use client";
 import { FormSchema } from "@components/common/AppForm/form.type";
-import Crud from "@components/common/Crud";
+import QuickUI from "@components/common/QuickUI";
 import { Button, Space } from "antd";
 import { useState } from "react";
 
@@ -110,7 +110,7 @@ const PermissionPage = () => {
     };
 
     return (
-        <Crud
+        <QuickUI
             title="Permissions"
             formSchema={permissionFormSchema}
             crudType="modal"

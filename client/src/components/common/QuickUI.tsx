@@ -48,7 +48,7 @@ export type StatItem = {
 export type CrudType = "modal" | "drawer" | "page";
 
 // CRUD props combining AppForm and DynamicCrud capabilities
-export interface CrudProps {
+export interface QuickUIProps {
     // Basic configuration
     title: string;
     formSchema: FormSchema;
@@ -107,7 +107,7 @@ export interface CrudProps {
     renderExtraFormActions?: (form: any, editingRecord: any | null) => ReactNode;
 }
 
-const Crud = ({
+const QuickUI = ({
     title,
     formSchema,
     crudType = "modal",
@@ -146,7 +146,7 @@ const Crud = ({
     beforeFormSubmit,
     afterFormSubmit,
     renderExtraFormActions,
-}: CrudProps) => {
+}: QuickUIProps) => {
     // State management
     const [data, setData] = useState<any[]>(initialData);
     const [editingRecord, setEditingRecord] = useState<any | null>(null);
@@ -988,4 +988,4 @@ const Crud = ({
     );
 };
 
-export default Crud;
+export default QuickUI;
