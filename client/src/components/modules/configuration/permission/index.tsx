@@ -2,7 +2,7 @@
 import { TeamOutlined } from "@ant-design/icons";
 import AppContainer from "@components/common/AppContainer";
 import { FormSchema } from "@components/common/AppForm/form.type";
-import EnhancedCrud from "@components/common/EnhancedCrud";
+import Crud from "@components/common/Crud";
 import { useState } from "react";
 
 // Sample permissions data
@@ -104,7 +104,7 @@ const PermissionPage = () => {
 
     return (
         <AppContainer title="Permissions Management">
-            <EnhancedCrud
+            <Crud
                 title="Permissions"
                 formSchema={permissionFormSchema}
                 crudType="drawer"

@@ -43,8 +43,8 @@ export type StatItem = {
 // CRUD UI type
 export type CrudType = "modal" | "drawer" | "page";
 
-// Enhanced CRUD props combining AppForm and DynamicCrud capabilities
-export interface EnhancedCrudProps {
+// CRUD props combining AppForm and DynamicCrud capabilities
+export interface CrudProps {
     // Basic configuration
     title: string;
     formSchema: FormSchema;
@@ -101,7 +101,7 @@ export interface EnhancedCrudProps {
     renderExtraFormActions?: (form: any, editingRecord: any | null) => ReactNode;
 }
 
-const EnhancedCrud = ({
+const Crud = ({
     title,
     formSchema,
     crudType = "modal",
@@ -138,7 +138,7 @@ const EnhancedCrud = ({
     beforeFormSubmit,
     afterFormSubmit,
     renderExtraFormActions,
-}: EnhancedCrudProps) => {
+}: CrudProps) => {
     // State management
     const [data, setData] = useState<any[]>(initialData);
     const [editingRecord, setEditingRecord] = useState<any | null>(null);
@@ -925,4 +925,4 @@ const EnhancedCrud = ({
     );
 };
 
-export default EnhancedCrud;
+export default Crud;
