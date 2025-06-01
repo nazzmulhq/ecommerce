@@ -4,8 +4,17 @@ import Crud from "@components/common/Crud";
 import { Button, Space } from "antd";
 import { useState } from "react";
 
+// Define a type for permission records
+interface Permission {
+    id: string;
+    name: string;
+    description: string;
+    module: string;
+    isActive: boolean;
+}
+
 // Sample permissions data
-const initialPermissions = [
+const initialPermissions: Permission[] = [
     { id: "1", name: "create", description: "Can create resources", module: "products", isActive: true },
     { id: "2", name: "read", description: "Can read resources", module: "products", isActive: true },
     { id: "3", name: "update", description: "Can update resources", module: "products", isActive: true },
@@ -74,10 +83,10 @@ const permissionFormSchema: FormSchema = {
 };
 
 const PermissionPage = () => {
-    const [permissions, setPermissions] = useState(initialPermissions);
+    const [permissions, setPermissions] = useState<Permission[]>(initialPermissions);
 
     // Handle API calls (simulated)
-    const handleCreate = async record => {
+    const handleCreate = async (record: Permission): Promise<Permission> => {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 500));
         const newData = [...permissions, record];
@@ -85,7 +94,7 @@ const PermissionPage = () => {
         return record;
     };
 
-    const handleUpdate = async record => {
+    const handleUpdate = async (record: Permission): Promise<Permission> => {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 500));
         const newData = permissions.map(item => (item.id === record.id ? record : item));
@@ -93,7 +102,7 @@ const PermissionPage = () => {
         return record;
     };
 
-    const handleDelete = async record => {
+    const handleDelete = async (record: Permission): Promise<Permission> => {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 500));
         const newData = permissions.filter(item => item.id !== record.id);
@@ -132,7 +141,7 @@ const PermissionPage = () => {
                 pagination: { pageSize: 5 },
             }}
             rowSelection
-            batchActions={(selectedRowKeys: any[], selectedRows: any[]) => {
+            batchActions={(selectedRowKeys: string[], selectedRows: Permission[]) => {
                 return (
                     <Space size="small">
                         <Button
@@ -151,19 +160,19 @@ const PermissionPage = () => {
                             Activate Selected
                         </Button>
                         <Button
-                            type="primary"
+                            danger
                             onClick={() => {
-                                // Handle batch activation logic
+                                // Handle batch deactivation
                                 const updatedPermissions = permissions.map(permission => {
                                     if (selectedRowKeys.includes(permission.id)) {
-                                        return { ...permission, isActive: true };
+                                        return { ...permission, isActive: false };
                                     }
                                     return permission;
                                 });
                                 setPermissions(updatedPermissions);
                             }}
                         >
-                            Activate Selected
+                            Deactivate Selected
                         </Button>
                     </Space>
                 );
