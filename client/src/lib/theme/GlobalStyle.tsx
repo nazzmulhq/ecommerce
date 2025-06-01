@@ -436,11 +436,11 @@ export const GlobalStyles = createGlobalStyle`
     }
   }
 
-  .ant-menu-submenu {
+  /* .ant-menu-submenu {
     & .ant-menu-submenu-arrow::before {
         clip-path: var(--ant-arrow-path) !important;
     }
-  }
+  } */
 
   .ant-mentions-dropdown {
     & .ant-mentions-dropdown-arrow::before {
