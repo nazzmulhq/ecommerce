@@ -7,73 +7,49 @@ import { useState } from "react";
 // Define a type for permission records
 interface Permission {
     id: string;
+    slug?: string;
+    status?: boolean;
     name: string;
-    description: string;
-    module: string;
-    isActive: boolean;
 }
 
 // Sample permissions data
 const initialPermissions: Permission[] = [
-    { id: "1", name: "create", description: "Can create resources", module: "products", isActive: true },
-    { id: "2", name: "read", description: "Can read resources", module: "products", isActive: true },
-    { id: "3", name: "update", description: "Can update resources", module: "products", isActive: true },
-    { id: "4", name: "delete", description: "Can delete resources", module: "products", isActive: false },
-    { id: "5", name: "manage_users", description: "Can manage users", module: "users", isActive: true },
+    { id: "1", name: "create", slug: "create_permission", status: true },
+    { id: "2", name: "read", slug: "read_permission", status: true },
+    { id: "3", name: "update", slug: "update_permission", status: true },
+    { id: "4", name: "delete", slug: "delete_permission", status: true },
+    { id: "5", name: "manage_users", slug: "manage_users_permission", status: true },
 ];
 
 // Define form schema using AppForm's schema format
 const permissionFormSchema: FormSchema = {
     layout: "vertical",
     size: "middle",
-    sections: [
+    fields: [
         {
-            title: "Basic Information",
-            fields: [
-                {
-                    name: "name",
-                    label: "Permission Name",
-                    type: "input",
-                    rules: [{ required: true, message: "Please input permission name!" }],
-                    grid: { xs: 24, sm: 12 },
-                    filterable: true,
-                },
-                {
-                    name: "module",
-                    label: "Module",
-                    type: "select",
-                    options: [
-                        { value: "products", label: "Products" },
-                        { value: "orders", label: "Orders" },
-                        { value: "users", label: "Users" },
-                        { value: "settings", label: "Settings" },
-                    ],
-                    rules: [{ required: true, message: "Please select a module!" }],
-                    grid: { xs: 24, sm: 12 },
-                    filterable: true,
-                },
-            ],
+            name: "id",
+            label: "ID",
+            type: "input",
+            required: true,
+            hidden: true,
         },
         {
-            title: "Additional Settings",
-            fields: [
-                {
-                    name: "description",
-                    label: "Description",
-                    type: "input.text_area",
-                    grid: { xs: 24 },
-                    filterable: false,
-                },
-                {
-                    name: "isActive",
-                    label: "Active",
-                    type: "switch",
-                    rules: [{ required: true }],
-                    grid: { xs: 24, sm: 12 },
-                    filterable: true,
-                    defaultValue: true,
-                },
-            ],
+            name: "slug",
+            label: "Permission Slug",
+            type: "input",
+            required: true,
+            placeholder: "Enter permission slug",
+            grid: { xs: 24, sm: 24, md: 24, lg: 24, xl: 24, xxl: 24 },
+            filterable: true,
+        },
+        {
+            name: "name",
+            label: "Permission Name",
+            type: "input",
+            required: true,
+            placeholder: "Enter permission name",
+            grid: { xs: 24, sm: 24, md: 24, lg: 24, xl: 24, xxl: 24 },
+            filterable: true,
         },
     ],
     validation: {
@@ -110,26 +86,46 @@ const PermissionPage = () => {
         return record;
     };
 
+    // filter data based on filter form
+    const filterData = async (data: Permission[], filter: Partial<Permission>): Promise<Permission[]> => {
+        console.log({
+            data,
+            filter,
+        });
+        return data.filter(item => {
+            return Object.keys(filter).every(key => {
+                if (key === "name" && filter.name) {
+                    return item.name.toLowerCase().includes(filter.name.toLowerCase());
+                }
+                if (key === "slug" && filter.slug) {
+                    return item.slug?.toLowerCase().includes(filter.slug.toLowerCase());
+                }
+                return true;
+            });
+        });
+    };
+
     return (
         <Crud
             title="Permissions"
             formSchema={permissionFormSchema}
-            crudType="drawer"
+            crudType="modal"
             icon="AiOutlineTeam"
             initialData={permissions}
             onRecordCreate={handleCreate}
             onRecordUpdate={handleUpdate}
             onRecordDelete={handleDelete}
-            showToggleCrudType={true}
-            statistics={[
-                { key: "total", label: "Total Permissions", value: permissions.length, color: "#1890ff" },
-                {
-                    key: "active",
-                    label: "Active Permissions",
-                    value: permissions.filter(p => p.isActive).length,
-                    color: "#52c41a",
-                },
-            ]}
+            // onFilter={filterData}
+            showToggleCrudType={false}
+            // statistics={[
+            //     { key: "total", label: "Total Permissions", value: permissions.length, color: "#1890ff" },
+            //     {
+            //         key: "active",
+            //         label: "Active Permissions",
+            //         value: permissions.filter(p => p.isActive).length,
+            //         color: "#52c41a",
+            //     },
+            // ]}
             successMessages={{
                 create: "Permission created successfully",
                 update: "Permission updated successfully",

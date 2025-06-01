@@ -12,6 +12,7 @@ import {
     Button,
     Card,
     Col,
+    Collapse,
     Drawer,
     Flex,
     Form,
@@ -27,11 +28,10 @@ import {
     message,
 } from "antd";
 import { ColumnType } from "antd/lib/table";
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AppForm from "./AppForm";
 import { FormSchema } from "./AppForm/form.type";
 import AppIcons from "./AppIcons";
-import { Collapse } from "antd";
 
 const { Title, Text } = Typography;
 
@@ -62,6 +62,7 @@ export interface CrudProps {
     onRecordCreate?: (record: any) => Promise<any> | void;
     onRecordUpdate?: (record: any) => Promise<any> | void;
     onRecordDelete?: (record: any) => Promise<any> | void;
+    onFilter?: (data: any[], filter: Record<string, any>) => Promise<any[]> | void;
 
     // UI customization
     tableColumns?: any[];
@@ -75,6 +76,7 @@ export interface CrudProps {
     };
 
     // Filtering and searching
+    showFilter?: boolean;
     searchFields?: string[];
     filterFields?: any[];
 
@@ -111,6 +113,8 @@ const Crud = ({
     crudType = "modal",
     initialData = [],
     icon,
+    onFilter,
+    showFilter = true,
     onDataChange,
     onRecordView,
     onRecordCreate,
@@ -152,7 +156,6 @@ const Crud = ({
     const [isFormVisible, setIsFormVisible] = useState<boolean>(false);
     const [isViewVisible, setIsViewVisible] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState<"list" | "form" | "view">("list");
-    const [searchText, setSearchText] = useState<string>("");
     const [filters, setFilters] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState<boolean>(false);
     const [activeCrudType, setActiveCrudType] = useState<CrudType>(crudType);
@@ -204,23 +207,6 @@ const Crud = ({
             .slice(0, 4); // Limit to 4 fields for filter UI
     }, [formSchema, filterFields]);
 
-    // Generate search fields if not provided
-    // const processedSearchFields = useMemo(() => {
-    //     if (searchFields.length > 0) return searchFields;
-
-    //     // Extract from formSchema if not provided
-    //     const fieldsFromSchema: any[] = [
-    //         ...(formSchema.fields || []),
-    //         ...(formSchema.sections?.flatMap(s => s.fields) || []),
-    //         ...(formSchema.tabs?.flatMap(t => t.fields) || []),
-    //         ...(formSchema.steps?.flatMap(s => s.fields) || []),
-    //     ];
-
-    //     return fieldsFromSchema
-    //         .filter(field => field.searchable || field.type === "input" || field.type === "input.search")
-    //         .map(field => field.name);
-    // }, [formSchema, searchFields]);
-
     // Generate filter schema from form schema
     const filterFormSchema = useMemo((): FormSchema => {
         const filterFields = processedFilterFields.map(field => {
@@ -244,47 +230,57 @@ const Crud = ({
             return filterField;
         });
 
-        // Add a search field at the beginning
-        const searchField = {
-            name: "_search",
-            label: "Search",
-            type: "input.search",
-            placeholder: "Search...",
-            grid: { xs: 24, sm: 24 },
-        };
-
         return {
             layout: "vertical",
             fields: [...filterFields],
         };
     }, [processedFilterFields]);
 
-    // Handle filter form submission
-    const handleFilterSubmit = useCallback((values: any) => {
-        // Extract search text
-        const searchValue = values._search;
-        if (searchValue !== undefined) {
-            setSearchText(searchValue);
-            delete values._search; // Remove from filter values
-        }
+    /**
+     * Enhanced filter handling that integrates search text with filters
+     * and supports both client-side and server-side filtering
+     */
+    const handleFilterSubmit = useCallback(
+        async (values: any) => {
+            setLoading(true);
 
-        // Apply remaining filters
-        const newFilters = { ...values };
+            // Prepare filters from form values
+            const newFilters: Record<string, any> = {};
+            Object.entries(values).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== "") {
+                    newFilters[key] = value;
+                }
+            });
 
-        // Remove empty filters
-        Object.keys(newFilters).forEach(key => {
-            if (
-                newFilters[key] === undefined ||
-                newFilters[key] === null ||
-                newFilters[key] === "" ||
-                (Array.isArray(newFilters[key]) && newFilters[key].length === 0)
-            ) {
-                delete newFilters[key];
+            setFilters(newFilters);
+
+            try {
+                // If we have a custom filter function, use it
+                if (onFilter) {
+                    const filteredData = await onFilter(initialData, { ...newFilters });
+                    setData(filteredData as any[]);
+                } else {
+                    // Default client-side filtering
+                    let filteredData = [...initialData];
+
+                    // Apply other filters
+                    Object.entries(newFilters).forEach(([key, value]) => {
+                        if (value !== undefined && value !== null && value !== "") {
+                            filteredData = filteredData.filter(record => record[key] === value);
+                        }
+                    });
+
+                    setData(filteredData);
+                }
+            } catch (error) {
+                console.error("Filter error:", error);
+                message.error("Failed to apply filters");
+            } finally {
+                setLoading(false);
             }
-        });
-
-        setFilters(newFilters);
-    }, []);
+        },
+        [onFilter, initialData],
+    );
 
     const generatedColumns = useMemo<ColumnType<any>[]>(() => {
         if (tableColumns) return tableColumns;
@@ -372,21 +368,14 @@ const Crud = ({
         return columns;
     }, [formSchema, tableColumns, actions, confirmTexts.delete]);
 
-    // Filtered and sorted data
+    // Filtered and sorted data - updated to respect custom filtering
     const processedData = useMemo(() => {
-        let result = [...data];
+        // If we're using custom filtering through onFilter, just return the current data
+        if (onFilter) {
+            return data;
+        }
 
-        // Apply search
-        // if (searchText.trim()) {
-        //     const searchLower = searchText.toLowerCase();
-        //     result = result.filter(record => {
-        //         return processedSearchFields.some(field => {
-        //             const value = record[field];
-        //             if (value === null || value === undefined) return false;
-        //             return String(value).toLowerCase().includes(searchLower);
-        //         });
-        //     });
-        // }
+        let result = [...data];
 
         // Apply filters
         Object.entries(filters).forEach(([key, value]) => {
@@ -413,7 +402,7 @@ const Crud = ({
         });
 
         return result;
-    }, [data, searchText, filters]);
+    }, [data, filters, onFilter]);
 
     // CRUD Handlers
     const handleAdd = () => {
@@ -568,19 +557,55 @@ const Crud = ({
         }
     };
 
-    const handleClearFilters = () => {
-        setFilters({});
-        setSearchText("");
-        // filterForm.resetFields(); // No need to reset filterForm as we're using AppForm directly
-    };
+    // Add a form ref to track the filter form instance
+    const filterFormRef = useRef(form);
 
-    // Render filter form using AppForm
+    /**
+     * Clear all filters and reset data
+     */
+    const handleClearFilters = useCallback(async () => {
+        // Clear filter state
+        setFilters({});
+
+        // Reset the filter form fields if we have access to the form instance
+        if (filterFormRef.current) {
+            filterFormRef.current.resetFields();
+        }
+
+        // If we have a custom filter function, reset data using an empty filter
+        if (onFilter) {
+            try {
+                setLoading(true);
+                const filteredData = await onFilter(initialData, {});
+                setData(filteredData as any[]);
+            } catch (error) {
+                console.error("Error clearing filters:", error);
+                // If error, just reset to initial data
+                setData(initialData);
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            // For client-side filtering, reset to initial data
+            setData(initialData);
+        }
+    }, [onFilter, initialData]);
+
+    /**
+     * Enhanced filter form that respects showFilter prop
+     * and highlights active filters
+     */
     const renderFilterForm = () => {
-        if (!hasFilterFields || processedFilterFields.length === 0) return null;
+        // Don't render if filters shouldn't be shown or no filterable fields exist
+        if (!showFilter || !hasFilterFields || processedFilterFields.length === 0) return null;
+
+        // Count active filters for badge display
+        const activeFilterCount = Object.keys(filters).length;
 
         return (
             <Collapse
-                defaultActiveKey={[]}
+                // Auto-expand if filters are active
+                defaultActiveKey={activeFilterCount > 0 ? ["1"] : []}
                 style={{ marginBottom: 16 }}
                 items={[
                     {
@@ -589,18 +614,24 @@ const Crud = ({
                             <Flex align="center">
                                 <FilterOutlined style={{ marginRight: 8 }} />
                                 <span>Filter {title}</span>
-                                {Object.keys(filters).length > 0 && (
+                                {activeFilterCount > 0 && (
                                     <Tag color="blue" style={{ marginLeft: 8 }}>
-                                        {Object.keys(filters).length} active filters
+                                        {activeFilterCount} active filter{activeFilterCount > 1 ? "s" : ""}
                                     </Tag>
                                 )}
                             </Flex>
                         ),
                         children: (
                             <AppForm
+                                // Add a key to force re-render when filters change
+                                key={`filter-form-${JSON.stringify(filters)}`}
                                 schema={filterFormSchema}
                                 onFinish={handleFilterSubmit}
-                                initialValues={{ _search: searchText, ...filters }}
+                                initialValues={{ ...filters }}
+                                // Store reference to the form instance
+                                onFormReady={form => {
+                                    filterFormRef.current = form;
+                                }}
                                 renderFooter={form => (
                                     <Flex justify="end" style={{ marginTop: 8 }}>
                                         <Space>
@@ -608,17 +639,23 @@ const Crud = ({
                                                 type="primary"
                                                 onClick={() => form.submit()}
                                                 icon={<SearchOutlined />}
+                                                loading={loading}
                                             >
                                                 Apply Filters
                                             </Button>
                                             <Button
                                                 onClick={() => {
-                                                    form.resetFields();
+                                                    // First reset the form via direct ref
+                                                    if (filterFormRef.current) {
+                                                        filterFormRef.current.resetFields();
+                                                    }
+                                                    // Then clear the filters state and reset data
                                                     handleClearFilters();
                                                 }}
                                                 icon={<FilterOutlined />}
+                                                disabled={loading || activeFilterCount === 0}
                                             >
-                                                Clear
+                                                Clear Filters
                                             </Button>
                                         </Space>
                                     </Flex>

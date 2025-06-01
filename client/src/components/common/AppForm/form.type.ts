@@ -260,6 +260,7 @@ export interface FieldConfig {
     grid?: ColProps;
     style?: React.CSSProperties;
     className?: string;
+    hideInTable?: boolean;
 
     // Enhanced properties
     formList?: FormListConfig;
