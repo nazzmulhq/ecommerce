@@ -41,6 +41,7 @@ const permissionFormSchema: FormSchema = {
             placeholder: "Enter permission slug",
             grid: { xs: 24, sm: 24, md: 24, lg: 24, xl: 24, xxl: 24 },
             filterable: true,
+            hidden: true,
         },
         {
             name: "name",
@@ -115,7 +116,7 @@ const PermissionPage = () => {
             onRecordCreate={handleCreate}
             onRecordUpdate={handleUpdate}
             onRecordDelete={handleDelete}
-            // onFilter={filterData}
+            onFilter={filterData}
             showToggleCrudType={false}
             // statistics={[
             //     { key: "total", label: "Total Permissions", value: permissions.length, color: "#1890ff" },

@@ -295,7 +295,7 @@ const Crud = ({
 
         // Generate basic columns from fields
         const columns: any = fieldsFromSchema
-            .filter(field => !field.hidden && !field.hideInTable)
+            .filter(field => !field.hideInTable)
             .map(field => ({
                 title: field.label,
                 dataIndex: field.name,
