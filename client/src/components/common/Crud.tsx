@@ -175,9 +175,7 @@ const Crud = ({
             ...(formSchema.steps?.flatMap(s => s.fields) || []),
         ];
 
-        return fieldsFromSchema.some(
-            field => field.filterable || field.type === "select" || field.type === "switch" || field.type === "boolean",
-        );
+        return fieldsFromSchema.some(field => field?.filterable);
     }, [formSchema, filterFields]);
 
     // Process filter fields - enhanced to extract more information from formSchema
@@ -194,10 +192,7 @@ const Crud = ({
 
         // Map to the correct format for filtering
         return fieldsFromSchema
-            .filter(
-                field =>
-                    field.filterable || field.type === "select" || field.type === "switch" || field.type === "boolean",
-            )
+            .filter(field => field?.filterable)
             .map(field => ({
                 name: field.name,
                 label: field.label,
@@ -209,21 +204,21 @@ const Crud = ({
     }, [formSchema, filterFields]);
 
     // Generate search fields if not provided
-    const processedSearchFields = useMemo(() => {
-        if (searchFields.length > 0) return searchFields;
+    // const processedSearchFields = useMemo(() => {
+    //     if (searchFields.length > 0) return searchFields;
 
-        // Extract from formSchema if not provided
-        const fieldsFromSchema: any[] = [
-            ...(formSchema.fields || []),
-            ...(formSchema.sections?.flatMap(s => s.fields) || []),
-            ...(formSchema.tabs?.flatMap(t => t.fields) || []),
-            ...(formSchema.steps?.flatMap(s => s.fields) || []),
-        ];
+    //     // Extract from formSchema if not provided
+    //     const fieldsFromSchema: any[] = [
+    //         ...(formSchema.fields || []),
+    //         ...(formSchema.sections?.flatMap(s => s.fields) || []),
+    //         ...(formSchema.tabs?.flatMap(t => t.fields) || []),
+    //         ...(formSchema.steps?.flatMap(s => s.fields) || []),
+    //     ];
 
-        return fieldsFromSchema
-            .filter(field => field.searchable || field.type === "input" || field.type === "input.search")
-            .map(field => field.name);
-    }, [formSchema, searchFields]);
+    //     return fieldsFromSchema
+    //         .filter(field => field.searchable || field.type === "input" || field.type === "input.search")
+    //         .map(field => field.name);
+    // }, [formSchema, searchFields]);
 
     // Generate filter schema from form schema
     const filterFormSchema = useMemo((): FormSchema => {
@@ -259,7 +254,7 @@ const Crud = ({
 
         return {
             layout: "vertical",
-            fields: [searchField, ...filterFields],
+            fields: [...filterFields],
         };
     }, [processedFilterFields]);
 
@@ -381,16 +376,16 @@ const Crud = ({
         let result = [...data];
 
         // Apply search
-        if (searchText.trim()) {
-            const searchLower = searchText.toLowerCase();
-            result = result.filter(record => {
-                return processedSearchFields.some(field => {
-                    const value = record[field];
-                    if (value === null || value === undefined) return false;
-                    return String(value).toLowerCase().includes(searchLower);
-                });
-            });
-        }
+        // if (searchText.trim()) {
+        //     const searchLower = searchText.toLowerCase();
+        //     result = result.filter(record => {
+        //         return processedSearchFields.some(field => {
+        //             const value = record[field];
+        //             if (value === null || value === undefined) return false;
+        //             return String(value).toLowerCase().includes(searchLower);
+        //         });
+        //     });
+        // }
 
         // Apply filters
         Object.entries(filters).forEach(([key, value]) => {
@@ -417,7 +412,7 @@ const Crud = ({
         });
 
         return result;
-    }, [data, searchText, filters, processedSearchFields]);
+    }, [data, searchText, filters]);
 
     // CRUD Handlers
     const handleAdd = () => {

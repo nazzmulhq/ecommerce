@@ -1,6 +1,7 @@
 "use client";
 import { FormSchema } from "@components/common/AppForm/form.type";
 import Crud from "@components/common/Crud";
+import { Button, Space } from "antd";
 import { useState } from "react";
 
 // Sample permissions data
@@ -129,6 +130,43 @@ const PermissionPage = () => {
                 bordered: true,
                 size: "middle",
                 pagination: { pageSize: 5 },
+            }}
+            rowSelection
+            batchActions={(selectedRowKeys: any[], selectedRows: any[]) => {
+                return (
+                    <Space size="small">
+                        <Button
+                            type="primary"
+                            onClick={() => {
+                                // Handle batch activation logic
+                                const updatedPermissions = permissions.map(permission => {
+                                    if (selectedRowKeys.includes(permission.id)) {
+                                        return { ...permission, isActive: true };
+                                    }
+                                    return permission;
+                                });
+                                setPermissions(updatedPermissions);
+                            }}
+                        >
+                            Activate Selected
+                        </Button>
+                        <Button
+                            type="primary"
+                            onClick={() => {
+                                // Handle batch activation logic
+                                const updatedPermissions = permissions.map(permission => {
+                                    if (selectedRowKeys.includes(permission.id)) {
+                                        return { ...permission, isActive: true };
+                                    }
+                                    return permission;
+                                });
+                                setPermissions(updatedPermissions);
+                            }}
+                        >
+                            Activate Selected
+                        </Button>
+                    </Space>
+                );
             }}
         />
     );
