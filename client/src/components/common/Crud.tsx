@@ -31,6 +31,7 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import AppForm from "./AppForm";
 import { FormSchema } from "./AppForm/form.type";
 import AppIcons from "./AppIcons";
+import { Collapse } from "antd";
 
 const { Title, Text } = Typography;
 
@@ -578,31 +579,55 @@ const Crud = ({
         if (!hasFilterFields || processedFilterFields.length === 0) return null;
 
         return (
-            <Card size="small" style={{ marginBottom: 16 }}>
-                <AppForm
-                    schema={filterFormSchema}
-                    onFinish={handleFilterSubmit}
-                    initialValues={{ _search: searchText, ...filters }}
-                    renderFooter={form => (
-                        <Flex justify="end" style={{ marginTop: 8 }}>
-                            <Space>
-                                <Button type="primary" onClick={() => form.submit()} icon={<SearchOutlined />}>
-                                    Apply Filters
-                                </Button>
-                                <Button
-                                    onClick={() => {
-                                        form.resetFields();
-                                        handleClearFilters();
-                                    }}
-                                    icon={<FilterOutlined />}
-                                >
-                                    Clear
-                                </Button>
-                            </Space>
-                        </Flex>
-                    )}
-                />
-            </Card>
+            <Collapse
+                defaultActiveKey={[]}
+                style={{ marginBottom: 16 }}
+                items={[
+                    {
+                        key: "1",
+                        label: (
+                            <Flex align="center">
+                                <FilterOutlined style={{ marginRight: 8 }} />
+                                <span>Filter {title}</span>
+                                {Object.keys(filters).length > 0 && (
+                                    <Tag color="blue" style={{ marginLeft: 8 }}>
+                                        {Object.keys(filters).length} active filters
+                                    </Tag>
+                                )}
+                            </Flex>
+                        ),
+                        children: (
+                            <AppForm
+                                schema={filterFormSchema}
+                                onFinish={handleFilterSubmit}
+                                initialValues={{ _search: searchText, ...filters }}
+                                renderFooter={form => (
+                                    <Flex justify="end" style={{ marginTop: 8 }}>
+                                        <Space>
+                                            <Button
+                                                type="primary"
+                                                onClick={() => form.submit()}
+                                                icon={<SearchOutlined />}
+                                            >
+                                                Apply Filters
+                                            </Button>
+                                            <Button
+                                                onClick={() => {
+                                                    form.resetFields();
+                                                    handleClearFilters();
+                                                }}
+                                                icon={<FilterOutlined />}
+                                            >
+                                                Clear
+                                            </Button>
+                                        </Space>
+                                    </Flex>
+                                )}
+                            />
+                        ),
+                    },
+                ]}
+            />
         );
     };
 
