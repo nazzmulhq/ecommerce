@@ -1,6 +1,6 @@
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as redisStore from 'cache-manager-redis-store';
@@ -29,14 +29,13 @@ import * as winston from 'winston';
             synchronize: true,
             logging: true,
         }),
-        // Enhanced MongoDB connection with retry options
-        // MongooseModule.forRootAsync({
-        //     imports: [ConfigModule],
-        //     inject: [ConfigService],
-        //     useFactory: (configService: ConfigService) => ({
-        //         uri: configService.getOrThrow('MONGODB_URI'),
-        //     }),
-        // }),
+        MongooseModule.forRoot(process.env.MONGO_DB_URL, {
+            dbName: process.env.MONGO_DB_NAME || 'default',
+            auth: {
+                username: process.env.MONGO_USER,
+                password: process.env.MONGO_PASS,
+            },
+        }),
         CacheModule.register({
             isGlobal: true,
             store: redisStore,
