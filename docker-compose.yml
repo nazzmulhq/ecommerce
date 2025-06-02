@@ -73,6 +73,7 @@ services:
         container_name: mongodb
         restart: always
         environment:
+            MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:?err}
             MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?err}
             MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:?err}
         ports:
