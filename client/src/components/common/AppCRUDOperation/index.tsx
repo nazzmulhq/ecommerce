@@ -810,7 +810,7 @@ const QuickUI = ({
                 onCancel={handleCancel}
                 width={800}
                 footer={null}
-                destroyOnClose
+                destroyOnHidden
             >
                 <AppForm
                     key={`form-${editingRecord?.id || "new"}`}
@@ -841,7 +841,7 @@ const QuickUI = ({
                 open={activeCrudType === "drawer" && isFormVisible}
                 onClose={handleCancel}
                 width={600}
-                destroyOnClose
+                destroyOnHidden
             >
                 <AppForm
                     key={`form-${editingRecord?.id || "new"}`}
@@ -891,7 +891,7 @@ const QuickUI = ({
                     </Button>,
                 ].filter(Boolean)}
                 width={800}
-                destroyOnClose
+                destroyOnHidden
             >
                 {renderDetailView()}
             </Modal>
@@ -902,7 +902,7 @@ const QuickUI = ({
                 open={activeCrudType === "drawer" && isViewVisible}
                 onClose={() => dispatch(setViewVisible(false))}
                 width={600}
-                destroyOnClose
+                destroyOnHidden
                 extra={
                     actions.edit ? (
                         <Button

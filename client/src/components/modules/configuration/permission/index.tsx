@@ -1,6 +1,6 @@
 "use client";
+import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
-import QuickUI from "@components/common/QuickUI";
 import { Button, Space } from "antd";
 import { useState } from "react";
 
