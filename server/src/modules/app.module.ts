@@ -7,9 +7,16 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { LoggingMiddleware } from './log/logging.middleware';
 import { LoggingService } from './log/logging.service';
+import { TestModule } from './test/test.module';
 
 @Module({
-    imports: [ConfigurationModule, AuthModule, RouteModule, ProjectLogsModule],
+    imports: [
+        ConfigurationModule,
+        AuthModule,
+        RouteModule,
+        ProjectLogsModule,
+        TestModule,
+    ],
     controllers: [AppController],
     providers: [AppService, LoggingService],
 })
