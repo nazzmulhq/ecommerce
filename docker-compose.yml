@@ -34,8 +34,10 @@ services:
             - "${PORT_BACKEND}:3010"
         depends_on:
             - db
+            - mongo
             - redis
 
+    # MySQL and phpMyAdmin
     db:
         image: mysql:8.0
         container_name: ${COMPOSE_PROJECT_NAME:?err}_db
@@ -53,7 +55,6 @@ services:
             - ${COMPOSE_PROJECT_NAME:?err}_network
         ports:
             - "${DOCKER_DB_HOST_PORT:?err}:3306"
-
     phpmyadmin:
         depends_on:
             - db
@@ -66,6 +67,35 @@ services:
             MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
         networks:
             - ${COMPOSE_PROJECT_NAME:?err}_network
+    # MongoDB and Mongo Express
+    mongo:
+        image: mongo:latest
+        container_name: mongodb
+        restart: always
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?err}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:?err}
+        ports:
+            - "${MONGO_PORT}:27017"
+        volumes:
+            - mongodb_data:/data/db
+
+    mongo-express:
+        image: mongo-express:latest
+        container_name: mongo-express
+        restart: always
+        ports:
+            - "${MONGO_DB_UI_PORT}:8081"
+        environment:
+            ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER:?err}
+            ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASS:?err}
+            ME_CONFIG_MONGODB_SERVER: mongo
+            ME_CONFIG_MONGODB_PORT: 27017
+            ME_CONFIG_MONGODB_AUTH_DATABASE: admin
+            ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_DB_ADMIN_USER:?err}
+            ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_DB_ADMIN_PASS:?err}
+        depends_on:
+            - mongo
 
     redis:
         image: redis:alpine
@@ -96,4 +126,5 @@ networks:
         driver: bridge
 volumes:
     mysql-data:
+    mongodb_data:
     rabbitmq_data:
