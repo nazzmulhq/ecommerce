@@ -64,13 +64,39 @@ async function bootstrap() {
 
     app.useGlobalFilters(new ExpiredFilter(cacheManager, loggingService));
 
-    app.setBaseViewsDir(join(__dirname, '..', 'views'));
+    // More robust view path resolution for Docker and development environments
+    const possibleViewPaths = [
+        join(process.cwd(), 'views'), // /app/server/views
+        join(process.cwd(), 'server/views'), // /app/server/server/views
+        join(process.cwd(), '../views'), // /app/views
+        join(__dirname, '..', 'views'), // dist/../views
+        join(__dirname, '..', '..', 'views'), // dist/../../views
+    ];
+
+    // Find the first path that exists
+    let viewsPath = possibleViewPaths[0]; // Default to first path
+    for (const path of possibleViewPaths) {
+        try {
+            // Log attempted paths for debugging
+            console.log(`Checking for views directory at: ${path}`);
+            const { existsSync } = require('fs');
+            if (existsSync(path)) {
+                viewsPath = path;
+                console.log(`Using views directory: ${viewsPath}`);
+                break;
+            }
+        } catch (error) {
+            console.error(`Error checking path ${path}:`, error);
+        }
+    }
+
+    app.setBaseViewsDir(viewsPath);
     app.engine(
         'hbs',
         hbs.engine({
             extname: 'hbs',
-            layoutsDir: join(__dirname, '..', 'views/layouts'),
-            partialsDir: join(__dirname, '..', 'views/partials'),
+            layoutsDir: join(viewsPath, 'layouts'),
+            partialsDir: join(viewsPath, 'partials'),
             defaultLayout: 'main',
             helpers: {
                 // Define 'extend' helper
