@@ -28,14 +28,12 @@ import * as winston from 'winston';
             ],
             synchronize: true,
             logging: true,
+            autoLoadEntities: true,
+            migrations: [join(process.cwd(), 'dist/migrations/*{.ts,.js}')],
+            migrationsRun: true,
+            migrationsTableName: 'typeorm_migrations',
         }),
-        MongooseModule.forRoot(process.env.MONGO_DB_URL, {
-            dbName: process.env.MONGO_DB_NAME || 'default',
-            auth: {
-                username: process.env.MONGO_USER,
-                password: process.env.MONGO_PASS,
-            },
-        }),
+        MongooseModule.forRoot(process.env.MONGO_DB_URL),
         CacheModule.register({
             isGlobal: true,
             store: redisStore,
