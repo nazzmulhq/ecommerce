@@ -123,9 +123,6 @@ export interface QuickUIProps {
     beforeFormSubmit?: (values: any) => any | Promise<any>;
     afterFormSubmit?: (values: any, result: any) => void;
     renderExtraFormActions?: (form: any, editingRecord: any | null) => ReactNode;
-
-    // Redux store slice name (optional - defaults to 'quickUI')
-    sliceName?: string;
 }
 
 const QuickUI = ({
@@ -167,7 +164,6 @@ const QuickUI = ({
     beforeFormSubmit,
     afterFormSubmit,
     renderExtraFormActions,
-    sliceName = "quickUI",
 }: QuickUIProps) => {
     const dispatch = useDispatch<AppDispatch>();
 
@@ -185,7 +181,7 @@ const QuickUI = ({
         loading,
         activeCrudType,
         error,
-    } = useSelector((state: RootState) => state?.[sliceName] || state.quickUI);
+    } = useSelector((state: RootState) => state.quickUI);
 
     // Form instance
     const [form] = Form.useForm();

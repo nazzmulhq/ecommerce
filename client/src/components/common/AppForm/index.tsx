@@ -666,7 +666,7 @@ const AppForm: React.FC<AppFormProps> = ({
         const fieldState = fieldStates[field.name] || {};
         const isDisabled = disabled || readonly || field.disabled || fieldState.disabled;
         const isRequired = field.required || fieldState.required;
-        const isHidden = field.hidden || fieldState.hidden;
+        const isHidden = field.hideInForm || fieldState.hideInForm;
 
         if (isHidden) return null;
 
@@ -728,6 +728,7 @@ const AppForm: React.FC<AppFormProps> = ({
             tooltip: field.tooltip,
             extra: extraButtons,
             help: field.description,
+            hidden: field.hidden || fieldState.hidden,
         };
 
         const renderedField = (
@@ -745,19 +746,28 @@ const AppForm: React.FC<AppFormProps> = ({
         if (!schema.sections?.length) return null;
 
         // Convert sections to items format for Collapse
-        const items = schema.sections.map((section, index) => ({
-            key: index.toString(),
-            label: section.title,
-            children: (
-                <>
-                    {section.description && (
-                        <Alert message={section.description} type="info" style={{ marginBottom: 16 }} />
-                    )}
-                    <Row gutter={24}>{section.fields.map(field => renderFieldItem(field, form.getFieldsValue()))}</Row>
-                </>
-            ),
-            extra: section.extra,
-        }));
+        const items = schema.sections.map((section, index) => {
+            // Sort fields by order property if available
+            const sortedFields = [...section.fields].sort((a, b) =>
+                a.order !== undefined && b.order !== undefined ? a.order - b.order : 0,
+            );
+
+            return {
+                key: index.toString(),
+                label: section.title,
+                children: (
+                    <>
+                        {section.description && (
+                            <Alert message={section.description} type="info" style={{ marginBottom: 16 }} />
+                        )}
+                        <Row gutter={24}>
+                            {sortedFields.map(field => renderFieldItem(field, form.getFieldsValue()))}
+                        </Row>
+                    </>
+                ),
+                extra: section.extra,
+            };
+        });
 
         return <Collapse defaultActiveKey={schema.sections.map((_, index) => index.toString())} items={items} />;
     };
@@ -767,6 +777,10 @@ const AppForm: React.FC<AppFormProps> = ({
         if (!schema.steps?.length) return null;
 
         const currentStepFields = schema.steps[currentStep]?.fields || [];
+        // Sort fields by order property if available
+        const sortedFields = [...currentStepFields].sort((a, b) =>
+            a.order !== undefined && b.order !== undefined ? a.order - b.order : 0,
+        );
 
         return (
             <div>
@@ -782,7 +796,7 @@ const AppForm: React.FC<AppFormProps> = ({
                     ))}
                 </Steps>
 
-                <Row gutter={24}>{currentStepFields.map(field => renderFieldItem(field, form.getFieldsValue()))}</Row>
+                <Row gutter={24}>{sortedFields.map(field => renderFieldItem(field, form.getFieldsValue()))}</Row>
 
                 <div style={{ marginTop: 24, textAlign: "center" }}>
                     <Space>
@@ -820,21 +834,30 @@ const AppForm: React.FC<AppFormProps> = ({
 
         return (
             <Tabs activeKey={activeTab || schema.tabs[0]?.key} onChange={setActiveTab} type="card">
-                {schema.tabs.map(tab => (
-                    <TabPane
-                        tab={
-                            <span>
-                                {tab.icon}
-                                {tab.tab}
-                            </span>
-                        }
-                        key={tab.key}
-                        disabled={tab.disabled}
-                        closable={tab.closable}
-                    >
-                        <Row gutter={24}>{tab.fields.map(field => renderFieldItem(field, form.getFieldsValue()))}</Row>
-                    </TabPane>
-                ))}
+                {schema.tabs.map(tab => {
+                    // Sort fields by order property if available
+                    const sortedFields = [...tab.fields].sort((a, b) =>
+                        a.order !== undefined && b.order !== undefined ? a.order - b.order : 0,
+                    );
+
+                    return (
+                        <TabPane
+                            tab={
+                                <span>
+                                    {tab.icon}
+                                    {tab.tab}
+                                </span>
+                            }
+                            key={tab.key}
+                            disabled={tab.disabled}
+                            closable={tab.closable}
+                        >
+                            <Row gutter={24}>
+                                {sortedFields.map(field => renderFieldItem(field, form.getFieldsValue()))}
+                            </Row>
+                        </TabPane>
+                    );
+                })}
             </Tabs>
         );
     };
@@ -945,7 +968,11 @@ const AppForm: React.FC<AppFormProps> = ({
                 ) : schema.sections ? (
                     renderSections()
                 ) : (
-                    <Row gutter={24}>{schema.fields?.map(field => renderFieldItem(field, form.getFieldsValue()))}</Row>
+                    <Row gutter={24}>
+                        {schema.fields
+                            ?.sort((a, b) => (a.order !== undefined && b.order !== undefined ? a.order - b.order : 0))
+                            .map(field => renderFieldItem(field, form.getFieldsValue()))}
+                    </Row>
                 )}
 
                 {/* Custom footer or default buttons */}

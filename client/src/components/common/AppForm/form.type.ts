@@ -250,7 +250,6 @@ export interface FieldConfig {
     hidden?: boolean;
     readOnly?: boolean;
     options?: Option[];
-    filterable?: boolean;
     defaultValue?: any;
     initialValue?: any;
     props?: Record<string, any>;
@@ -260,7 +259,9 @@ export interface FieldConfig {
     grid?: ColProps;
     style?: React.CSSProperties;
     className?: string;
+    filterable?: boolean;
     hideInTable?: boolean;
+    hideInForm?: boolean;
 
     // Enhanced properties
     formList?: FormListConfig;
