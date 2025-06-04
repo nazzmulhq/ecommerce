@@ -817,4 +817,97 @@ export const GlobalStyles = createGlobalStyle`
     }
   }
 
+  // Fix for tooltip text in dark mode
+  .ant-tooltip {
+    .ant-tooltip-inner {
+      background-color: ${({ theme }) => (theme.mode === "dark" ? theme.palette.background.inverse : theme.palette.tooltipBg)};
+      color: ${({ theme }) => (theme.mode === "dark" ? theme.palette.text.inverse : theme.palette.white)};
+
+      & a {
+        color: ${({ theme }) => (theme.mode === "dark" ? theme.palette.primary.main : theme.palette.white)};
+        display: flex;
+        align-items: center;
+
+        & .ant-menu-item-icon {
+          margin-right: 6px;
+
+          & .anticon, & svg {
+            display: block;
+          }
+        }
+      }
+    }
+
+    // Fix tooltip arrow
+    & .ant-tooltip-arrow::before {
+      clip-path: var(--ant-arrow-path) !important;
+      background-color: ${({ theme }) => (theme.mode === "dark" ? theme.palette.background.inverse : theme.palette.tooltipBg)};
+    }
+  }
+
+  // Fix table styles for dark mode
+  .ant-table-wrapper {
+    .ant-table {
+      .ant-table-tbody {
+        > tr {
+          &.ant-table-row-selected > td {
+            background-color: ${({ theme }) =>
+                theme.mode === "dark"
+                    ? theme.palette.selection?.bgDark || "#3a4148"
+                    : theme.palette.selection?.bg || "#f0f7ff"};
+            color: ${({ theme }) =>
+                theme.mode === "dark"
+                    ? theme.palette.selection?.textDark || "#ffffff"
+                    : theme.palette.selection?.text || "rgb(17, 24, 39)"} !important;
+          }
+
+          &:hover > td {
+            background-color: ${({ theme }) =>
+                theme.mode === "dark"
+                    ? rgba(theme.palette.primary.main, 0.15)
+                    : rgba(theme.palette.primary.main, 0.05)};
+          }
+        }
+      }
+    }
+  }
+
+  // Fix button tooltips
+  .ant-btn {
+    .ant-tooltip {
+      .ant-tooltip-inner {
+        background-color: ${({ theme }) => (theme.mode === "dark" ? theme.palette.background?.inverse || "#f5f5f5" : theme.palette.tooltipBg)};
+        color: ${({ theme }) => (theme.mode === "dark" ? theme.palette.text?.inverse || "#000000" : theme.palette.white)};
+      }
+
+      .ant-tooltip-arrow::before {
+        background-color: ${({ theme }) => (theme.mode === "dark" ? theme.palette.background?.inverse || "#f5f5f5" : theme.palette.tooltipBg)};
+      }
+    }
+  }
+
+  // Fix for dropdown menus in dark mode
+  .ant-dropdown-menu {
+    background-color: ${({ theme }) => theme.palette.background.paper};
+
+    .ant-dropdown-menu-item {
+      color: ${({ theme }) => theme.palette.text.primary};
+
+      &:hover {
+        background-color: ${({ theme }) =>
+            theme.mode === "dark" ? rgba(theme.palette.primary.main, 0.15) : rgba(theme.palette.primary.main, 0.05)};
+      }
+
+      &-selected {
+        background-color: ${({ theme }) =>
+            theme.mode === "dark"
+                ? theme.palette.selection?.bgDark || "#3a4148"
+                : theme.palette.selection?.bg || "#f0f7ff"};
+        color: ${({ theme }) =>
+            theme.mode === "dark"
+                ? theme.palette.selection?.textDark || "#ffffff"
+                : theme.palette.selection?.text || "rgb(17, 24, 39)"};
+      }
+    }
+  }
 `;

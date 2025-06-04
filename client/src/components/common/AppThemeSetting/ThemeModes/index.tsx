@@ -44,14 +44,33 @@ const ThemeModes = () => {
                     sidebarHeaderColor: DarkSidebar.sidebarHeaderColor,
                 } as SidebarData);
             }
-            updateThemeMode(themeMode);
+
+            // Update theme with proper mode and selection settings
             updateTheme({
                 ...theme,
+                mode: themeMode,
                 palette: {
                     ...theme.palette,
                     mode: themeMode === ThemeMode.DARK ? ThemeMode.DARK : ThemeMode.LIGHT,
                     background: themeMode === ThemeMode.DARK ? backgroundDark : backgroundLight,
                     text: themeMode === ThemeMode.DARK ? textDark : textLight,
+                    tooltipBg: themeMode === ThemeMode.DARK ? backgroundLight.paper : "rgba(0, 0, 0, 0.75)",
+                    tooltipText: themeMode === ThemeMode.DARK ? textLight.primary : "#ffffff",
+                    // Ensure selection object is properly initialized
+                    selection:
+                        themeMode === ThemeMode.DARK
+                            ? {
+                                  bg: "#f0f7ff",
+                                  text: "rgb(17, 24, 39)",
+                                  bgDark: "#3a4148",
+                                  textDark: "#ffffff",
+                              }
+                            : theme.palette.selection || {
+                                  bg: "#f0f7ff",
+                                  text: "rgb(17, 24, 39)",
+                                  bgDark: "#3a4148",
+                                  textDark: "#ffffff",
+                              },
                 },
             });
         }

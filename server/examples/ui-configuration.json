@@ -1,0 +1,1275 @@
+{
+    "project": {
+        "id": "proj_001",
+        "name": "E-Commerce Dashboard",
+        "slug": "ecommerce-dashboard",
+        "icon": "ShopOutlined",
+        "logo": "https://example.com/logo.png",
+        "description": "Complete e-commerce management system",
+        "status": "active",
+        "metadata": {
+            "version": "1.0.0",
+            "theme": "light",
+            "createdAt": "2023-06-15T08:00:00Z"
+        },
+        "permissions": {
+            "read": ["admin", "manager", "viewer"],
+            "write": ["admin", "manager"],
+            "admin": ["admin"]
+        }
+    },
+    "routes": [
+        {
+            "id": "route_001",
+            "projectId": "proj_001",
+            "name": "Product Management",
+            "slug": "products",
+            "path": "/products",
+            "icon": "AppstoreOutlined",
+            "description": "Manage product catalog",
+            "status": "active",
+            "sortOrder": 1,
+            "metadata": {
+                "requiresAuth": true,
+                "roles": ["admin", "manager"]
+            }
+        },
+        {
+            "id": "route_002",
+            "projectId": "proj_001",
+            "name": "Order Management",
+            "slug": "orders",
+            "path": "/orders",
+            "icon": "ShoppingCartOutlined",
+            "description": "Manage customer orders",
+            "status": "active",
+            "sortOrder": 2,
+            "metadata": {
+                "requiresAuth": true,
+                "roles": ["admin", "manager"]
+            }
+        }
+    ],
+    "components": [
+        {
+            "id": "comp_001",
+            "routeId": "route_001",
+            "name": "Product List",
+            "slug": "product-list",
+            "type": "crud",
+            "description": "Product catalog management",
+            "status": "active",
+            "sortOrder": 1,
+            "metadata": {
+                "icon": "TableOutlined",
+                "category": "management"
+            },
+            "permissions": {
+                "read": ["admin", "manager", "viewer"],
+                "write": ["admin", "manager"]
+            }
+        },
+        {
+            "id": "comp_002",
+            "routeId": "route_002",
+            "name": "Order Management",
+            "slug": "order-management",
+            "type": "crud",
+            "description": "Order processing and management",
+            "status": "active",
+            "sortOrder": 1,
+            "metadata": {
+                "icon": "OrderedListOutlined",
+                "category": "management"
+            }
+        }
+    ],
+    "formConfigs": [
+        {
+            "id": "form_001",
+            "componentId": "comp_001",
+            "name": "Product Form",
+            "description": "Form for creating and editing products",
+            "version": "1.0.0",
+            "isDefault": true,
+            "status": "active",
+            "schema": {
+                "layout": "vertical",
+                "size": "middle",
+                "tabs": [
+                    {
+                        "key": "basic",
+                        "title": "Basic Information",
+                        "fields": [
+                            {
+                                "name": "name",
+                                "label": "Product Name",
+                                "type": "input",
+                                "required": true,
+                                "filterable": true,
+                                "sortable": true,
+                                "grid": { "xs": 24, "md": 12 },
+                                "order": 1,
+                                "rules": [
+                                    {
+                                        "required": true,
+                                        "message": "Product name is required"
+                                    },
+                                    {
+                                        "min": 3,
+                                        "message": "Name must be at least 3 characters"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "sku",
+                                "label": "SKU",
+                                "type": "input",
+                                "required": true,
+                                "filterable": true,
+                                "grid": { "xs": 24, "md": 12 },
+                                "order": 2,
+                                "rules": [
+                                    {
+                                        "required": true,
+                                        "message": "SKU is required"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "categoryId",
+                                "label": "Category",
+                                "type": "select",
+                                "required": true,
+                                "filterable": true,
+                                "grid": { "xs": 24, "md": 12 },
+                                "order": 3,
+                                "options": [
+                                    {
+                                        "label": "Electronics",
+                                        "value": "electronics"
+                                    },
+                                    {
+                                        "label": "Clothing",
+                                        "value": "clothing"
+                                    },
+                                    {
+                                        "label": "Home & Kitchen",
+                                        "value": "home"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "brand",
+                                "label": "Brand",
+                                "type": "input",
+                                "filterable": true,
+                                "grid": { "xs": 24, "md": 12 },
+                                "order": 4
+                            }
+                        ]
+                    },
+                    {
+                        "key": "details",
+                        "title": "Product Details",
+                        "fields": [
+                            {
+                                "name": "description",
+                                "label": "Description",
+                                "type": "input.text_area",
+                                "grid": { "xs": 24 },
+                                "order": 1,
+                                "props": { "rows": 4 }
+                            },
+                            {
+                                "name": "features",
+                                "label": "Features",
+                                "type": "form.list",
+                                "grid": { "xs": 24 },
+                                "order": 2,
+                                "formList": {
+                                    "min": 1,
+                                    "max": 10,
+                                    "addText": "Add Feature",
+                                    "template": [
+                                        {
+                                            "name": "feature",
+                                            "label": "Feature",
+                                            "type": "input",
+                                            "required": true,
+                                            "grid": { "xs": 24 }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "key": "pricing",
+                        "title": "Pricing",
+                        "fields": [
+                            {
+                                "name": "price",
+                                "label": "Price",
+                                "type": "input_number",
+                                "required": true,
+                                "filterable": true,
+                                "sortable": true,
+                                "grid": { "xs": 24, "md": 8 },
+                                "order": 1,
+                                "props": {
+                                    "min": 0,
+                                    "step": 0.01,
+                                    "precision": 2
+                                }
+                            },
+                            {
+                                "name": "costPrice",
+                                "label": "Cost Price",
+                                "type": "input_number",
+                                "grid": { "xs": 24, "md": 8 },
+                                "order": 2,
+                                "props": {
+                                    "min": 0,
+                                    "step": 0.01,
+                                    "precision": 2
+                                }
+                            },
+                            {
+                                "name": "salePrice",
+                                "label": "Sale Price",
+                                "type": "input_number",
+                                "grid": { "xs": 24, "md": 8 },
+                                "order": 3,
+                                "props": {
+                                    "min": 0,
+                                    "step": 0.01,
+                                    "precision": 2
+                                },
+                                "dependencies": [
+                                    {
+                                        "type": "custom",
+                                        "conditions": [
+                                            {
+                                                "field": "price",
+                                                "operator": "is_not_empty",
+                                                "value": null
+                                            }
+                                        ],
+                                        "callback": "(form, values) => { if (values.salePrice > values.price) { form.setFields([{ name: 'salePrice', errors: ['Sale price cannot be higher than regular price'] }]); } }"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "onSale",
+                                "label": "On Sale",
+                                "type": "switch",
+                                "grid": { "xs": 24, "md": 8 },
+                                "order": 4,
+                                "defaultValue": false
+                            },
+                            {
+                                "name": "saleStartDate",
+                                "label": "Sale Start Date",
+                                "type": "date_picker",
+                                "grid": { "xs": 24, "md": 8 },
+                                "order": 5,
+                                "dependencies": [
+                                    {
+                                        "type": "show_if",
+                                        "conditions": [
+                                            {
+                                                "field": "onSale",
+                                                "operator": "equals",
+                                                "value": true
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "saleEndDate",
+                                "label": "Sale End Date",
+                                "type": "date_picker",
+                                "grid": { "xs": 24, "md": 8 },
+                                "order": 6,
+                                "dependencies": [
+                                    {
+                                        "type": "show_if",
+                                        "conditions": [
+                                            {
+                                                "field": "onSale",
+                                                "operator": "equals",
+                                                "value": true
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "key": "inventory",
+                        "title": "Inventory",
+                        "fields": [
+                            {
+                                "name": "stockQuantity",
+                                "label": "Stock Quantity",
+                                "type": "input_number",
+                                "required": true,
+                                "filterable": true,
+                                "grid": { "xs": 24, "md": 12 },
+                                "order": 1,
+                                "props": { "min": 0, "precision": 0 }
+                            },
+                            {
+                                "name": "lowStockThreshold",
+                                "label": "Low Stock Alert Threshold",
+                                "type": "input_number",
+                                "grid": { "xs": 24, "md": 12 },
+                                "order": 2,
+                                "props": { "min": 0, "precision": 0 }
+                            },
+                            {
+                                "name": "weight",
+                                "label": "Weight (kg)",
+                                "type": "input_number",
+                                "grid": { "xs": 24, "md": 8 },
+                                "order": 3,
+                                "props": {
+                                    "min": 0,
+                                    "step": 0.01,
+                                    "precision": 2
+                                }
+                            },
+                            {
+                                "name": "dimensions",
+                                "label": "Dimensions",
+                                "type": "form.list",
+                                "grid": { "xs": 24 },
+                                "order": 4,
+                                "formList": {
+                                    "min": 1,
+                                    "max": 1,
+                                    "addText": "Add Dimensions",
+                                    "template": [
+                                        {
+                                            "name": "length",
+                                            "label": "Length (cm)",
+                                            "type": "input_number",
+                                            "grid": { "xs": 24, "md": 8 }
+                                        },
+                                        {
+                                            "name": "width",
+                                            "label": "Width (cm)",
+                                            "type": "input_number",
+                                            "grid": { "xs": 24, "md": 8 }
+                                        },
+                                        {
+                                            "name": "height",
+                                            "label": "Height (cm)",
+                                            "type": "input_number",
+                                            "grid": { "xs": 24, "md": 8 }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "key": "media",
+                        "title": "Media",
+                        "fields": [
+                            {
+                                "name": "images",
+                                "label": "Product Images",
+                                "type": "upload",
+                                "grid": { "xs": 24 },
+                                "order": 1,
+                                "props": {
+                                    "listType": "picture-card",
+                                    "multiple": true,
+                                    "maxCount": 10,
+                                    "accept": "image/*"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "autoSave": {
+                    "enabled": true,
+                    "interval": 30000,
+                    "key": "product_form_autosave"
+                },
+                "validation": {
+                    "validateOnChange": true,
+                    "validateOnBlur": true,
+                    "scrollToError": true
+                },
+                "ui": {
+                    "theme": "default",
+                    "showProgress": true,
+                    "compactMode": false
+                },
+                "hooks": {
+                    "beforeSubmit": "(values) => { const processed = {...values}; if (values.images) { processed.imageUrls = values.images.map(img => img.url); } return processed; }",
+                    "afterSubmit": "(values, result) => { console.log('Product saved:', result); }"
+                }
+            }
+        },
+        {
+            "id": "form_002",
+            "componentId": "comp_002",
+            "name": "Order Form",
+            "description": "Form for creating and editing orders",
+            "version": "1.0.0",
+            "isDefault": true,
+            "status": "active",
+            "schema": {
+                "layout": "vertical",
+                "steps": [
+                    {
+                        "title": "Customer Information",
+                        "description": "Enter customer details",
+                        "fields": [
+                            {
+                                "name": "customer.name",
+                                "label": "Customer Name",
+                                "type": "input",
+                                "required": true,
+                                "grid": { "xs": 24, "md": 12 },
+                                "order": 1
+                            },
+                            {
+                                "name": "customer.email",
+                                "label": "Email",
+                                "type": "input",
+                                "required": true,
+                                "grid": { "xs": 24, "md": 12 },
+                                "order": 2,
+                                "rules": [
+                                    {
+                                        "type": "email",
+                                        "message": "Please enter a valid email"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "customer.phone",
+                                "label": "Phone",
+                                "type": "input",
+                                "grid": { "xs": 24, "md": 12 },
+                                "order": 3
+                            },
+                            {
+                                "name": "billingAddress",
+                                "label": "Billing Address",
+                                "type": "input.text_area",
+                                "required": true,
+                                "grid": { "xs": 24 },
+                                "order": 4
+                            },
+                            {
+                                "name": "shippingAddressSameAsBilling",
+                                "label": "Shipping address same as billing",
+                                "type": "switch",
+                                "defaultValue": true,
+                                "grid": { "xs": 24 },
+                                "order": 5
+                            },
+                            {
+                                "name": "shippingAddress",
+                                "label": "Shipping Address",
+                                "type": "input.text_area",
+                                "grid": { "xs": 24 },
+                                "order": 6,
+                                "dependencies": [
+                                    {
+                                        "type": "show_if",
+                                        "conditions": [
+                                            {
+                                                "field": "shippingAddressSameAsBilling",
+                                                "operator": "equals",
+                                                "value": false
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "required_if",
+                                        "conditions": [
+                                            {
+                                                "field": "shippingAddressSameAsBilling",
+                                                "operator": "equals",
+                                                "value": false
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "title": "Order Items",
+                        "description": "Add products to the order",
+                        "fields": [
+                            {
+                                "name": "items",
+                                "label": "Order Items",
+                                "type": "form.list",
+                                "required": true,
+                                "grid": { "xs": 24 },
+                                "formList": {
+                                    "min": 1,
+                                    "addText": "Add Product",
+                                    "template": [
+                                        {
+                                            "name": "productId",
+                                            "label": "Product",
+                                            "type": "select",
+                                            "required": true,
+                                            "grid": { "xs": 24, "md": 10 },
+                                            "options": "(async) => { const response = await fetch('/api/products'); return response.json().then(data => data.map(p => ({ label: p.name, value: p.id, price: p.price }))); }"
+                                        },
+                                        {
+                                            "name": "quantity",
+                                            "label": "Quantity",
+                                            "type": "input_number",
+                                            "required": true,
+                                            "grid": { "xs": 24, "md": 4 },
+                                            "props": { "min": 1 }
+                                        },
+                                        {
+                                            "name": "unitPrice",
+                                            "label": "Unit Price",
+                                            "type": "input_number",
+                                            "grid": { "xs": 24, "md": 5 },
+                                            "props": { "precision": 2 },
+                                            "dependencies": [
+                                                {
+                                                    "type": "calculate",
+                                                    "conditions": [
+                                                        {
+                                                            "field": "productId",
+                                                            "operator": "is_not_empty",
+                                                            "value": null
+                                                        }
+                                                    ],
+                                                    "callback": "(form, values, fieldName) => { const idx = fieldName.match(/\\d+/)[0]; const product = form.getFieldValue(['items', idx, 'productId', 'options'])?.find(opt => opt.value === values.items[idx].productId); return product?.price || 0; }"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name": "subtotal",
+                                            "label": "Subtotal",
+                                            "type": "input_number",
+                                            "grid": { "xs": 24, "md": 5 },
+                                            "props": {
+                                                "disabled": true,
+                                                "precision": 2
+                                            },
+                                            "dependencies": [
+                                                {
+                                                    "type": "calculate",
+                                                    "conditions": [
+                                                        {
+                                                            "field": "quantity",
+                                                            "operator": "is_not_empty",
+                                                            "value": null
+                                                        },
+                                                        {
+                                                            "field": "unitPrice",
+                                                            "operator": "is_not_empty",
+                                                            "value": null
+                                                        }
+                                                    ],
+                                                    "logic": "AND",
+                                                    "callback": "(form, values, fieldName) => { const idx = fieldName.match(/\\d+/)[0]; const quantity = Number(values.items[idx].quantity) || 0; const unitPrice = Number(values.items[idx].unitPrice) || 0; return (quantity * unitPrice).toFixed(2); }"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "name": "subtotal",
+                                "label": "Subtotal",
+                                "type": "input_number",
+                                "grid": { "xs": 24, "md": 8 },
+                                "props": { "disabled": true, "precision": 2 },
+                                "dependencies": [
+                                    {
+                                        "type": "calculate",
+                                        "conditions": [
+                                            {
+                                                "field": "items",
+                                                "operator": "is_not_empty",
+                                                "value": null
+                                            }
+                                        ],
+                                        "callback": "(form, values) => { return values.items?.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0).toFixed(2) || '0.00'; }"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "shipping",
+                                "label": "Shipping Cost",
+                                "type": "input_number",
+                                "grid": { "xs": 24, "md": 8 },
+                                "props": { "min": 0, "precision": 2 },
+                                "defaultValue": 0
+                            },
+                            {
+                                "name": "tax",
+                                "label": "Tax",
+                                "type": "input_number",
+                                "grid": { "xs": 24, "md": 8 },
+                                "props": { "min": 0, "precision": 2 },
+                                "dependencies": [
+                                    {
+                                        "type": "calculate",
+                                        "conditions": [
+                                            {
+                                                "field": "subtotal",
+                                                "operator": "is_not_empty",
+                                                "value": null
+                                            }
+                                        ],
+                                        "callback": "(form, values) => { return (Number(values.subtotal) * 0.1).toFixed(2); }"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "discount",
+                                "label": "Discount",
+                                "type": "input_number",
+                                "grid": { "xs": 24, "md": 8 },
+                                "props": { "min": 0, "precision": 2 },
+                                "defaultValue": 0
+                            },
+                            {
+                                "name": "total",
+                                "label": "Total",
+                                "type": "input_number",
+                                "grid": { "xs": 24, "md": 8 },
+                                "props": { "disabled": true, "precision": 2 },
+                                "dependencies": [
+                                    {
+                                        "type": "calculate",
+                                        "conditions": [
+                                            {
+                                                "field": "subtotal",
+                                                "operator": "is_not_empty",
+                                                "value": null
+                                            }
+                                        ],
+                                        "callback": "(form, values) => { return (Number(values.subtotal) + Number(values.shipping) + Number(values.tax) - Number(values.discount)).toFixed(2); }"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "title": "Payment Information",
+                        "description": "Enter payment details",
+                        "fields": [
+                            {
+                                "name": "paymentMethod",
+                                "label": "Payment Method",
+                                "type": "radio.group",
+                                "required": true,
+                                "grid": { "xs": 24 },
+                                "options": [
+                                    {
+                                        "label": "Credit Card",
+                                        "value": "credit_card"
+                                    },
+                                    { "label": "PayPal", "value": "paypal" },
+                                    {
+                                        "label": "Bank Transfer",
+                                        "value": "bank_transfer"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "paymentStatus",
+                                "label": "Payment Status",
+                                "type": "select",
+                                "required": true,
+                                "grid": { "xs": 24, "md": 12 },
+                                "options": [
+                                    { "label": "Pending", "value": "pending" },
+                                    { "label": "Paid", "value": "paid" },
+                                    { "label": "Failed", "value": "failed" }
+                                ],
+                                "defaultValue": "pending"
+                            },
+                            {
+                                "name": "notes",
+                                "label": "Order Notes",
+                                "type": "input.text_area",
+                                "grid": { "xs": 24 },
+                                "props": { "rows": 4 }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "crudConfigs": [
+        {
+            "id": "crud_001",
+            "componentId": "comp_001",
+            "formConfigId": "form_001",
+            "name": "Products CRUD",
+            "description": "Product management interface",
+            "version": "1.0.0",
+            "isDefault": true,
+            "status": "active",
+            "config": {
+                "title": "Products",
+                "crudType": "drawer",
+                "icon": "ShoppingOutlined",
+                "actions": {
+                    "view": true,
+                    "edit": true,
+                    "delete": true
+                },
+                "showFilter": true,
+                "searchFields": ["name", "sku", "description"],
+                "filterFields": [
+                    {
+                        "name": "categoryId",
+                        "label": "Category",
+                        "type": "select",
+                        "options": [
+                            { "label": "Electronics", "value": "electronics" },
+                            { "label": "Clothing", "value": "clothing" },
+                            { "label": "Home & Kitchen", "value": "home" }
+                        ]
+                    },
+                    {
+                        "name": "priceRange",
+                        "label": "Price Range",
+                        "type": "custom",
+                        "render": "() => { return <Slider range min={0} max={1000} defaultValue={[0, 500]} />; }"
+                    },
+                    {
+                        "name": "status",
+                        "label": "Stock Status",
+                        "type": "select",
+                        "options": [
+                            { "label": "In Stock", "value": "in_stock" },
+                            {
+                                "label": "Out of Stock",
+                                "value": "out_of_stock"
+                            },
+                            { "label": "Low Stock", "value": "low_stock" }
+                        ]
+                    }
+                ],
+                "confirmTexts": {
+                    "delete": "Are you sure you want to delete this product? This action cannot be undone.",
+                    "create": "Create Product",
+                    "update": "Update Product"
+                },
+                "successMessages": {
+                    "create": "Product created successfully",
+                    "update": "Product updated successfully",
+                    "delete": "Product deleted successfully"
+                },
+                "statistics": [
+                    {
+                        "key": "total",
+                        "label": "Total Products",
+                        "computation": "data.length",
+                        "icon": "ShoppingOutlined",
+                        "color": "#1890ff"
+                    },
+                    {
+                        "key": "outOfStock",
+                        "label": "Out of Stock",
+                        "computation": "data.filter(item => item.stockQuantity <= 0).length",
+                        "icon": "ExclamationCircleOutlined",
+                        "color": "#f5222d"
+                    },
+                    {
+                        "key": "averagePrice",
+                        "label": "Average Price",
+                        "computation": "data.length ? `$${(data.reduce((sum, item) => sum + Number(item.price), 0) / data.length).toFixed(2)}` : '$0.00'",
+                        "icon": "DollarCircleOutlined",
+                        "color": "#52c41a"
+                    }
+                ],
+                "rowSelection": true,
+                "emptyText": "No products found",
+                "showToggleCrudType": true,
+                "validateOnMount": true,
+                "preserveFormData": false,
+                "tableColumns": [
+                    {
+                        "title": "Product",
+                        "dataIndex": "name",
+                        "key": "name",
+                        "render": "(name, record) => { return <div><Avatar src={record.images?.[0]} size='small' style={{marginRight: '8px'}} />{name}</div>; }"
+                    },
+                    {
+                        "title": "SKU",
+                        "dataIndex": "sku",
+                        "key": "sku"
+                    },
+                    {
+                        "title": "Category",
+                        "dataIndex": "categoryId",
+                        "key": "categoryId",
+                        "render": "(category) => { const categories = {electronics: 'Electronics', clothing: 'Clothing', home: 'Home & Kitchen'}; return categories[category] || category; }"
+                    },
+                    {
+                        "title": "Price",
+                        "dataIndex": "price",
+                        "key": "price",
+                        "render": "(price) => `$${parseFloat(price).toFixed(2)}`,",
+                        "sorter": "(a, b) => a.price - b.price"
+                    },
+                    {
+                        "title": "Stock",
+                        "dataIndex": "stockQuantity",
+                        "key": "stockQuantity",
+                        "render": "(stock, record) => { if (stock <= 0) return <Tag color='red'>Out of Stock</Tag>; if (stock <= record.lowStockThreshold) return <Tag color='orange'>Low Stock: {stock}</Tag>; return <Tag color='green'>{stock}</Tag>; }"
+                    },
+                    {
+                        "title": "Status",
+                        "dataIndex": "onSale",
+                        "key": "onSale",
+                        "render": "(onSale) => onSale ? <Tag color='green'>On Sale</Tag> : <Tag color='blue'>Regular</Tag>"
+                    }
+                ],
+                "tableProps": {
+                    "scroll": { "x": 1000 },
+                    "pagination": { "pageSize": 10 },
+                    "expandable": {
+                        "expandedRowRender": "(record) => <p style={{margin: 0}}>{record.description}</p>"
+                    }
+                },
+                "formProps": {
+                    "scrollToFirstError": true
+                }
+            }
+        },
+        {
+            "id": "crud_002",
+            "componentId": "comp_002",
+            "formConfigId": "form_002",
+            "name": "Orders CRUD",
+            "description": "Order management interface",
+            "version": "1.0.0",
+            "isDefault": true,
+            "status": "active",
+            "config": {
+                "title": "Orders",
+                "crudType": "drawer",
+                "icon": "ShoppingCartOutlined",
+                "actions": {
+                    "view": true,
+                    "edit": true,
+                    "delete": true
+                },
+                "showFilter": true,
+                "searchFields": ["id", "customer.name", "customer.email"],
+                "filterFields": [
+                    {
+                        "name": "status",
+                        "label": "Order Status",
+                        "type": "select",
+                        "options": [
+                            { "label": "New", "value": "new" },
+                            { "label": "Processing", "value": "processing" },
+                            { "label": "Shipped", "value": "shipped" },
+                            { "label": "Delivered", "value": "delivered" },
+                            { "label": "Cancelled", "value": "cancelled" }
+                        ]
+                    },
+                    {
+                        "name": "paymentStatus",
+                        "label": "Payment Status",
+                        "type": "select",
+                        "options": [
+                            { "label": "Pending", "value": "pending" },
+                            { "label": "Paid", "value": "paid" },
+                            { "label": "Failed", "value": "failed" }
+                        ]
+                    },
+                    {
+                        "name": "dateRange",
+                        "label": "Order Date",
+                        "type": "custom",
+                        "render": "() => <DatePicker.RangePicker />"
+                    }
+                ],
+                "statistics": [
+                    {
+                        "key": "total",
+                        "label": "Total Orders",
+                        "computation": "data.length",
+                        "icon": "ShoppingCartOutlined",
+                        "color": "#1890ff"
+                    },
+                    {
+                        "key": "new",
+                        "label": "New Orders",
+                        "computation": "data.filter(item => item.status === 'new').length",
+                        "icon": "InboxOutlined",
+                        "color": "#52c41a"
+                    },
+                    {
+                        "key": "revenue",
+                        "label": "Total Revenue",
+                        "computation": "`$${data.reduce((sum, item) => sum + Number(item.total), 0).toFixed(2)}`",
+                        "icon": "DollarCircleOutlined",
+                        "color": "#722ed1"
+                    }
+                ],
+                "rowSelection": true,
+                "tableColumns": [
+                    {
+                        "title": "Order #",
+                        "dataIndex": "id",
+                        "key": "id"
+                    },
+                    {
+                        "title": "Customer",
+                        "dataIndex": ["customer", "name"],
+                        "key": "customer.name"
+                    },
+                    {
+                        "title": "Order Date",
+                        "dataIndex": "createdAt",
+                        "key": "createdAt",
+                        "render": "(date) => new Date(date).toLocaleDateString()",
+                        "sorter": "(a, b) => new Date(a.createdAt) - new Date(b.createdAt)"
+                    },
+                    {
+                        "title": "Status",
+                        "dataIndex": "status",
+                        "key": "status",
+                        "render": "(status) => { const colors = {new: 'blue', processing: 'orange', shipped: 'purple', delivered: 'green', cancelled: 'red'}; return <Tag color={colors[status] || 'blue'}>{status.toUpperCase()}</Tag>; }"
+                    },
+                    {
+                        "title": "Payment",
+                        "dataIndex": "paymentStatus",
+                        "key": "paymentStatus",
+                        "render": "(status) => { const colors = {pending: 'orange', paid: 'green', failed: 'red'}; return <Tag color={colors[status] || 'default'}>{status.toUpperCase()}</Tag>; }"
+                    },
+                    {
+                        "title": "Total",
+                        "dataIndex": "total",
+                        "key": "total",
+                        "render": "(total) => `$${parseFloat(total).toFixed(2)}`",
+                        "sorter": "(a, b) => a.total - b.total"
+                    }
+                ]
+            }
+        }
+    ],
+    "entityConfig": {
+        "id": "entity_001",
+        "name": "product",
+        "slug": "product",
+        "displayName": "Product",
+        "pluralName": "Products",
+        "description": "Product catalog items",
+        "entityType": "collection",
+        "isVisible": true,
+        "isSearchable": true,
+        "icon": "ShoppingOutlined",
+        "fields": [
+            {
+                "name": "name",
+                "type": "text",
+                "label": "Product Name",
+                "description": "The name of the product",
+                "required": true,
+                "unique": false,
+                "filterable": true,
+                "sortable": true,
+                "searchable": true,
+                "validation": [
+                    {
+                        "min": 3,
+                        "message": "Product name must be at least 3 characters"
+                    },
+                    {
+                        "max": 100,
+                        "message": "Product name cannot exceed 100 characters"
+                    }
+                ]
+            },
+            {
+                "name": "sku",
+                "type": "text",
+                "label": "SKU",
+                "description": "Stock keeping unit",
+                "required": true,
+                "unique": true,
+                "filterable": true,
+                "validation": [
+                    {
+                        "pattern": "^[A-Za-z0-9-]+$",
+                        "message": "SKU can only contain letters, numbers, and hyphens"
+                    }
+                ]
+            },
+            {
+                "name": "description",
+                "type": "textarea",
+                "label": "Description",
+                "required": false,
+                "searchable": true
+            },
+            {
+                "name": "price",
+                "type": "decimal",
+                "label": "Price",
+                "description": "Regular selling price",
+                "required": true,
+                "filterable": true,
+                "sortable": true,
+                "validation": [
+                    { "min": 0, "message": "Price must be a positive number" }
+                ]
+            },
+            {
+                "name": "categoryId",
+                "type": "relation",
+                "label": "Category",
+                "required": true,
+                "filterable": true,
+                "relationConfig": {
+                    "ref": "category",
+                    "displayField": "name"
+                }
+            },
+            {
+                "name": "stockQuantity",
+                "type": "integer",
+                "label": "Stock Quantity",
+                "required": true,
+                "filterable": true,
+                "sortable": true,
+                "validation": [
+                    { "min": 0, "message": "Stock quantity cannot be negative" }
+                ]
+            },
+            {
+                "name": "images",
+                "type": "media",
+                "label": "Product Images",
+                "uploadConfig": {
+                    "accept": "image/*",
+                    "maxSize": 5242880,
+                    "maxCount": 10,
+                    "listType": "picture-card"
+                }
+            },
+            {
+                "name": "features",
+                "type": "array",
+                "label": "Features",
+                "formListConfig": {
+                    "min": 0,
+                    "max": 20,
+                    "nestFields": [
+                        {
+                            "name": "feature",
+                            "type": "text",
+                            "label": "Feature",
+                            "required": true
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "onSale",
+                "type": "boolean",
+                "label": "On Sale",
+                "defaultValue": false,
+                "filterable": true
+            },
+            {
+                "name": "tags",
+                "type": "array",
+                "label": "Tags",
+                "description": "Product tags for categorization"
+            },
+            {
+                "name": "status",
+                "type": "select",
+                "label": "Status",
+                "required": true,
+                "filterable": true,
+                "options": [
+                    { "value": "active", "label": "Active" },
+                    { "value": "draft", "label": "Draft" },
+                    { "value": "archived", "label": "Archived" }
+                ],
+                "defaultValue": "active"
+            }
+        ],
+        "ui": {
+            "listView": {
+                "defaultColumns": [
+                    "name",
+                    "sku",
+                    "price",
+                    "stockQuantity",
+                    "categoryId",
+                    "status"
+                ],
+                "defaultSort": { "field": "createdAt", "direction": "desc" },
+                "actionsConfig": {
+                    "view": true,
+                    "edit": true,
+                    "delete": true,
+                    "duplicate": true
+                },
+                "rowSelection": true
+            },
+            "formView": {
+                "layout": "vertical",
+                "size": "middle"
+            },
+            "detailView": {
+                "layout": "tabbed",
+                "tabs": [
+                    {
+                        "key": "details",
+                        "title": "Product Details",
+                        "fields": [
+                            "name",
+                            "sku",
+                            "description",
+                            "price",
+                            "categoryId"
+                        ]
+                    },
+                    {
+                        "key": "inventory",
+                        "title": "Inventory",
+                        "fields": ["stockQuantity", "status"]
+                    },
+                    { "key": "media", "title": "Media", "fields": ["images"] }
+                ]
+            },
+            "crudType": "drawer"
+        },
+        "permissions": {
+            "read": ["admin", "manager", "viewer"],
+            "create": ["admin", "manager"],
+            "update": ["admin", "manager"],
+            "delete": ["admin"]
+        },
+        "workflowStates": [
+            {
+                "name": "draft",
+                "label": "Draft",
+                "color": "#8c8c8c",
+                "isInitial": true,
+                "transitions": [
+                    {
+                        "to": "active",
+                        "label": "Publish",
+                        "roles": ["admin", "manager"]
+                    }
+                ]
+            },
+            {
+                "name": "active",
+                "label": "Active",
+                "color": "#52c41a",
+                "transitions": [
+                    {
+                        "to": "archived",
+                        "label": "Archive",
+                        "roles": ["admin", "manager"]
+                    }
+                ]
+            },
+            {
+                "name": "archived",
+                "label": "Archived",
+                "color": "#f5222d",
+                "isFinal": true,
+                "transitions": [
+                    {
+                        "to": "active",
+                        "label": "Restore",
+                        "roles": ["admin"]
+                    }
+                ]
+            }
+        ],
+        "statistics": [
+            {
+                "key": "totalProducts",
+                "label": "Total Products",
+                "computation": "count(*)"
+            },
+            {
+                "key": "averagePrice",
+                "label": "Average Price",
+                "computation": "avg(price)"
+            },
+            {
+                "key": "outOfStock",
+                "label": "Out of Stock",
+                "computation": "count(*) where stockQuantity <= 0"
+            }
+        ],
+        "api": {
+            "basePath": "/products",
+            "enabled": true,
+            "methods": {
+                "findAll": true,
+                "findOne": true,
+                "create": true,
+                "update": true,
+                "delete": true,
+                "bulkCreate": true,
+                "bulkUpdate": true,
+                "bulkDelete": true
+            },
+            "custom": [
+                {
+                    "name": "getLowStock",
+                    "path": "/low-stock",
+                    "method": "GET",
+                    "handler": "getProductsWithLowStock",
+                    "description": "Get products with stock below threshold"
+                },
+                {
+                    "name": "generateSku",
+                    "path": "/generate-sku",
+                    "method": "POST",
+                    "handler": "generateProductSku",
+                    "description": "Generate unique SKU for new product"
+                }
+            ]
+        },
+        "indexes": [
+            { "fields": { "name": 1 } },
+            { "fields": { "sku": 1 }, "options": { "unique": true } },
+            { "fields": { "categoryId": 1, "status": 1 } },
+            { "fields": { "price": 1 } },
+            { "fields": { "createdAt": -1 } }
+        ],
+        "hooks": {
+            "beforeCreate": "validateAndEnrichProduct",
+            "afterCreate": "indexProductForSearch",
+            "beforeUpdate": "checkProductChanges",
+            "afterUpdate": "updateInventoryStatus",
+            "beforeDelete": "checkProductDeletable",
+            "afterDelete": "cleanupProductReferences"
+        },
+        "version": "1.0.0"
+    }
+}
