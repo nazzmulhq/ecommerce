@@ -8,7 +8,7 @@ export const StyledVerticalNav = styled(Menu)`
     & .ant-menu-submenu-title:active,
     & .ant-menu-item.ant-menu-item-selected,
     & .ant-menu-item:not(.ant-menu-item-selected):active {
-        color: ${({ color }) => color}!important;
+        /* color: ${({ color }) => color}!important; */
     }
 
     &.ant-menu,
