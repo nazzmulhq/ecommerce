@@ -46,12 +46,36 @@ import {
     message,
 } from "antd";
 import { ColumnType } from "antd/lib/table";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AppForm from "../AppForm";
 import { FormSchema } from "../AppForm/form.type";
 import AppIcons from "../AppIcons";
 const { Title, Text } = Typography;
+
+// Permission types and route config
+export type Permission = string | string[];
+export interface PermissionConfig {
+    view?: Permission;
+    create?: Permission;
+    edit?: Permission;
+    delete?: Permission;
+    filter?: Permission;
+    export?: Permission;
+    [key: string]: Permission | undefined;
+}
+export type PermissionChecker = (permission: Permission) => boolean;
+export type CrudType = "modal" | "drawer" | "page" | "route";
+export interface RouteConfig {
+    basePath: string;
+    createPath?: string;
+    editPath?: string;
+    viewPath?: string;
+    listPath?: string;
+    paramName?: string;
+    queryParams?: Record<string, string>;
+}
 
 // Statistics item type
 export type StatItem = {
@@ -61,9 +85,6 @@ export type StatItem = {
     color?: string;
     icon?: ReactNode;
 };
-
-// CRUD UI type
-export type CrudType = "modal" | "drawer" | "page";
 
 // CRUD props combining AppForm and DynamicCrud capabilities
 export interface QuickUIProps {
@@ -90,7 +111,7 @@ export interface QuickUIProps {
         view?: boolean;
         edit?: boolean;
         delete?: boolean;
-        extraActions?: (record: any) => ReactNode[];
+        extraActions?: (record: any, permissions?: { [key: string]: boolean }) => ReactNode[];
     };
 
     // Filtering and searching
@@ -113,7 +134,7 @@ export interface QuickUIProps {
     // Additional features
     statistics?: StatItem[] | ((data: any[]) => StatItem[]);
     rowSelection?: boolean;
-    batchActions?: (selectedRowKeys: any[], selectedRows: any[]) => ReactNode;
+    batchActions?: (selectedRowKeys: any[], selectedRows: any[], permissions?: { [key: string]: boolean }) => ReactNode;
     emptyText?: string;
     showToggleCrudType?: boolean;
 
@@ -122,7 +143,19 @@ export interface QuickUIProps {
     preserveFormData?: boolean;
     beforeFormSubmit?: (values: any) => any | Promise<any>;
     afterFormSubmit?: (values: any, result: any) => void;
-    renderExtraFormActions?: (form: any, editingRecord: any | null) => ReactNode;
+    renderExtraFormActions?: (
+        form: any,
+        editingRecord: any | null,
+        permissions?: { [key: string]: boolean },
+    ) => ReactNode;
+
+    // Permissions
+    permissions?: PermissionConfig;
+    checkPermission?: PermissionChecker;
+    routeConfig?: RouteConfig;
+    currentAction?: string;
+    currentRecordId?: string;
+    onNavigate?: (path: string, params?: Record<string, any>) => void;
 }
 
 const QuickUI = ({
@@ -164,8 +197,17 @@ const QuickUI = ({
     beforeFormSubmit,
     afterFormSubmit,
     renderExtraFormActions,
+    permissions = {},
+    checkPermission,
+    routeConfig,
+    currentAction = "list",
+    currentRecordId,
+    onNavigate,
 }: QuickUIProps) => {
     const dispatch = useDispatch<AppDispatch>();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
 
     // Get state from Redux store
     const {
@@ -217,6 +259,29 @@ const QuickUI = ({
             message.error(error);
         }
     }, [error]);
+
+    // Permission helper
+    const hasPermission = useCallback(
+        (permission: Permission): boolean => {
+            if (!checkPermission || !permission) return true;
+            if (Array.isArray(permission)) return permission.some(p => checkPermission(p));
+            return checkPermission(permission);
+        },
+        [checkPermission],
+    );
+
+    // Computed permissions for UI elements
+    const computedPermissions = useMemo(
+        () => ({
+            canView: hasPermission(permissions.view || []),
+            canCreate: hasPermission(permissions.create || []),
+            canEdit: hasPermission(permissions.edit || []),
+            canDelete: hasPermission(permissions.delete || []),
+            canFilter: hasPermission(permissions.filter || []),
+            canExport: hasPermission(permissions.export || []),
+        }),
+        [permissions, hasPermission],
+    );
 
     // Determine if we need a filter form
     const hasFilterFields = useMemo(() => {
@@ -342,7 +407,12 @@ const QuickUI = ({
                 },
             }));
 
-        if (actions.view || actions.edit || actions.delete || actions.extraActions) {
+        const hasAnyAction =
+            (computedPermissions.canView && actions.view) ||
+            (computedPermissions.canEdit && actions.edit) ||
+            (computedPermissions.canDelete && actions.delete) ||
+            actions.extraActions;
+        if (hasAnyAction) {
             columns.push({
                 title: "Actions",
                 key: "actions",
@@ -350,7 +420,7 @@ const QuickUI = ({
                 width: 150,
                 render: (_: any, record: any) => (
                     <Space>
-                        {actions.view && (
+                        {computedPermissions.canView && actions.view && (
                             <Tooltip title="View Details">
                                 <Button
                                     type="primary"
@@ -360,12 +430,12 @@ const QuickUI = ({
                                 />
                             </Tooltip>
                         )}
-                        {actions.edit && (
+                        {computedPermissions.canEdit && actions.edit && (
                             <Tooltip title="Edit Record">
                                 <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} />
                             </Tooltip>
                         )}
-                        {actions.delete && (
+                        {computedPermissions.canDelete && actions.delete && (
                             <Tooltip title="Delete Record">
                                 <Popconfirm
                                     title={confirmTexts.delete}
@@ -377,17 +447,21 @@ const QuickUI = ({
                                 </Popconfirm>
                             </Tooltip>
                         )}
-                        {actions.extraActions && actions.extraActions(record)}
+                        {actions.extraActions && actions.extraActions(record, computedPermissions)}
                     </Space>
                 ),
             });
         }
 
         return columns;
-    }, [formSchema, tableColumns, actions, confirmTexts.delete]);
+    }, [formSchema, tableColumns, actions, confirmTexts.delete, computedPermissions]);
 
     // CRUD Handlers
     const handleAdd = () => {
+        if (!computedPermissions.canCreate) {
+            message.warning("You do not have permission to create records");
+            return;
+        }
         dispatch(setEditingRecord(null));
         form.resetFields();
 
@@ -410,7 +484,9 @@ const QuickUI = ({
             form.setFieldsValue(defaultValues);
         }
 
-        if (activeCrudType === "modal" || activeCrudType === "drawer") {
+        if (crudType === "route") {
+            navigateToRoute("create");
+        } else if (activeCrudType === "modal" || activeCrudType === "drawer") {
             dispatch(setFormVisible(true));
         } else {
             dispatch(setCurrentPage("form"));
@@ -418,10 +494,15 @@ const QuickUI = ({
     };
 
     const handleEdit = (record: any) => {
+        if (!computedPermissions.canEdit) {
+            message.warning("You do not have permission to edit records");
+            return;
+        }
         dispatch(setEditingRecord(record));
         form.setFieldsValue(record);
-
-        if (activeCrudType === "modal" || activeCrudType === "drawer") {
+        if (crudType === "route") {
+            navigateToRoute("edit", record.id);
+        } else if (activeCrudType === "modal" || activeCrudType === "drawer") {
             dispatch(setFormVisible(true));
         } else {
             dispatch(setCurrentPage("form"));
@@ -429,10 +510,15 @@ const QuickUI = ({
     };
 
     const handleView = (record: any) => {
+        if (!computedPermissions.canView) {
+            message.warning("You do not have permission to view records");
+            return;
+        }
         dispatch(setViewingRecord(record));
         onRecordView?.(record);
-
-        if (activeCrudType === "modal" || activeCrudType === "drawer") {
+        if (crudType === "route") {
+            navigateToRoute("view", record.id);
+        } else if (activeCrudType === "modal" || activeCrudType === "drawer") {
             dispatch(setViewVisible(true));
         } else {
             dispatch(setCurrentPage("view"));
@@ -440,6 +526,10 @@ const QuickUI = ({
     };
 
     const handleDelete = async (record: any) => {
+        if (!computedPermissions.canDelete) {
+            message.warning("You do not have permission to delete records");
+            return;
+        }
         try {
             await dispatch(deleteRecord({ record, onRecordDelete })).unwrap();
             message.success(successMessages.delete);
@@ -502,14 +592,18 @@ const QuickUI = ({
     );
 
     const handleCancel = () => {
-        dispatch(setFormVisible(false));
-        dispatch(setViewVisible(false));
-        dispatch(setCurrentPage("list"));
-        dispatch(setEditingRecord(null));
-        dispatch(setViewingRecord(null));
+        if (crudType === "route") {
+            navigateToRoute("list");
+        } else {
+            dispatch(setFormVisible(false));
+            dispatch(setViewVisible(false));
+            dispatch(setCurrentPage("list"));
+            dispatch(setEditingRecord(null));
+            dispatch(setViewingRecord(null));
 
-        if (!preserveFormData) {
-            form.resetFields();
+            if (!preserveFormData) {
+                form.resetFields();
+            }
         }
     };
 
@@ -536,6 +630,45 @@ const QuickUI = ({
     const handleCrudTypeChange = (type: CrudType) => {
         dispatch(setActiveCrudType(type));
     };
+
+    // Route helpers
+    const getRoutePath = useCallback(
+        (action: string, recordId?: string) => {
+            if (!routeConfig) return "";
+            const { basePath, createPath, editPath, viewPath, listPath, paramName = "id" } = routeConfig;
+            switch (action) {
+                case "create":
+                    return createPath || `${basePath}/create`;
+                case "edit":
+                    return editPath
+                        ? editPath.replace(`[${paramName}]`, recordId || "")
+                        : `${basePath}/${recordId}/edit`;
+                case "view":
+                    return viewPath ? viewPath.replace(`[${paramName}]`, recordId || "") : `${basePath}/${recordId}`;
+                case "list":
+                default:
+                    return listPath || basePath;
+            }
+        },
+        [routeConfig],
+    );
+
+    const navigateToRoute = useCallback(
+        (action: string, recordId?: string, params?: Record<string, any>) => {
+            if (crudType !== "route" || !routeConfig) return;
+            const path = getRoutePath(action, recordId);
+            const searchParamsObj = new URLSearchParams();
+            if (params) {
+                Object.entries(params).forEach(([key, value]) => {
+                    if (value !== undefined && value !== null) searchParamsObj.set(key, String(value));
+                });
+            }
+            const fullPath = searchParamsObj.toString() ? `${path}?${searchParamsObj.toString()}` : path;
+            if (onNavigate) onNavigate(fullPath, params);
+            else router.push(fullPath);
+        },
+        [crudType, routeConfig, router, onNavigate, getRoutePath],
+    );
 
     // Render filter form
     const renderFilterForm = () => {
@@ -665,6 +798,144 @@ const QuickUI = ({
 
     // Main content renderer
     const renderContent = () => {
+        // Route-based rendering
+        if (crudType === "route") {
+            if (currentAction === "create" || currentAction === "edit") {
+                const recordToEdit = currentAction === "edit" ? data.find(item => item.id === currentRecordId) : null;
+
+                return (
+                    <div>
+                        <Card
+                            title={
+                                <Flex justify="space-between" align="center">
+                                    <Space size="small">
+                                        {icon ? <AppIcons name={icon} /> : null}
+                                        <span>{`${currentAction === "edit" ? "Edit" : "Add"} ${title}`}</span>
+                                    </Space>
+                                </Flex>
+                            }
+                            extra={<Button onClick={handleCancel}>Back to List</Button>}
+                        >
+                            <AppForm
+                                key={`form-${recordToEdit?.id || "new"}`}
+                                schema={formSchema}
+                                initialValues={recordToEdit}
+                                onFinish={handleFormSubmit}
+                                loading={loading}
+                                validateOnMount={validateOnMount}
+                                preserveFormData={preserveFormData}
+                                renderFooter={(form, loading) => (
+                                    <Flex justify="end" style={{ marginTop: 8 }}>
+                                        <Space>
+                                            <Button type="primary" onClick={() => form.submit()} loading={loading}>
+                                                {currentAction === "edit" ? confirmTexts.update : confirmTexts.create}
+                                            </Button>
+                                            <Button onClick={handleCancel}>Cancel</Button>
+                                            {renderExtraFormActions &&
+                                                renderExtraFormActions(form, recordToEdit, computedPermissions)}
+                                        </Space>
+                                    </Flex>
+                                )}
+                                {...formProps}
+                            />
+                        </Card>
+                    </div>
+                );
+            }
+
+            if (currentAction === "view") {
+                const recordToView = data.find(item => item.id === currentRecordId);
+                return (
+                    <div>
+                        <Space style={{ marginBottom: 16 }}>
+                            <Button onClick={handleCancel}>Back to List</Button>
+                            {computedPermissions.canEdit && actions.edit && (
+                                <Button
+                                    type="primary"
+                                    icon={<EditOutlined />}
+                                    onClick={() => {
+                                        navigateToRoute("edit", recordToView?.id);
+                                    }}
+                                >
+                                    Edit
+                                </Button>
+                            )}
+                        </Space>
+                        <Card
+                            title={
+                                <Space>
+                                    {icon ? <AppIcons name={icon} /> : null}
+                                    <span>{`${title} Details`}</span>
+                                </Space>
+                            }
+                        >
+                            {renderDetailView()}
+                        </Card>
+                    </div>
+                );
+            }
+
+            // Default: list view for route-based CRUD
+            return (
+                <Card
+                    title={
+                        <Space>
+                            {icon ? <AppIcons name={icon} /> : null}
+                            <span>{title}</span>
+                        </Space>
+                    }
+                    extra={
+                        showToggleCrudType && (
+                            <Radio.Group
+                                value={activeCrudType}
+                                onChange={e => handleCrudTypeChange(e.target.value)}
+                                buttonStyle="solid"
+                                size="small"
+                            >
+                                <Radio.Button value="modal">Modal</Radio.Button>
+                                <Radio.Button value="drawer">Drawer</Radio.Button>
+                                <Radio.Button value="page">Page</Radio.Button>
+                                <Radio.Button value="route">Route</Radio.Button>
+                            </Radio.Group>
+                        )
+                    }
+                >
+                    {renderStatistics()}
+                    {renderFilterForm()}
+
+                    <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between" }}>
+                        {computedPermissions.canCreate && (
+                            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                                Add {title}
+                            </Button>
+                        )}
+
+                        {rowSelection && selectedRowKeys.length > 0 && batchActions && (
+                            <div>{batchActions(selectedRowKeys, selectedRows, computedPermissions)}</div>
+                        )}
+                    </div>
+
+                    <Table
+                        columns={generatedColumns}
+                        dataSource={data}
+                        rowKey="id"
+                        rowSelection={
+                            rowSelection
+                                ? {
+                                      selectedRowKeys,
+                                      onChange: handleRowSelection,
+                                  }
+                                : undefined
+                        }
+                        locale={{ emptyText }}
+                        loading={loading}
+                        {...tableProps}
+                    />
+                </Card>
+            );
+        }
+
+        // Page-based rendering (existing)
         if (activeCrudType === "page" && currentPage === "form") {
             return (
                 <div>
@@ -694,7 +965,8 @@ const QuickUI = ({
                                             {editingRecord ? confirmTexts.update : confirmTexts.create}
                                         </Button>
                                         <Button onClick={handleCancel}>Cancel</Button>
-                                        {renderExtraFormActions && renderExtraFormActions(form, editingRecord)}
+                                        {renderExtraFormActions &&
+                                            renderExtraFormActions(form, editingRecord, computedPermissions)}
                                     </Space>
                                 </Flex>
                             )}
@@ -758,6 +1030,7 @@ const QuickUI = ({
                             <Radio.Button value="modal">Modal</Radio.Button>
                             <Radio.Button value="drawer">Drawer</Radio.Button>
                             <Radio.Button value="page">Page</Radio.Button>
+                            <Radio.Button value="route">Route</Radio.Button>
                         </Radio.Group>
                     )
                 }
@@ -766,12 +1039,14 @@ const QuickUI = ({
                 {renderFilterForm()}
 
                 <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between" }}>
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                        Add {title}
-                    </Button>
+                    {computedPermissions.canCreate && (
+                        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                            Add {title}
+                        </Button>
+                    )}
 
                     {rowSelection && selectedRowKeys.length > 0 && batchActions && (
-                        <div>{batchActions(selectedRowKeys, selectedRows)}</div>
+                        <div>{batchActions(selectedRowKeys, selectedRows, computedPermissions)}</div>
                     )}
                 </div>
 
