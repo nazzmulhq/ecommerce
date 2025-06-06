@@ -35,7 +35,7 @@ const initialState: QuickUIState = {
 // Async thunks
 export const createRecord = createAsyncThunk(
     "quickUI/createRecord",
-    async ({ record, onRecordCreate }: { record: any; onRecordCreate?: (record: any) => Promise<any> }) => {
+    async ({ record, onRecordCreate }: { record: any; onRecordCreate?: (record: any) => Promise<any> | void }) => {
         if (onRecordCreate) {
             return await onRecordCreate(record);
         }
@@ -45,7 +45,7 @@ export const createRecord = createAsyncThunk(
 
 export const updateRecord = createAsyncThunk(
     "quickUI/updateRecord",
-    async ({ record, onRecordUpdate }: { record: any; onRecordUpdate?: (record: any) => Promise<any> }) => {
+    async ({ record, onRecordUpdate }: { record: any; onRecordUpdate?: (record: any) => Promise<any> | void }) => {
         if (onRecordUpdate) {
             return await onRecordUpdate(record);
         }
@@ -55,7 +55,7 @@ export const updateRecord = createAsyncThunk(
 
 export const deleteRecord = createAsyncThunk(
     "quickUI/deleteRecord",
-    async ({ record, onRecordDelete }: { record: any; onRecordDelete?: (record: any) => Promise<any> }) => {
+    async ({ record, onRecordDelete }: { record: any; onRecordDelete?: (record: any) => Promise<any> | void }) => {
         if (onRecordDelete) {
             await onRecordDelete(record);
         }
