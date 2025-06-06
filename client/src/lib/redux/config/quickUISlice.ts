@@ -1,4 +1,5 @@
 // store/quickUISlice.ts
+import { CrudType } from "@components/common/AppCRUDOperation";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface QuickUIState {
@@ -12,7 +13,7 @@ export interface QuickUIState {
     currentPage: "list" | "form" | "view";
     filters: Record<string, any>;
     loading: boolean;
-    activeCrudType: "modal" | "drawer" | "page";
+    activeCrudType: CrudType;
     error: string | null;
 }
 
@@ -123,7 +124,7 @@ const quickUISlice = createSlice({
         clearFilters: state => {
             state.filters = {};
         },
-        setActiveCrudType: (state, action: PayloadAction<"modal" | "drawer" | "page">) => {
+        setActiveCrudType: (state, action: PayloadAction<CrudType>) => {
             state.activeCrudType = action.payload;
         },
         resetState: state => {
