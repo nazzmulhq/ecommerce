@@ -367,7 +367,7 @@ const PermissionPage = () => {
             <QuickUI
                 title="Permission Management"
                 formSchema={permissionFormSchema}
-                crudType="page"
+                crudType="modal"
                 icon="AiOutlineSecurityScan"
                 initialData={permissions}
                 onDataChange={data => {
