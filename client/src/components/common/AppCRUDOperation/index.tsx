@@ -657,10 +657,10 @@ const QuickUI = ({
 
         if (crudType === "route") {
             navigateToRoute("create");
+        } else if (activeCrudType === "page") {
+            dispatch(setCurrentPage("form"));
         } else if (activeCrudType === "modal" || activeCrudType === "drawer") {
             dispatch(setFormVisible(true));
-        } else {
-            dispatch(setCurrentPage("form"));
         }
     };
 
@@ -671,12 +671,13 @@ const QuickUI = ({
         }
         dispatch(setEditingRecord(record));
         form.setFieldsValue(record);
+
         if (crudType === "route") {
             navigateToRoute("edit", record.id);
+        } else if (activeCrudType === "page") {
+            dispatch(setCurrentPage("form"));
         } else if (activeCrudType === "modal" || activeCrudType === "drawer") {
             dispatch(setFormVisible(true));
-        } else {
-            dispatch(setCurrentPage("form"));
         }
     };
 
@@ -687,12 +688,13 @@ const QuickUI = ({
         }
         dispatch(setViewingRecord(record));
         onRecordView?.(record);
+
         if (crudType === "route") {
             navigateToRoute("view", record.id);
+        } else if (activeCrudType === "page") {
+            dispatch(setCurrentPage("view"));
         } else if (activeCrudType === "modal" || activeCrudType === "drawer") {
             dispatch(setViewVisible(true));
-        } else {
-            dispatch(setCurrentPage("view"));
         }
     };
 
@@ -765,13 +767,18 @@ const QuickUI = ({
     const handleCancel = () => {
         if (crudType === "route") {
             navigateToRoute("list");
-        } else {
-            dispatch(setFormVisible(false));
-            dispatch(setViewVisible(false));
+        } else if (activeCrudType === "page") {
             dispatch(setCurrentPage("list"));
             dispatch(setEditingRecord(null));
             dispatch(setViewingRecord(null));
-
+            if (!preserveFormData) {
+                form.resetFields();
+            }
+        } else {
+            dispatch(setFormVisible(false));
+            dispatch(setViewVisible(false));
+            dispatch(setEditingRecord(null));
+            dispatch(setViewingRecord(null));
             if (!preserveFormData) {
                 form.resetFields();
             }
@@ -1201,81 +1208,127 @@ const QuickUI = ({
         }
 
         // Page-based rendering (fixed)
-        if (activeCrudType === "page" && currentPage === "form") {
-            return (
-                <div>
-                    <Card
-                        title={
-                            <Flex justify="space-between" align="center">
-                                <Space size="small">
-                                    {icon ? <AppIcons name={icon} /> : null}
-                                    <span>{`${editingRecord ? "Edit" : "Add"} ${title}`}</span>
-                                </Space>
-                            </Flex>
-                        }
-                        extra={<Button onClick={handleCancel}>Back to List</Button>}
-                    >
-                        <AppForm
-                            key={`form-${editingRecord?.id || "new"}`}
-                            schema={formSchema}
-                            initialValues={editingRecord}
-                            onFinish={handleFormSubmit}
-                            loading={loading}
-                            validateOnMount={validateOnMount}
-                            preserveFormData={preserveFormData}
-                            renderFooter={(form, loading) => (
-                                <Flex justify="end" style={{ marginTop: 8 }}>
-                                    <Space>
-                                        <Button type="primary" onClick={() => form.submit()} loading={loading}>
-                                            {editingRecord ? confirmTexts.update : confirmTexts.create}
-                                        </Button>
-                                        <Button onClick={handleCancel}>Cancel</Button>
-                                        {renderExtraFormActions &&
-                                            renderExtraFormActions(form, editingRecord, computedPermissions)}
+        if (activeCrudType === "page") {
+            if (currentPage === "form") {
+                return (
+                    <div>
+                        <Card
+                            title={
+                                <Flex justify="space-between" align="center">
+                                    <Space size="small">
+                                        {icon ? <AppIcons name={icon} /> : null}
+                                        <span>{`${editingRecord ? "Edit" : "Add"} ${title}`}</span>
                                     </Space>
                                 </Flex>
-                            )}
-                            {...formProps}
-                        />
-                    </Card>
-                </div>
-            );
-        }
+                            }
+                            extra={<Button onClick={handleCancel}>Back to List</Button>}
+                        >
+                            <AppForm
+                                key={`form-${editingRecord?.id || "new"}`}
+                                schema={formSchema}
+                                initialValues={editingRecord}
+                                onFinish={handleFormSubmit}
+                                loading={loading}
+                                validateOnMount={validateOnMount}
+                                preserveFormData={preserveFormData}
+                                renderFooter={(form, loading) => (
+                                    <Flex justify="end" style={{ marginTop: 8 }}>
+                                        <Space>
+                                            <Button type="primary" onClick={() => form.submit()} loading={loading}>
+                                                {editingRecord ? confirmTexts.update : confirmTexts.create}
+                                            </Button>
+                                            <Button onClick={handleCancel}>Cancel</Button>
+                                            {renderExtraFormActions &&
+                                                renderExtraFormActions(form, editingRecord, computedPermissions)}
+                                        </Space>
+                                    </Flex>
+                                )}
+                                {...formProps}
+                            />
+                        </Card>
+                    </div>
+                );
+            }
 
-        if (activeCrudType === "page" && currentPage === "view") {
+            if (currentPage === "view") {
+                return (
+                    <div>
+                        <Space style={{ marginBottom: 16 }}>
+                            <Button onClick={handleCancel}>Back to List</Button>
+                            {computedPermissions.canEdit && actions.edit && (
+                                <Button
+                                    type="primary"
+                                    icon={<EditOutlined />}
+                                    onClick={() => {
+                                        dispatch(setEditingRecord(viewingRecord));
+                                        dispatch(setCurrentPage("form"));
+                                    }}
+                                >
+                                    Edit
+                                </Button>
+                            )}
+                        </Space>
+
+                        <Card
+                            title={
+                                <Space>
+                                    {icon ? <AppIcons name={icon} /> : null}
+                                    <span>{`${title} Details`}</span>
+                                </Space>
+                            }
+                        >
+                            {renderDetailView()}
+                        </Card>
+                    </div>
+                );
+            }
+
+            // Default: list view for page-based CRUD
             return (
-                <div>
-                    <Space style={{ marginBottom: 16 }}>
-                        <Button onClick={handleCancel}>Back to List</Button>
-                        {computedPermissions.canEdit && actions.edit && (
-                            <Button
-                                type="primary"
-                                icon={<EditOutlined />}
-                                onClick={() => {
-                                    dispatch(setEditingRecord(viewingRecord));
-                                    dispatch(setCurrentPage("form"));
-                                }}
+                <Card
+                    title={
+                        <Space>
+                            {icon ? <AppIcons name={icon} /> : null}
+                            <span>{title}</span>
+                        </Space>
+                    }
+                    extra={
+                        showToggleCrudType && (
+                            <Radio.Group
+                                value={activeCrudType}
+                                onChange={e => handleCrudTypeChange(e.target.value)}
+                                buttonStyle="solid"
+                                size="small"
                             >
-                                Edit
+                                <Radio.Button value="modal">Modal</Radio.Button>
+                                <Radio.Button value="drawer">Drawer</Radio.Button>
+                                <Radio.Button value="page">Page</Radio.Button>
+                                <Radio.Button value="route">Route</Radio.Button>
+                            </Radio.Group>
+                        )
+                    }
+                >
+                    {renderStatistics()}
+                    {renderFilterForm()}
+
+                    <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between" }}>
+                        {computedPermissions.canCreate && (
+                            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                                Add {title}
                             </Button>
                         )}
-                    </Space>
 
-                    <Card
-                        title={
-                            <Space>
-                                {icon ? <AppIcons name={icon} /> : null}
-                                <span>{`${title} Details`}</span>
-                            </Space>
-                        }
-                    >
-                        {renderDetailView()}
-                    </Card>
-                </div>
+                        {rowSelection && selectedRowKeys.length > 0 && batchActions && (
+                            <div>{batchActions(selectedRowKeys, selectedRows, computedPermissions)}</div>
+                        )}
+                    </div>
+
+                    {renderTable()}
+                </Card>
             );
         }
 
-        // Default list view
+        // Default list view for modal/drawer modes
         return (
             <Card
                 title={
