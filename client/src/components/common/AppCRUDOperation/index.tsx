@@ -1200,13 +1200,13 @@ const QuickUI = ({
             );
         }
 
-        // Page-based rendering (existing)
+        // Page-based rendering (fixed)
         if (activeCrudType === "page" && currentPage === "form") {
             return (
                 <div>
                     <Card
                         title={
-                            <Flex justify="end">
+                            <Flex justify="space-between" align="center">
                                 <Space size="small">
                                     {icon ? <AppIcons name={icon} /> : null}
                                     <span>{`${editingRecord ? "Edit" : "Add"} ${title}`}</span>
@@ -1247,7 +1247,7 @@ const QuickUI = ({
                 <div>
                     <Space style={{ marginBottom: 16 }}>
                         <Button onClick={handleCancel}>Back to List</Button>
-                        {actions.edit && (
+                        {computedPermissions.canEdit && actions.edit && (
                             <Button
                                 type="primary"
                                 icon={<EditOutlined />}
@@ -1264,7 +1264,7 @@ const QuickUI = ({
                     <Card
                         title={
                             <Space>
-                                {icon}
+                                {icon ? <AppIcons name={icon} /> : null}
                                 <span>{`${title} Details`}</span>
                             </Space>
                         }

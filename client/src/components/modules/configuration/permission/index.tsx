@@ -367,7 +367,7 @@ const PermissionPage = () => {
             <QuickUI
                 title="Permission Management"
                 formSchema={permissionFormSchema}
-                crudType="modal"
+                crudType="page"
                 icon="AiOutlineSecurityScan"
                 initialData={permissions}
                 onDataChange={data => {
@@ -375,7 +375,7 @@ const PermissionPage = () => {
                 }}
                 onRecordView={record => {
                     console.log("Viewing record:", record.name);
-                    // message.info(`Viewing permission: ${record.name}`);
+                    // Remove message.info as it can interfere with navigation
                 }}
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
