@@ -133,6 +133,9 @@ const quickUISlice = createSlice({
         setError: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload;
         },
+        setLoading: (state, action: PayloadAction<boolean>) => {
+            state.loading = action.payload;
+        },
     },
     extraReducers: builder => {
         builder
@@ -216,6 +219,7 @@ export const {
     setActiveCrudType,
     resetState,
     setError,
+    setLoading,
 } = quickUISlice.actions;
 
 export default quickUISlice.reducer;

@@ -8,7 +8,6 @@ import {
     SearchOutlined,
 } from "@ant-design/icons";
 import {
-    applyFilters,
     clearFilters,
     createRecord,
     deleteRecord,
@@ -17,6 +16,7 @@ import {
     setCurrentPage,
     setData,
     setEditingRecord,
+    setError,
     setFilters,
     setFormVisible,
     setSelectedRows,
@@ -47,7 +47,7 @@ import {
 } from "antd";
 import { ColumnType } from "antd/lib/table";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AppForm from "../AppForm";
 import { FormSchema } from "../AppForm/form.type";
@@ -225,14 +225,181 @@ const QuickUI = ({
         error,
     } = useSelector((state: RootState) => state.quickUI);
 
+    // Local pagination state synchronized with URL
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: 0,
+        showSizeChanger: true,
+        showQuickJumper: true,
+        showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} items`,
+    });
+
     // Form instance
     const [form] = Form.useForm();
     const filterFormRef = useRef(form);
 
+    // Initialize from URL parameters on mount
+    useEffect(() => {
+        const urlFilters: Record<string, any> = {};
+        const currentPageFromUrl = parseInt(searchParams.get("page") || "1");
+        const pageSizeFromUrl = parseInt(searchParams.get("pageSize") || "10");
+
+        // Extract filter parameters from URL
+        Array.from(searchParams.entries()).forEach(([key, value]) => {
+            if (!["page", "pageSize"].includes(key) && value) {
+                try {
+                    // Try to parse JSON for complex values
+                    urlFilters[key] = JSON.parse(decodeURIComponent(value));
+                } catch {
+                    // Fall back to string value
+                    urlFilters[key] = decodeURIComponent(value);
+                }
+            }
+        });
+
+        // Set filters from URL if any
+        if (Object.keys(urlFilters).length > 0) {
+            dispatch(setFilters(urlFilters));
+            // Set filter form values
+            if (filterFormRef.current) {
+                filterFormRef.current.setFieldsValue(urlFilters);
+            }
+        }
+
+        // Set pagination from URL
+        setPagination(prev => ({
+            ...prev,
+            current: currentPageFromUrl,
+            pageSize: pageSizeFromUrl,
+        }));
+    }, [searchParams, dispatch]);
+
+    // Update URL when filters or pagination change
+    const updateURL = useCallback(
+        (newFilters: Record<string, any> = filters, newPagination = pagination) => {
+            const url = new URL(window.location.href);
+
+            // Clear existing params
+            url.search = "";
+
+            // Add filter params
+            Object.entries(newFilters).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== "") {
+                    const encodedValue =
+                        typeof value === "object"
+                            ? encodeURIComponent(JSON.stringify(value))
+                            : encodeURIComponent(String(value));
+                    url.searchParams.set(key, encodedValue);
+                }
+            });
+
+            // Add pagination params
+            if (newPagination.current > 1) {
+                url.searchParams.set("page", String(newPagination.current));
+            }
+            if (newPagination.pageSize !== 10) {
+                url.searchParams.set("pageSize", String(newPagination.pageSize));
+            }
+
+            // Update URL without navigation
+            window.history.replaceState({}, "", url.toString());
+        },
+        [filters, pagination],
+    );
+
+    // Enhanced data loading with pagination support
+    const loadData = useCallback(
+        async (currentFilters = filters, currentPagination = pagination) => {
+            if (onFilter) {
+                try {
+                    dispatch({ type: "quickUI/setLoading", payload: true });
+
+                    // Call onFilter with pagination info
+                    const filteredData = await onFilter(initialData, {
+                        ...currentFilters,
+                        _pagination: {
+                            page: currentPagination.current,
+                            pageSize: currentPagination.pageSize,
+                        },
+                    });
+
+                    // Handle paginated response
+                    if (filteredData && typeof filteredData === "object" && "data" in filteredData) {
+                        // Server-side pagination response
+                        const { data: responseData, total, current, pageSize } = filteredData as any;
+                        dispatch(setData(responseData || []));
+                        setPagination(prev => ({
+                            ...prev,
+                            total: total || responseData?.length || 0,
+                            current: current || currentPagination.current,
+                            pageSize: pageSize || currentPagination.pageSize,
+                        }));
+                    } else {
+                        // Client-side pagination
+                        const dataArray = Array.isArray(filteredData) ? filteredData : [];
+                        const startIndex = (currentPagination.current - 1) * currentPagination.pageSize;
+                        const endIndex = startIndex + currentPagination.pageSize;
+                        const paginatedData = dataArray.slice(startIndex, endIndex);
+
+                        dispatch(setData(paginatedData));
+                        setPagination(prev => ({
+                            ...prev,
+                            total: dataArray.length,
+                        }));
+                    }
+                } catch (error) {
+                    console.error("Error loading data:", error);
+                    dispatch(setError("Failed to load data"));
+                } finally {
+                    dispatch({ type: "quickUI/setLoading", payload: false });
+                }
+            } else {
+                // Client-side filtering and pagination
+                let filteredData = [...initialData];
+
+                // Apply filters
+                Object.entries(currentFilters).forEach(([key, value]) => {
+                    if (value !== undefined && value !== null && value !== "") {
+                        filteredData = filteredData.filter(record => {
+                            const recordValue = record[key];
+                            if (typeof value === "string" && typeof recordValue === "string") {
+                                return recordValue.toLowerCase().includes(value.toLowerCase());
+                            }
+                            return recordValue === value;
+                        });
+                    }
+                });
+
+                // Apply pagination
+                const startIndex = (currentPagination.current - 1) * currentPagination.pageSize;
+                const endIndex = startIndex + currentPagination.pageSize;
+                const paginatedData = filteredData.slice(startIndex, endIndex);
+
+                dispatch(setData(paginatedData));
+                setPagination(prev => ({
+                    ...prev,
+                    total: filteredData.length,
+                }));
+            }
+
+            // Update URL
+            updateURL(currentFilters, currentPagination);
+        },
+        [filters, pagination, initialData, onFilter, dispatch, updateURL],
+    );
+
     // Initialize data when component mounts or initialData changes
     useEffect(() => {
         if (initialData.length > 0) {
-            dispatch(setData(initialData));
+            // Set total for initial pagination
+            setPagination(prev => ({
+                ...prev,
+                total: initialData.length,
+            }));
+
+            // Load data with current filters and pagination
+            loadData();
         }
 
         // Set initial crud type
@@ -244,7 +411,7 @@ const QuickUI = ({
         return () => {
             dispatch(resetState());
         };
-    }, [initialData, dispatch, crudType, activeCrudType]);
+    }, [initialData, crudType, activeCrudType]);
 
     // Handle data changes callback
     useEffect(() => {
@@ -347,7 +514,7 @@ const QuickUI = ({
         };
     }, [processedFilterFields]);
 
-    // Filter handling
+    // Enhanced filter handling with pagination reset
     const handleFilterSubmit = useCallback(
         async (values: any) => {
             const newFilters: Record<string, any> = {};
@@ -358,103 +525,106 @@ const QuickUI = ({
             });
 
             dispatch(setFilters(newFilters));
-            dispatch(
-                applyFilters({
-                    filters: newFilters,
-                    initialData,
-                    onFilter,
-                }),
-            );
+
+            // Reset to first page when applying filters
+            const newPagination = { ...pagination, current: 1 };
+            setPagination(newPagination);
+
+            // Load data with new filters
+            await loadData(newFilters, newPagination);
         },
-        [dispatch, initialData, onFilter],
+        [dispatch, pagination, loadData],
     );
 
-    // Generate table columns
-    const generatedColumns = useMemo<ColumnType<any>[]>(() => {
-        if (tableColumns) return tableColumns;
+    // Enhanced clear filters
+    const handleClearFilters = useCallback(async () => {
+        dispatch(clearFilters());
 
-        const fieldsFromSchema: any[] = [
-            ...(formSchema.fields || []),
-            ...(formSchema.sections?.flatMap(s => s.fields) || []),
-            ...(formSchema.tabs?.flatMap(t => t.fields) || []),
-            ...(formSchema.steps?.flatMap(s => s.fields) || []),
-        ];
-
-        const columns: any = fieldsFromSchema
-            .filter(field => !field.hideInTable)
-            .map(field => ({
-                title: field.label,
-                dataIndex: field.name,
-                key: field.name,
-                sorter: field.sortable ? true : false,
-                render: (value: any, record: any) => {
-                    if (field.render) {
-                        return field.render(value, record);
-                    }
-
-                    switch (field.type) {
-                        case "switch":
-                        case "boolean":
-                            return <Tag color={value ? "green" : "red"}>{value ? "Yes" : "No"}</Tag>;
-                        case "select":
-                            const option = field.options?.find((opt: any) =>
-                                typeof opt === "object" ? opt.value === value : opt === value,
-                            );
-                            return typeof option === "object" ? option?.label : option;
-                        default:
-                            return value;
-                    }
-                },
-            }));
-
-        const hasAnyAction =
-            (computedPermissions.canView && actions.view) ||
-            (computedPermissions.canEdit && actions.edit) ||
-            (computedPermissions.canDelete && actions.delete) ||
-            actions.extraActions;
-        if (hasAnyAction) {
-            columns.push({
-                title: "Actions",
-                key: "actions",
-                fixed: "right",
-                width: 150,
-                render: (_: any, record: any) => (
-                    <Space>
-                        {computedPermissions.canView && actions.view && (
-                            <Tooltip title="View Details">
-                                <Button
-                                    type="primary"
-                                    icon={<EyeOutlined />}
-                                    size="small"
-                                    onClick={() => handleView(record)}
-                                />
-                            </Tooltip>
-                        )}
-                        {computedPermissions.canEdit && actions.edit && (
-                            <Tooltip title="Edit Record">
-                                <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} />
-                            </Tooltip>
-                        )}
-                        {computedPermissions.canDelete && actions.delete && (
-                            <Tooltip title="Delete Record">
-                                <Popconfirm
-                                    title={confirmTexts.delete}
-                                    onConfirm={() => handleDelete(record)}
-                                    okText="Yes"
-                                    cancelText="No"
-                                >
-                                    <Button type="primary" danger icon={<DeleteOutlined />} size="small" />
-                                </Popconfirm>
-                            </Tooltip>
-                        )}
-                        {actions.extraActions && actions.extraActions(record, computedPermissions)}
-                    </Space>
-                ),
-            });
+        if (filterFormRef.current) {
+            filterFormRef.current.resetFields();
         }
 
-        return columns;
-    }, [formSchema, tableColumns, actions, confirmTexts.delete, computedPermissions]);
+        // Reset to first page when clearing filters
+        const newPagination = { ...pagination, current: 1 };
+        setPagination(newPagination);
+
+        // Load data without filters
+        await loadData({}, newPagination);
+    }, [dispatch, pagination, loadData]);
+
+    // Enhanced table change handler
+    const handleTableChange = useCallback(
+        async (paginationInfo: any, filtersInfo: any, sorter: any) => {
+            const newPagination = {
+                ...pagination,
+                current: paginationInfo.current,
+                pageSize: paginationInfo.pageSize,
+            };
+
+            setPagination(newPagination);
+
+            // Handle table filters (column filters)
+            const tableFilters: Record<string, any> = {};
+            Object.entries(filtersInfo || {}).forEach(([key, value]) => {
+                if (value && Array.isArray(value) && value.length > 0) {
+                    tableFilters[key] = value.length === 1 ? value[0] : value;
+                }
+            });
+
+            // Merge with existing filters
+            const mergedFilters = { ...filters, ...tableFilters };
+            if (Object.keys(tableFilters).length > 0) {
+                dispatch(setFilters(mergedFilters));
+            }
+
+            // Handle sorting
+            if (sorter && sorter.field) {
+                const sortFilters = {
+                    ...mergedFilters,
+                    _sort: sorter.field,
+                    _order: sorter.order === "ascend" ? "asc" : "desc",
+                };
+                await loadData(sortFilters, newPagination);
+            } else {
+                await loadData(mergedFilters, newPagination);
+            }
+        },
+        [pagination, filters, dispatch, loadData],
+    );
+
+    // Enhanced page size change handler
+    const handleShowSizeChange = useCallback(
+        async (current: number, size: number) => {
+            const newPagination = {
+                ...pagination,
+                current: 1, // Reset to first page when changing page size
+                pageSize: size,
+            };
+
+            setPagination(newPagination);
+            await loadData(filters, newPagination);
+        },
+        [pagination, filters, loadData],
+    );
+
+    // Enhanced row selection with persistence
+    const handleRowSelection = useCallback(
+        (keys: any[], rows: any[]) => {
+            dispatch(setSelectedRows({ keys, rows }));
+
+            // Update URL with selected items for persistence (optional)
+            if (keys.length > 0) {
+                const url = new URL(window.location.href);
+                url.searchParams.set("selected", keys.join(","));
+                window.history.replaceState({}, "", url.toString());
+            } else {
+                const url = new URL(window.location.href);
+                url.searchParams.delete("selected");
+                window.history.replaceState({}, "", url.toString());
+            }
+        },
+        [dispatch],
+    );
 
     // CRUD Handlers
     const handleAdd = () => {
@@ -607,30 +777,6 @@ const QuickUI = ({
         }
     };
 
-    const handleClearFilters = useCallback(async () => {
-        dispatch(clearFilters());
-
-        if (filterFormRef.current) {
-            filterFormRef.current.resetFields();
-        }
-
-        dispatch(
-            applyFilters({
-                filters: {},
-                initialData,
-                onFilter,
-            }),
-        );
-    }, [dispatch, initialData, onFilter]);
-
-    const handleRowSelection = (keys: any[], rows: any[]) => {
-        dispatch(setSelectedRows({ keys, rows }));
-    };
-
-    const handleCrudTypeChange = (type: CrudType) => {
-        dispatch(setActiveCrudType(type));
-    };
-
     // Route helpers
     const getRoutePath = useCallback(
         (action: string, recordId?: string) => {
@@ -669,6 +815,98 @@ const QuickUI = ({
         },
         [crudType, routeConfig, router, onNavigate, getRoutePath],
     );
+
+    // Add missing handleCrudTypeChange function before renderContent
+    const handleCrudTypeChange = (type: CrudType) => {
+        dispatch(setActiveCrudType(type));
+    };
+
+    // Generate table columns
+    const generatedColumns = useMemo<ColumnType<any>[]>(() => {
+        if (tableColumns) return tableColumns;
+
+        const fieldsFromSchema: any[] = [
+            ...(formSchema.fields || []),
+            ...(formSchema.sections?.flatMap(s => s.fields) || []),
+            ...(formSchema.tabs?.flatMap(t => t.fields) || []),
+            ...(formSchema.steps?.flatMap(s => s.fields) || []),
+        ];
+
+        const columns: any = fieldsFromSchema
+            .filter(field => !field.hideInTable && !field.hidden) // Filter out hidden fields
+            .map(field => ({
+                title: field.label,
+                dataIndex: field.name,
+                key: field.name,
+                sorter: field.sortable ? true : false,
+                render: (value: any, record: any) => {
+                    if (field.render) {
+                        return field.render(value, record);
+                    }
+
+                    switch (field.type) {
+                        case "switch":
+                        case "boolean":
+                            return <Tag color={value ? "green" : "red"}>{value ? "Yes" : "No"}</Tag>;
+                        case "select":
+                            const option = field.options?.find((opt: any) =>
+                                typeof opt === "object" ? opt.value === value : opt === value,
+                            );
+                            return typeof option === "object" ? option?.label : option;
+                        default:
+                            return value;
+                    }
+                },
+            }));
+
+        const hasAnyAction =
+            (computedPermissions.canView && actions.view) ||
+            (computedPermissions.canEdit && actions.edit) ||
+            (computedPermissions.canDelete && actions.delete) ||
+            actions.extraActions;
+        if (hasAnyAction) {
+            columns.push({
+                title: "Actions",
+                key: "actions",
+                fixed: "right",
+                width: 150,
+                render: (_: any, record: any) => (
+                    <Space>
+                        {computedPermissions.canView && actions.view && (
+                            <Tooltip title="View Details">
+                                <Button
+                                    type="primary"
+                                    icon={<EyeOutlined />}
+                                    size="small"
+                                    onClick={() => handleView(record)}
+                                />
+                            </Tooltip>
+                        )}
+                        {computedPermissions.canEdit && actions.edit && (
+                            <Tooltip title="Edit Record">
+                                <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} />
+                            </Tooltip>
+                        )}
+                        {computedPermissions.canDelete && actions.delete && (
+                            <Tooltip title="Delete Record">
+                                <Popconfirm
+                                    title={confirmTexts.delete}
+                                    onConfirm={() => handleDelete(record)}
+                                    okText="Yes"
+                                    cancelText="No"
+                                >
+                                    <Button type="primary" danger icon={<DeleteOutlined />} size="small" />
+                                </Popconfirm>
+                            </Tooltip>
+                        )}
+                        {actions.extraActions && actions.extraActions(record, computedPermissions)}
+                    </Space>
+                ),
+            });
+        }
+
+        return columns;
+    }, [formSchema, tableColumns, actions, confirmTexts.delete, computedPermissions]);
 
     // Render filter form
     const renderFilterForm = () => {
@@ -715,12 +953,7 @@ const QuickUI = ({
                                                 Apply Filters
                                             </Button>
                                             <Button
-                                                onClick={() => {
-                                                    if (filterFormRef.current) {
-                                                        filterFormRef.current.resetFields();
-                                                    }
-                                                    handleClearFilters();
-                                                }}
+                                                onClick={handleClearFilters}
                                                 icon={<FilterOutlined />}
                                                 disabled={loading || activeFilterCount === 0}
                                             >
@@ -737,7 +970,7 @@ const QuickUI = ({
         );
     };
 
-    // Render detailed view
+    // Fix renderDetailView to handle empty fieldsFromSchema
     const renderDetailView = () => {
         if (!viewingRecord) return null;
 
@@ -748,24 +981,37 @@ const QuickUI = ({
             ...(formSchema.steps?.flatMap(s => s.fields) || []),
         ];
 
+        // Check if we have fields to display
+        if (fieldsFromSchema.length === 0) {
+            return (
+                <Card>
+                    <div style={{ textAlign: "center", padding: 20 }}>
+                        <Text type="secondary">No fields to display</Text>
+                    </div>
+                </Card>
+            );
+        }
+
         return (
             <Card>
                 <Row gutter={[16, 16]}>
-                    {fieldsFromSchema.map(field => (
-                        <Col key={field.name} xs={24} sm={12}>
-                            <Card size="small" title={field.label}>
-                                {field.render ? (
-                                    field.render(viewingRecord[field.name], viewingRecord)
-                                ) : field.type === "switch" || field.type === "boolean" ? (
-                                    <Tag color={viewingRecord[field.name] ? "green" : "red"}>
-                                        {viewingRecord[field.name] ? "Yes" : "No"}
-                                    </Tag>
-                                ) : (
-                                    <div>{viewingRecord[field.name]}</div>
-                                )}
-                            </Card>
-                        </Col>
-                    ))}
+                    {fieldsFromSchema
+                        .filter(field => !field.hidden) // Filter out hidden fields from detail view
+                        .map(field => (
+                            <Col key={field.name} xs={24} sm={12}>
+                                <Card size="small" title={field.label}>
+                                    {field.render ? (
+                                        field.render(viewingRecord[field.name], viewingRecord)
+                                    ) : field.type === "switch" || field.type === "boolean" ? (
+                                        <Tag color={viewingRecord[field.name] ? "green" : "red"}>
+                                            {viewingRecord[field.name] ? "Yes" : "No"}
+                                        </Tag>
+                                    ) : (
+                                        <div>{viewingRecord[field.name]}</div>
+                                    )}
+                                </Card>
+                            </Col>
+                        ))}
                 </Row>
             </Card>
         );
@@ -795,6 +1041,38 @@ const QuickUI = ({
             </Row>
         );
     };
+
+    // Enhanced table rendering with improved pagination
+    const renderTable = () => (
+        <Table
+            columns={generatedColumns}
+            dataSource={data}
+            rowKey="id"
+            rowSelection={
+                rowSelection
+                    ? {
+                          selectedRowKeys,
+                          onChange: handleRowSelection,
+                          preserveSelectedRowKeys: true,
+                      }
+                    : undefined
+            }
+            locale={{ emptyText }}
+            loading={loading}
+            pagination={{
+                ...pagination,
+                onChange: async (page, pageSize) => {
+                    const newPagination = { ...pagination, current: page, pageSize: pageSize || pagination.pageSize };
+                    setPagination(newPagination);
+                    await loadData(filters, newPagination);
+                },
+                onShowSizeChange: handleShowSizeChange,
+            }}
+            onChange={handleTableChange}
+            scroll={{ x: "max-content" }} // Responsive horizontal scroll
+            {...tableProps}
+        />
+    );
 
     // Main content renderer
     const renderContent = () => {
@@ -915,22 +1193,7 @@ const QuickUI = ({
                         )}
                     </div>
 
-                    <Table
-                        columns={generatedColumns}
-                        dataSource={data}
-                        rowKey="id"
-                        rowSelection={
-                            rowSelection
-                                ? {
-                                      selectedRowKeys,
-                                      onChange: handleRowSelection,
-                                  }
-                                : undefined
-                        }
-                        locale={{ emptyText }}
-                        loading={loading}
-                        {...tableProps}
-                    />
+                    {renderTable()}
                 </Card>
             );
         }
@@ -1038,34 +1301,30 @@ const QuickUI = ({
                 {renderStatistics()}
                 {renderFilterForm()}
 
-                <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between" }}>
-                    {computedPermissions.canCreate && (
-                        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                            Add {title}
-                        </Button>
-                    )}
+                <div
+                    style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                >
+                    <Space>
+                        {computedPermissions.canCreate && (
+                            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                                Add {title}
+                            </Button>
+                        )}
+
+                        {/* Quick filter controls */}
+                        {Object.keys(filters).length > 0 && (
+                            <Button size="small" onClick={handleClearFilters} icon={<FilterOutlined />}>
+                                Clear All Filters
+                            </Button>
+                        )}
+                    </Space>
 
                     {rowSelection && selectedRowKeys.length > 0 && batchActions && (
                         <div>{batchActions(selectedRowKeys, selectedRows, computedPermissions)}</div>
                     )}
                 </div>
 
-                <Table
-                    columns={generatedColumns}
-                    dataSource={data}
-                    rowKey="id"
-                    rowSelection={
-                        rowSelection
-                            ? {
-                                  selectedRowKeys,
-                                  onChange: handleRowSelection,
-                              }
-                            : undefined
-                    }
-                    locale={{ emptyText }}
-                    loading={loading}
-                    {...tableProps}
-                />
+                {renderTable()}
             </Card>
         );
     };

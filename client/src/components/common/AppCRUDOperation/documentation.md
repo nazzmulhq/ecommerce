@@ -1,232 +1,219 @@
-# QuickUI - Complete Documentation
+# QuickUI - Complete Props & Configuration Documentation
 
 ## Table of Contents
 
-1. [Introduction](#introduction)
-2. [Installation & Setup](#installation--setup)
-3. [Core Concepts](#core-concepts)
-4. [Props Reference](#props-reference)
-5. [Type Definitions](#type-definitions)
-6. [Basic Usage Examples](#basic-usage-examples)
-7. [Advanced Examples](#advanced-examples)
-8. [Route-based CRUD with Next.js 15](#route-based-crud-with-nextjs-15)
-9. [Permission System](#permission-system)
-10. [Customization Guide](#customization-guide)
-11. [Performance Optimization](#performance-optimization)
-12. [Troubleshooting](#troubleshooting)
-13. [Best Practices](#best-practices)
-14. [Migration Guide](#migration-guide)
+1. [Core Props](#core-props)
+2. [Type Definitions](#type-definitions)
+3. [Form Schema Configuration](#form-schema-configuration)
+4. [Table Configuration](#table-configuration)
+5. [Permission System](#permission-system)
+6. [Route Configuration](#route-configuration)
+7. [Action Configuration](#action-configuration)
+8. [UI Customization](#ui-customization)
+9. [Event Handlers](#event-handlers)
+10. [Advanced Examples](#advanced-examples)
 
-## Introduction
+## Core Props
 
-QuickUI is a powerful, flexible React component that provides a complete CRUD (Create, Read, Update, Delete) interface with Redux Toolkit state management. It automatically generates tables, forms, modal dialogs, and handles all CRUD operations with minimal configuration.
+### Essential Props
 
-### Key Features
+| Prop          | Type         | Required | Default   | Description                                                  |
+| ------------- | ------------ | -------- | --------- | ------------------------------------------------------------ |
+| `title`       | `string`     | ✅       | -         | Display title for the CRUD interface                         |
+| `formSchema`  | `FormSchema` | ✅       | -         | Schema defining form structure and table columns             |
+| `crudType`    | `CrudType`   | ❌       | `"modal"` | UI pattern: `"modal"` \| `"drawer"` \| `"page"` \| `"route"` |
+| `initialData` | `any[]`      | ❌       | `[]`      | Initial dataset for the table                                |
+| `icon`        | `TIconName`  | ❌       | -         | Icon to display in title                                     |
 
-- 🚀 **Zero-config CRUD** - Works out of the box with minimal setup
-- 📱 **Multiple UI modes** - Modal, drawer, page-based, and route-based CRUD
-- 🔐 **Built-in permissions** - Comprehensive role-based access control
-- 🎨 **Highly customizable** - Override any component or behavior
-- 📊 **Advanced filtering** - Auto-generated and custom filters
-- 📈 **Statistics dashboard** - Built-in data visualization
-- 🔄 **Real-time updates** - WebSocket and SSE support
-- 🌐 **Internationalization** - Full i18n support
-- ♿ **Accessibility** - WCAG 2.1 compliant
-- 📱 **Mobile responsive** - Works on all device sizes
-
-### Browser Support
-
-- Chrome (>= 88)
-- Firefox (>= 85)
-- Safari (>= 14)
-- Edge (>= 88)
-
-## Installation & Setup
-
-### 1. Install Dependencies
-
-```bash
-# Using npm
-npm install @reduxjs/toolkit react-redux antd
-
-# Using yarn
-yarn add @reduxjs/toolkit react-redux antd
-
-# Using pnpm
-pnpm add @reduxjs/toolkit react-redux antd
+```tsx
+// Basic usage
+<QuickUI title="User Management" formSchema={userSchema} crudType="modal" initialData={users} icon="UserOutlined" />
 ```
 
-### 2. Configure Redux Store
+### Data Management Props
 
-```typescript
-// store/index.ts
-import { configureStore } from "@reduxjs/toolkit";
-import quickUIReducer from "./quickUISlice";
+| Prop             | Type                                                                     | Description                  |
+| ---------------- | ------------------------------------------------------------------------ | ---------------------------- |
+| `onDataChange`   | `(data: any[]) => void`                                                  | Called when data changes     |
+| `onRecordView`   | `(record: any) => void`                                                  | Called when viewing a record |
+| `onRecordCreate` | `(record: any) => Promise<any> \| void`                                  | Handle record creation       |
+| `onRecordUpdate` | `(record: any) => Promise<any> \| void`                                  | Handle record updates        |
+| `onRecordDelete` | `(record: any) => Promise<any> \| void`                                  | Handle record deletion       |
+| `onFilter`       | `(data: any[], filters: Record<string, any>) => Promise<any[]> \| any[]` | Custom filtering logic       |
 
-export const store = configureStore({
-    reducer: {
-        quickUI: quickUIReducer,
-        // Add other reducers here
+```tsx
+// Data management example
+<QuickUI
+    title="Products"
+    formSchema={productSchema}
+    initialData={products}
+    // Local state management
+    onDataChange={data => {
+        console.log("Data changed:", data);
+        setProducts(data);
+    }}
+    // API integration
+    onRecordCreate={async product => {
+        const response = await fetch("/api/products", {
+            method: "POST",
+            body: JSON.stringify(product),
+        });
+        const newProduct = await response.json();
+        setProducts(prev => [...prev, newProduct]);
+        return newProduct;
+    }}
+    onRecordUpdate={async product => {
+        const response = await fetch(`/api/products/${product.id}`, {
+            method: "PUT",
+            body: JSON.stringify(product),
+        });
+        const updatedProduct = await response.json();
+        setProducts(prev => prev.map(p => (p.id === product.id ? updatedProduct : p)));
+        return updatedProduct;
+    }}
+    onRecordDelete={async product => {
+        await fetch(`/api/products/${product.id}`, { method: "DELETE" });
+        setProducts(prev => prev.filter(p => p.id !== product.id));
+    }}
+    // Server-side filtering with pagination
+    onFilter={async (data, filters) => {
+        const params = new URLSearchParams({
+            ...filters,
+            page: filters._pagination?.page || 1,
+            pageSize: filters._pagination?.pageSize || 10,
+        });
+
+        const response = await fetch(`/api/products?${params}`);
+        const result = await response.json();
+
+        // Return paginated response
+        return {
+            data: result.products,
+            total: result.total,
+            current: result.page,
+            pageSize: result.pageSize,
+        };
+    }}
+/>
+```
+
+### UI Customization Props
+
+| Prop                 | Type                | Description                           |
+| -------------------- | ------------------- | ------------------------------------- |
+| `tableColumns`       | `ColumnType<any>[]` | Override auto-generated table columns |
+| `tableProps`         | `TableProps<any>`   | Additional Ant Design Table props     |
+| `formProps`          | `any`               | Additional AppForm component props    |
+| `emptyText`          | `string`            | Text to display when no data          |
+| `showToggleCrudType` | `boolean`           | Show CRUD type toggle buttons         |
+| `showFilter`         | `boolean`           | Show filter form                      |
+
+```tsx
+// Custom table columns
+const customColumns = [
+    {
+        title: "Product Name",
+        dataIndex: "name",
+        key: "name",
+        sorter: true,
+        render: (text, record) => (
+            <div>
+                <strong>{text}</strong>
+                <br />
+                <small style={{ color: "#666" }}>{record.sku}</small>
+            </div>
+        ),
     },
-    middleware: getDefaultMiddleware =>
-        getDefaultMiddleware({
-            serializableCheck: {
-                ignoredActions: ["persist/PERSIST"],
-            },
-        }),
-});
+    {
+        title: "Price",
+        dataIndex: "price",
+        key: "price",
+        sorter: true,
+        align: "right",
+    },
+    {
+        title: "Status",
+        dataIndex: "active",
+        key: "active",
+        filters: [
+            { text: "Active", value: true },
+            { text: "Inactive", value: false },
+        ],
+        render: active => <Tag color={active ? "green" : "red"}>{active ? "Active" : "Inactive"}</Tag>,
+    },
+];
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+<QuickUI
+    title="Products"
+    formSchema={productSchema}
+    tableColumns={customColumns}
+    tableProps={{
+        scroll: { x: 1200 },
+        size: "small",
+        bordered: true,
+        pagination: {
+            showSizeChanger: true,
+            showQuickJumper: true,
+            pageSizeOptions: ["10", "20", "50", "100"],
+        },
+    }}
+    formProps={{
+        layout: "horizontal",
+        labelCol: { span: 6 },
+        wrapperCol: { span: 18 },
+    }}
+    emptyText="No products found. Click 'Add Product' to get started."
+    showToggleCrudType={true}
+    showFilter={true}
+/>;
 ```
 
-### 3. Setup Redux Provider
+## Type Definitions
 
-```tsx
-// App.tsx or layout.tsx (Next.js 13+)
-import { Provider } from "react-redux";
-import { store } from "./store";
-
-function App() {
-    return (
-        <Provider store={store}>
-            <YourAppContent />
-        </Provider>
-    );
-}
-```
-
-### 4. CSS Imports (if needed)
-
-```tsx
-// Import Ant Design CSS
-import "antd/dist/reset.css"; // Ant Design 5.x
-// or
-import "antd/dist/antd.css"; // Ant Design 4.x
-```
-
-## Core Concepts
-
-### Form Schema Architecture
-
-The form schema is the heart of QuickUI. It defines:
-
-- Field types and validation
-- Table column generation
-- Filter configuration
-- Form layout and structure
+### FormSchema Interface
 
 ```typescript
 interface FormSchema {
     layout?: "horizontal" | "vertical" | "inline";
-    fields?: FormField[]; // Simple field list
-    sections?: FormSection[]; // Grouped sections
-    tabs?: FormTab[]; // Tabbed interface
-    steps?: FormStep[]; // Multi-step wizard
+    fields?: FormField[];
+    sections?: FormSection[];
+    tabs?: FormTab[];
+    steps?: FormStep[];
 }
-```
 
-### CRUD Type Patterns
-
-| Type   | Use Case                  | Navigation      | Best For          |
-| ------ | ------------------------- | --------------- | ----------------- |
-| Modal  | Quick edits, simple forms | Overlay         | Simple data entry |
-| Drawer | Detailed forms            | Side panel      | Complex forms     |
-| Page   | Full-screen editing       | Same page       | Rich content      |
-| Route  | SEO-friendly URLs         | Browser history | Public interfaces |
-
-### Permission Model
-
-```typescript
-interface PermissionConfig {
-    view?: Permission; // Who can view records
-    create?: Permission; // Who can create records
-    edit?: Permission; // Who can edit records
-    delete?: Permission; // Who can delete records
-    filter?: Permission; // Who can use filters
-    export?: Permission; // Who can export data
-    [key: string]: Permission | undefined; // Custom permissions
-}
-```
-
-## Props Reference
-
-### Essential Props
-
-| Prop         | Type         | Required | Description                          |
-| ------------ | ------------ | -------- | ------------------------------------ |
-| `title`      | `string`     | ✅       | Display title for the interface      |
-| `formSchema` | `FormSchema` | ✅       | Schema defining form structure       |
-| `crudType`   | `CrudType`   | ❌       | UI pattern (modal/drawer/page/route) |
-
-### Data Management
-
-| Prop             | Type                                   | Description              |
-| ---------------- | -------------------------------------- | ------------------------ |
-| `initialData`    | `any[]`                                | Initial dataset          |
-| `onDataChange`   | `(data: any[]) => void`                | Called when data changes |
-| `onRecordCreate` | `(record: any) => Promise<any>`        | Handle record creation   |
-| `onRecordUpdate` | `(record: any) => Promise<any>`        | Handle record updates    |
-| `onRecordDelete` | `(record: any) => Promise<any>`        | Handle record deletion   |
-| `onFilter`       | `(data: any[], filters: any) => any[]` | Custom filtering logic   |
-
-### UI Customization
-
-| Prop           | Type                                 | Description             |
-| -------------- | ------------------------------------ | ----------------------- |
-| `tableColumns` | `ColumnType<any>[]`                  | Custom table columns    |
-| `tableProps`   | `TableProps<any>`                    | Ant Design Table props  |
-| `formProps`    | `any`                                | AppForm component props |
-| `actions`      | `ActionConfig`                       | Configure row actions   |
-| `statistics`   | `StatItem[] \| (data) => StatItem[]` | Dashboard statistics    |
-| `batchActions` | `(keys, rows, perms) => ReactNode`   | Bulk operation buttons  |
-
-### Permission System
-
-| Prop              | Type                | Description                   |
-| ----------------- | ------------------- | ----------------------------- |
-| `permissions`     | `PermissionConfig`  | Define required permissions   |
-| `checkPermission` | `PermissionChecker` | Function to check permissions |
-
-### Route Configuration (Next.js 15)
-
-| Prop              | Type          | Description                        |
-| ----------------- | ------------- | ---------------------------------- |
-| `routeConfig`     | `RouteConfig` | Route patterns for CRUD operations |
-| `currentAction`   | `string`      | Current route action context       |
-| `currentRecordId` | `string`      | Current record ID from URL         |
-| `onNavigate`      | `function`    | Custom navigation handler          |
-
-## Type Definitions
-
-### FormField Interface
-
-```typescript
 interface FormField {
-    name: string; // Field identifier
-    label: string; // Display label
-    type: FieldType; // Input type
-    required?: boolean; // Validation requirement
-    defaultValue?: any; // Default field value
-    placeholder?: string; // Input placeholder
-    disabled?: boolean; // Disable field
+    // Basic properties
+    name: string;
+    label: string;
+    type: FieldType;
+    required?: boolean;
+    disabled?: boolean;
+    placeholder?: string;
+    defaultValue?: any;
 
     // Table configuration
-    hideInTable?: boolean; // Hide in generated table
-    sortable?: boolean; // Enable sorting
-    filterable?: boolean; // Include in filters
-    render?: (value: any, record: any) => ReactNode; // Custom renderer
+    hideInTable?: boolean;
+    sortable?: boolean;
+    filterable?: boolean;
+    render?: (value: any, record: any) => ReactNode;
 
     // Layout
-    grid?: ResponsiveGrid; // Grid layout
+    grid?: {
+        xs?: number;
+        sm?: number;
+        md?: number;
+        lg?: number;
+        xl?: number;
+        xxl?: number;
+    };
 
     // Validation
-    rules?: ValidationRule[]; // Form validation rules
-    dependencies?: FieldDependency[]; // Field dependencies
+    rules?: ValidationRule[];
+    dependencies?: FieldDependency[];
 
-    // Field-specific props
-    options?: Option[]; // Select/Radio options
-    props?: any; // Component-specific props
+    // Field-specific options
+    options?: Option[];
+    props?: any;
 }
 
 type FieldType =
@@ -234,6 +221,8 @@ type FieldType =
     | "number"
     | "email"
     | "password"
+    | "url"
+    | "tel"
     | "select"
     | "multiselect"
     | "radio"
@@ -244,267 +233,1370 @@ type FieldType =
     | "daterange"
     | "time"
     | "datetime"
+    | "month"
+    | "week"
+    | "year"
     | "textarea"
     | "richtext"
+    | "markdown"
     | "upload"
     | "image"
+    | "file"
     | "cascader"
     | "treeselect"
+    | "transfer"
     | "color"
     | "slider"
     | "rate"
+    | "progress"
+    | "json"
+    | "code"
+    | "formula"
+    | "location"
+    | "map"
+    | "coordinates"
     | "custom";
+
+interface ValidationRule {
+    required?: boolean;
+    message?: string;
+    min?: number;
+    max?: number;
+    len?: number;
+    pattern?: RegExp;
+    validator?: (rule: any, value: any) => Promise<void>;
+    type?:
+        | "string"
+        | "number"
+        | "boolean"
+        | "method"
+        | "regexp"
+        | "integer"
+        | "float"
+        | "array"
+        | "object"
+        | "enum"
+        | "date"
+        | "url"
+        | "hex"
+        | "email";
+}
+
+interface FieldDependency {
+    type: "show_if" | "hide_if" | "enable_if" | "disable_if" | "calculate" | "validate";
+    conditions: DependencyCondition[];
+    callback?: (form: any, values: any) => any;
+}
+
+interface DependencyCondition {
+    field: string;
+    operator: "equals" | "not_equals" | "greater_than" | "less_than" | "contains" | "is_empty" | "is_not_empty";
+    value?: any;
+}
 ```
 
-### Advanced Field Types
+### Permission Types
 
 ```typescript
-// Custom field with full control
-{
-    name: "customField",
-    type: "custom",
-    render: (value, record, form) => (
-        <CustomComponent
-            value={value}
-            onChange={(val) => form.setFieldValue('customField', val)}
-        />
-    )
+type Permission = string | string[];
+
+interface PermissionConfig {
+    view?: Permission;
+    create?: Permission;
+    edit?: Permission;
+    delete?: Permission;
+    filter?: Permission;
+    export?: Permission;
+    [key: string]: Permission | undefined;
 }
 
-// Conditional field
-{
-    name: "conditionalField",
-    type: "text",
-    dependencies: [{
-        type: "show_if",
-        conditions: [{ field: "type", operator: "equals", value: "premium" }]
-    }],
-    rules: [{ required: true, message: "This field is required" }]
+type PermissionChecker = (permission: Permission) => boolean;
+
+// Advanced permission with context
+type ContextualPermission = (record?: any, context?: any) => Permission;
+
+interface AdvancedPermissionConfig {
+    view?: Permission | ContextualPermission;
+    create?: Permission | ContextualPermission;
+    edit?: Permission | ContextualPermission;
+    delete?: Permission | ContextualPermission;
+    filter?: Permission | ContextualPermission;
+    export?: Permission | ContextualPermission;
+}
+```
+
+### Route Configuration
+
+```typescript
+interface RouteConfig {
+    basePath: string;
+    createPath?: string;
+    editPath?: string;
+    viewPath?: string;
+    listPath?: string;
+    paramName?: string;
+    queryParams?: Record<string, string>;
 }
 
-// Calculated field
-{
-    name: "totalPrice",
-    type: "number",
-    disabled: true,
-    dependencies: [{
-        type: "calculate",
-        conditions: [
-            { field: "quantity", operator: "is_not_empty" },
-            { field: "unitPrice", operator: "is_not_empty" }
+// Example route configurations
+const routeConfigs = {
+    // Simple REST pattern
+    simple: {
+        basePath: "/users",
+        createPath: "/users/create",
+        editPath: "/users/[id]/edit",
+        viewPath: "/users/[id]",
+        listPath: "/users",
+    },
+
+    // Nested resource
+    nested: {
+        basePath: "/projects/[projectId]/tasks",
+        createPath: "/projects/[projectId]/tasks/create",
+        editPath: "/projects/[projectId]/tasks/[id]/edit",
+        viewPath: "/projects/[projectId]/tasks/[id]",
+        listPath: "/projects/[projectId]/tasks",
+    },
+
+    // Custom paths
+    custom: {
+        basePath: "/dashboard/user-management",
+        createPath: "/dashboard/user-management/new-user",
+        editPath: "/dashboard/user-management/edit/[userId]",
+        viewPath: "/dashboard/user-management/profile/[userId]",
+        listPath: "/dashboard/user-management",
+        paramName: "userId",
+    },
+};
+```
+
+## Form Schema Configuration
+
+### Basic Field Types
+
+```typescript
+// Text inputs
+const textFields: FormField[] = [
+    {
+        name: "firstName",
+        label: "First Name",
+        type: "text",
+        required: true,
+        placeholder: "Enter first name",
+        rules: [
+            { required: true, message: "First name is required" },
+            { min: 2, message: "First name must be at least 2 characters" },
+            { max: 50, message: "First name cannot exceed 50 characters" },
         ],
-        callback: (form, values) => {
-            return (values.quantity || 0) * (values.unitPrice || 0);
+    },
+    {
+        name: "email",
+        label: "Email Address",
+        type: "email",
+        required: true,
+        rules: [
+            { required: true, message: "Email is required" },
+            { type: "email", message: "Please enter a valid email address" },
+        ],
+    },
+    {
+        name: "phone",
+        label: "Phone Number",
+        type: "tel",
+        placeholder: "+1 (555) 123-4567",
+        rules: [{ pattern: /^\+?[\d\s\-\(\)]+$/, message: "Please enter a valid phone number" }],
+    },
+    {
+        name: "website",
+        label: "Website",
+        type: "url",
+        placeholder: "https://example.com",
+        rules: [{ type: "url", message: "Please enter a valid URL" }],
+    },
+];
+
+// Number inputs
+const numberFields: FormField[] = [
+    {
+        name: "age",
+        label: "Age",
+        type: "number",
+        props: {
+            min: 0,
+            max: 120,
+            step: 1,
+        },
+        rules: [{ type: "number", min: 0, max: 120, message: "Age must be between 0 and 120" }],
+    },
+    {
+        name: "price",
+        label: "Price",
+        type: "number",
+        props: {
+            precision: 2,
+            formatter: value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+            parser: value => value.replace(/\$\s?|(,*)/g, ""),
+            min: 0,
+        },
+        rules: [
+            { required: true, message: "Price is required" },
+            { type: "number", min: 0, message: "Price must be positive" },
+        ],
+    },
+];
+
+// Selection fields
+const selectionFields: FormField[] = [
+    {
+        name: "category",
+        label: "Category",
+        type: "select",
+        required: true,
+        filterable: true,
+        options: [
+            { value: "electronics", label: "Electronics" },
+            { value: "clothing", label: "Clothing" },
+            { value: "books", label: "Books" },
+            { value: "home", label: "Home & Garden" },
+        ],
+        props: {
+            showSearch: true,
+            allowClear: true,
+            placeholder: "Select a category",
+        },
+    },
+    {
+        name: "tags",
+        label: "Tags",
+        type: "multiselect",
+        options: [
+            { value: "new", label: "New" },
+            { value: "sale", label: "On Sale" },
+            { value: "featured", label: "Featured" },
+            { value: "popular", label: "Popular" },
+        ],
+        props: {
+            mode: "tags",
+            placeholder: "Select or create tags",
+        },
+    },
+    {
+        name: "priority",
+        label: "Priority",
+        type: "radio",
+        options: [
+            { value: "low", label: "Low" },
+            { value: "medium", label: "Medium" },
+            { value: "high", label: "High" },
+            { value: "urgent", label: "Urgent" },
+        ],
+        defaultValue: "medium",
+    },
+];
+
+// Date and time fields
+const dateTimeFields: FormField[] = [
+    {
+        name: "birthDate",
+        label: "Birth Date",
+        type: "date",
+        props: {
+            format: "YYYY-MM-DD",
+            disabledDate: current => current && current > moment().endOf("day"),
+        },
+    },
+    {
+        name: "eventDateRange",
+        label: "Event Duration",
+        type: "daterange",
+        props: {
+            format: "YYYY-MM-DD HH:mm",
+            showTime: true,
+        },
+    },
+    {
+        name: "workingHours",
+        label: "Working Hours",
+        type: "time",
+        props: {
+            format: "HH:mm",
+            minuteStep: 15,
+        },
+    },
+];
+
+// File upload fields
+const uploadFields: FormField[] = [
+    {
+        name: "avatar",
+        label: "Profile Picture",
+        type: "image",
+        props: {
+            listType: "picture-card",
+            maxCount: 1,
+            accept: "image/*",
+            beforeUpload: file => {
+                const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
+                if (!isJpgOrPng) {
+                    message.error("You can only upload JPG/PNG files!");
+                }
+                const isLt2M = file.size / 1024 / 1024 < 2;
+                if (!isLt2M) {
+                    message.error("Image must smaller than 2MB!");
+                }
+                return isJpgOrPng && isLt2M;
+            },
+        },
+    },
+    {
+        name: "documents",
+        label: "Documents",
+        type: "upload",
+        props: {
+            multiple: true,
+            accept: ".pdf,.doc,.docx,.xls,.xlsx",
+            action: "/api/upload",
+            onChange: info => {
+                if (info.file.status === "done") {
+                    message.success(`${info.file.name} uploaded successfully`);
+                } else if (info.file.status === "error") {
+                    message.error(`${info.file.name} upload failed`);
+                }
+            },
+        },
+    },
+];
+```
+
+### Complex Field Configurations
+
+```typescript
+// Conditional fields
+const conditionalFields: FormField[] = [
+    {
+        name: "hasShipping",
+        label: "Requires Shipping",
+        type: "switch",
+        defaultValue: false
+    },
+    {
+        name: "shippingWeight",
+        label: "Shipping Weight (kg)",
+        type: "number",
+        dependencies: [
+            {
+                type: "show_if",
+                conditions: [
+                    { field: "hasShipping", operator: "equals", value: true }
+                ]
+            }
+        ],
+        rules: [
+            { required: true, message: "Shipping weight is required when shipping is enabled" }
+        ]
+    },
+    {
+        name: "shippingDimensions",
+        label: "Dimensions",
+        type: "custom",
+        dependencies: [
+            {
+                type: "show_if",
+                conditions: [
+                    { field: "hasShipping", operator: "equals", value: true }
+                ]
+            }
+        ],
+        render: (value, record, form) => (
+            <Row gutter={8}>
+                <Col span={8}>
+                    <InputNumber
+                        placeholder="Length"
+                        value={value?.length}
+                        onChange={(val) =>
+                            form.setFieldValue('shippingDimensions', {
+                                ...value,
+                                length: val
+                            })
+                        }
+                    />
+                </Col>
+                <Col span={8}>
+                    <InputNumber
+                        placeholder="Width"
+                        value={value?.width}
+                        onChange={(val) =>
+                            form.setFieldValue('shippingDimensions', {
+                                ...value,
+                                width: val
+                            })
+                        }
+                    />
+                </Col>
+                <Col span={8}>
+                    <InputNumber
+                        placeholder="Height"
+                        value={value?.height}
+                        onChange={(val) =>
+                            form.setFieldValue('shippingDimensions', {
+                                ...value,
+                                height: val
+                            })
+                        }
+                    />
+                </Col>
+            </Row>
+        )
+    }
+];
+
+// Calculated fields
+const calculatedFields: FormField[] = [
+    {
+        name: "quantity",
+        label: "Quantity",
+        type: "number",
+        required: true,
+        defaultValue: 1
+    },
+    {
+        name: "unitPrice",
+        label: "Unit Price",
+        type: "number",
+        required: true,
+        props: { precision: 2 }
+    },
+    {
+        name: "totalPrice",
+        label: "Total Price",
+        type: "number",
+        disabled: true,
+        props: { precision: 2 },
+        dependencies: [
+            {
+                type: "calculate",
+                conditions: [
+                    { field: "quantity", operator: "is_not_empty" },
+                    { field: "unitPrice", operator: "is_not_empty" }
+                ],
+                callback: (form, values) => {
+                    const total = (values.quantity || 0) * (values.unitPrice || 0);
+                    return Number(total.toFixed(2));
+                }
+            }
+        ]
+    }
+];
+
+// Dynamic option fields
+const dynamicFields: FormField[] = [
+    {
+        name: "country",
+        label: "Country",
+        type: "select",
+        required: true,
+        options: countries, // Loaded from API
+        props: {
+            showSearch: true,
+            placeholder: "Select country"
         }
-    }]
+    },
+    {
+        name: "state",
+        label: "State/Province",
+        type: "select",
+        dependencies: [
+            {
+                type: "show_if",
+                conditions: [
+                    { field: "country", operator: "is_not_empty" }
+                ]
+            }
+        ],
+        options: [], // Will be populated based on country selection
+        props: {
+            showSearch: true,
+            placeholder: "Select state"
+        }
+    },
+    {
+        name: "city",
+        label: "City",
+        type: "select",
+        dependencies: [
+            {
+                type: "show_if",
+                conditions: [
+                    { field: "state", operator: "is_not_empty" }
+                ]
+            }
+        ],
+        options: [], // Will be populated based on state selection
+        props: {
+            showSearch: true,
+            placeholder: "Select city"
+        }
+    }
+];
+```
+
+### Schema Organization Patterns
+
+```typescript
+// Simple field list
+const simpleSchema: FormSchema = {
+    layout: "vertical",
+    fields: [
+        { name: "name", label: "Name", type: "text", required: true },
+        { name: "email", label: "Email", type: "email", required: true },
+        { name: "active", label: "Active", type: "switch", defaultValue: true },
+    ],
+};
+
+// Grouped sections
+const sectionedSchema: FormSchema = {
+    layout: "vertical",
+    sections: [
+        {
+            title: "Personal Information",
+            description: "Basic personal details",
+            fields: [
+                { name: "firstName", label: "First Name", type: "text", required: true },
+                { name: "lastName", label: "Last Name", type: "text", required: true },
+                { name: "email", label: "Email", type: "email", required: true },
+            ],
+        },
+        {
+            title: "Account Settings",
+            description: "Account configuration and permissions",
+            fields: [
+                { name: "role", label: "Role", type: "select", options: roleOptions },
+                { name: "active", label: "Active", type: "switch", defaultValue: true },
+                { name: "permissions", label: "Permissions", type: "multiselect", options: permissionOptions },
+            ],
+        },
+    ],
+};
+
+// Tabbed interface
+const tabbedSchema: FormSchema = {
+    layout: "vertical",
+    tabs: [
+        {
+            key: "basic",
+            title: "Basic Info",
+            icon: "UserOutlined",
+            fields: [
+                { name: "name", label: "Product Name", type: "text", required: true },
+                { name: "description", label: "Description", type: "textarea" },
+                { name: "category", label: "Category", type: "select", options: categoryOptions },
+            ],
+        },
+        {
+            key: "pricing",
+            title: "Pricing",
+            icon: "DollarOutlined",
+            fields: [
+                { name: "basePrice", label: "Base Price", type: "number", required: true },
+                { name: "salePrice", label: "Sale Price", type: "number" },
+                { name: "costPrice", label: "Cost", type: "number" },
+            ],
+        },
+        {
+            key: "inventory",
+            title: "Inventory",
+            icon: "InboxOutlined",
+            fields: [
+                { name: "sku", label: "SKU", type: "text", required: true },
+                { name: "stock", label: "Stock Quantity", type: "number" },
+                { name: "active", label: "Active", type: "switch", defaultValue: true },
+            ],
+        },
+    ],
+};
+
+// Multi-step wizard
+const wizardSchema: FormSchema = {
+    layout: "vertical",
+    steps: [
+        {
+            title: "Basic Information",
+            description: "Enter basic product details",
+            fields: [
+                { name: "name", label: "Product Name", type: "text", required: true },
+                { name: "category", label: "Category", type: "select", required: true, options: categoryOptions },
+            ],
+        },
+        {
+            title: "Pricing & Inventory",
+            description: "Set pricing and inventory details",
+            fields: [
+                { name: "price", label: "Price", type: "number", required: true },
+                { name: "stock", label: "Stock", type: "number", required: true },
+            ],
+        },
+        {
+            title: "Media & Description",
+            description: "Add images and detailed description",
+            fields: [
+                { name: "images", label: "Product Images", type: "image" },
+                { name: "description", label: "Detailed Description", type: "richtext" },
+            ],
+        },
+        {
+            title: "Review & Submit",
+            description: "Review all details before submitting",
+            fields: [], // Review step with summary
+            isReview: true,
+        },
+    ],
+};
+```
+
+## Action Configuration
+
+```typescript
+interface ActionConfig {
+    view?: boolean;
+    edit?: boolean;
+    delete?: boolean;
+    extraActions?: (record: any, permissions?: { [key: string]: boolean }) => ReactNode[];
 }
+
+// Basic actions
+const basicActions: ActionConfig = {
+    view: true,
+    edit: true,
+    delete: true
+};
+
+// Custom extra actions
+const advancedActions: ActionConfig = {
+    view: true,
+    edit: true,
+    delete: true,
+    extraActions: (record, permissions) => {
+        const actions = [];
+
+        // Conditional actions based on record state
+        if (record.status === 'draft' && permissions?.canEdit) {
+            actions.push(
+                <Button
+                    key="publish"
+                    size="small"
+                    type="primary"
+                    onClick={() => publishRecord(record)}
+                >
+                    Publish
+                </Button>
+            );
+        }
+
+        if (record.status === 'published' && permissions?.canEdit) {
+            actions.push(
+                <Button
+                    key="unpublish"
+                    size="small"
+                    onClick={() => unpublishRecord(record)}
+                >
+                    Unpublish
+                </Button>
+            );
+        }
+
+        // Clone action
+        if (permissions?.canCreate) {
+            actions.push(
+                <Button
+                    key="duplicate"
+                    size="small"
+                    icon={<CopyOutlined />}
+                    onClick={() => duplicateRecord(record)}
+                >
+                    Duplicate
+                </Button>
+            );
+        }
+
+        // Archive action (instead of delete for some records)
+        if (record.canArchive && permissions?.canDelete) {
+            actions.push(
+                <Popconfirm
+                    key="archive"
+                    title="Archive this record?"
+                    onConfirm={() => archiveRecord(record)}
+                    okText="Yes"
+                    cancelText="No"
+                >
+                    <Button size="small" danger icon={<ArchiveOutlined />}>
+                        Archive
+                    </Button>
+                </Popconfirm>
+            );
+        }
+
+        // Dropdown for many actions
+        if (actions.length > 2) {
+            const menuItems = actions.slice(2).map((action, index) => ({
+                key: index,
+                label: action
+            }));
+
+            return [
+                ...actions.slice(0, 2),
+                <Dropdown
+                    key="more"
+                    menu={{ items: menuItems }}
+                    trigger={['click']}
+                >
+                    <Button size="small" icon={<MoreOutlined />} />
+                </Dropdown>
+            ];
+        }
+
+        return actions;
+    }
+};
+
+// Role-based actions
+const roleBasedActions: ActionConfig = {
+    view: true,
+    edit: true,
+    delete: false, // Handled by extraActions
+    extraActions: (record, permissions) => {
+        const actions = [];
+        const userRole = getCurrentUserRole();
+
+        // Owners can always edit their records
+        if (record.ownerId === getCurrentUserId()) {
+            actions.push(
+                <Button
+                    key="edit-own"
+                    size="small"
+                    icon={<EditOutlined />}
+                    onClick={() => editRecord(record)}
+                >
+                    Edit
+                </Button>
+            );
+        }
+
+        // Managers can approve/reject
+        if (userRole === 'manager' && record.status === 'pending') {
+            actions.push(
+                <Button
+                    key="approve"
+                    size="small"
+                    type="primary"
+                    onClick={() => approveRecord(record)}
+                >
+                    Approve
+                </Button>,
+                <Button
+                    key="reject"
+                    size="small"
+                    danger
+                    onClick={() => rejectRecord(record)}
+                >
+                    Reject
+                </Button>
+            );
+        }
+
+        // Admins can delete
+        if (userRole === 'admin') {
+            actions.push(
+                <Popconfirm
+                    key="delete"
+                    title="Are you sure you want to delete this record?"
+                    onConfirm={() => deleteRecord(record)}
+                    okText="Yes"
+                    cancelText="No"
+                >
+                    <Button size="small" danger icon={<DeleteOutlined />}>
+                        Delete
+                    </Button>
+                </Popconfirm>
+            );
+        }
+
+        return actions;
+    }
+};
 ```
 
-## Basic Usage Examples
+## Batch Actions Configuration
 
-### 1. Simple User Management
+```typescript
+// Simple batch actions
+const simpleBatchActions = (selectedKeys: any[], selectedRows: any[], permissions?: any) => (
+    <Space>
+        {permissions?.canEdit && (
+            <Button
+                type="primary"
+                onClick={() => bulkEdit(selectedKeys)}
+                disabled={selectedKeys.length === 0}
+            >
+                Edit Selected ({selectedKeys.length})
+            </Button>
+        )}
+        {permissions?.canDelete && (
+            <Popconfirm
+                title={`Are you sure you want to delete ${selectedKeys.length} items?`}
+                onConfirm={() => bulkDelete(selectedKeys)}
+                disabled={selectedKeys.length === 0}
+            >
+                <Button danger disabled={selectedKeys.length === 0}>
+                    Delete Selected ({selectedKeys.length})
+                </Button>
+            </Popconfirm>
+        )}
+        <Button
+            icon={<ExportOutlined />}
+            onClick={() => exportSelected(selectedRows)}
+            disabled={selectedKeys.length === 0}
+        >
+            Export Selected
+        </Button>
+    </Space>
+);
 
-```tsx
-import QuickUI from "@components/common/AppCRUDOperation";
-
-const SimpleUserManagement = () => {
-    const userSchema = {
-        layout: "vertical",
-        fields: [
-            {
-                name: "name",
-                label: "Full Name",
-                type: "text",
-                required: true,
-                filterable: true,
-                grid: { xs: 24, md: 12 },
-            },
-            {
-                name: "email",
-                label: "Email Address",
-                type: "email",
-                required: true,
-                filterable: true,
-                grid: { xs: 24, md: 12 },
-            },
-            {
-                name: "role",
-                label: "User Role",
-                type: "select",
-                options: [
-                    { value: "user", label: "Regular User" },
-                    { value: "admin", label: "Administrator" },
-                    { value: "moderator", label: "Moderator" },
-                ],
-                filterable: true,
-                defaultValue: "user",
-            },
-            {
-                name: "active",
-                label: "Account Active",
-                type: "switch",
-                defaultValue: true,
-                filterable: true,
-            },
-        ],
-    };
-
-    const users = [
-        { id: "1", name: "John Doe", email: "john@example.com", role: "admin", active: true },
-        { id: "2", name: "Jane Smith", email: "jane@example.com", role: "user", active: true },
-    ];
+// Advanced batch actions with status management
+const advancedBatchActions = (selectedKeys: any[], selectedRows: any[], permissions?: any) => {
+    const canActivate = selectedRows.some(row => !row.active);
+    const canDeactivate = selectedRows.some(row => row.active);
+    const hasDrafts = selectedRows.some(row => row.status === 'draft');
+    const hasPublished = selectedRows.some(row => row.status === 'published');
 
     return (
-        <QuickUI
-            title="User Management"
-            formSchema={userSchema}
-            initialData={users}
-            crudType="modal"
-            showFilter={true}
-            rowSelection={true}
-        />
+        <Space wrap>
+            {/* Status actions */}
+            {permissions?.canEdit && (
+                <Space>
+                    {canActivate && (
+                        <Button
+                            type="primary"
+                            icon={<CheckOutlined />}
+                            onClick={() => bulkUpdateStatus(selectedKeys, 'active', true)}
+                        >
+                            Activate ({selectedKeys.length})
+                        </Button>
+                    )}
+                    {canDeactivate && (
+                        <Button
+                            icon={<StopOutlined />}
+                            onClick={() => bulkUpdateStatus(selectedKeys, 'active', false)}
+                        >
+                            Deactivate ({selectedKeys.length})
+                        </Button>
+                    )}
+                    {hasDrafts && (
+                        <Button
+                            type="primary"
+                            icon={<SendOutlined />}
+                            onClick={() => bulkUpdateStatus(selectedKeys, 'status', 'published')}
+                        >
+                            Publish Drafts
+                        </Button>
+                    )}
+                    {hasPublished && (
+                        <Button
+                            icon={<EditOutlined />}
+                            onClick={() => bulkUpdateStatus(selectedKeys, 'status', 'draft')}
+                        >
+                            Unpublish
+                        </Button>
+                    )}
+                </Space>
+            )}
+
+            {/* Category/Tag actions */}
+            {permissions?.canEdit && (
+                <Dropdown
+                    menu={{
+                        items: [
+                            {
+                                key: 'category',
+                                label: 'Change Category',
+                                icon: <TagOutlined />,
+                                onClick: () => showBulkCategoryModal(selectedKeys)
+                            },
+                            {
+                                key: 'tags',
+                                label: 'Add Tags',
+                                icon: <TagsOutlined />,
+                                onClick: () => showBulkTagModal(selectedKeys)
+                            },
+                            {
+                                key: 'assign',
+                                label: 'Assign To',
+                                icon: <UserOutlined />,
+                                onClick: () => showBulkAssignModal(selectedKeys)
+                            }
+                        ]
+                    }}
+                    trigger={['click']}
+                >
+                    <Button icon={<MoreOutlined />}>
+                        Bulk Edit <DownOutlined />
+                    </Button>
+                </Dropdown>
+            )}
+
+            {/* Export actions */}
+            <Dropdown
+                menu={{
+                    items: [
+                        {
+                            key: 'csv',
+                            label: 'Export as CSV',
+                            icon: <FileExcelOutlined />,
+                            onClick: () => exportSelected(selectedRows, 'csv')
+                        },
+                        {
+                            key: 'pdf',
+                            label: 'Export as PDF',
+                            icon: <FilePdfOutlined />,
+                            onClick: () => exportSelected(selectedRows, 'pdf')
+                        },
+                        {
+                            key: 'json',
+                            label: 'Export as JSON',
+                            icon: <FileTextOutlined />,
+                            onClick: () => exportSelected(selectedRows, 'json')
+                        }
+                    ]
+                }}
+                trigger={['click']}
+            >
+                <Button icon={<ExportOutlined />}>
+                    Export <DownOutlined />
+                </Button>
+            </Dropdown>
+
+            {/* Delete action */}
+            {permissions?.canDelete && (
+                <Popconfirm
+                    title={`Are you sure you want to delete ${selectedKeys.length} items?`}
+                    description="This action cannot be undone."
+                    onConfirm={() => bulkDelete(selectedKeys)}
+                    okText="Yes, Delete"
+                    cancelText="Cancel"
+                >
+                    <Button danger icon={<DeleteOutlined />}>
+                        Delete ({selectedKeys.length})
+                    </Button>
+                </Popconfirm>
+            )}
+        </Space>
+    );
+};
+
+// Context-aware batch actions
+const contextAwareBatchActions = (selectedKeys: any[], selectedRows: any[], permissions?: any) => {
+    // Different actions based on selection
+    if (selectedKeys.length === 1) {
+        // Single item selected
+        const record = selectedRows[0];
+        return (
+            <Space>
+                <Button type="primary" onClick={() => editRecord(record)}>
+                    Edit "{record.name}"
+                </Button>
+                <Button onClick={() => duplicateRecord(record)}>
+                    Duplicate
+                </Button>
+                {record.status === 'published' && (
+                    <Button onClick={() => createVariant(record)}>
+                        Create Variant
+                    </Button>
+                )}
+            </Space>
+        );
+    }
+
+    // Multiple items selected
+    return (
+        <Space>
+            <Button
+                type="primary"
+                onClick={() => showBulkEditModal(selectedKeys)}
+            >
+                Bulk Edit ({selectedKeys.length} items)
+            </Button>
+            <Button onClick={() => compareItems(selectedRows)}>
+                Compare Selected
+            </Button>
+            <Button
+                onClick={() => createBundle(selectedRows)}
+                disabled={selectedKeys.length < 2}
+            >
+                Create Bundle
+            </Button>
+        </Space>
     );
 };
 ```
 
-### 2. Product Catalog with Statistics
+## Statistics Configuration
 
-```tsx
-const ProductCatalog = () => {
-    const [products, setProducts] = useState([]);
+```typescript
+// Simple statistics
+const simpleStats = (data: any[]): StatItem[] => [
+    {
+        key: 'total',
+        label: 'Total Items',
+        value: data.length,
+        color: '#1890ff',
+        icon: <DatabaseOutlined />
+    },
+    {
+        key: 'active',
+        label: 'Active Items',
+        value: data.filter(item => item.active).length,
+        color: '#52c41a',
+        icon: <CheckCircleOutlined />
+    }
+];
 
-    const productSchema = {
-        layout: "vertical",
-        sections: [
-            {
-                title: "Basic Information",
-                fields: [
-                    { name: "name", label: "Product Name", type: "text", required: true },
-                    { name: "sku", label: "SKU", type: "text", required: true },
-                    {
-                        name: "category",
-                        label: "Category",
-                        type: "select",
-                        options: [
-                            { value: "electronics", label: "Electronics" },
-                            { value: "clothing", label: "Clothing" },
-                            { value: "books", label: "Books" },
-                        ],
-                        filterable: true,
-                    },
-                ],
-            },
-            {
-                title: "Pricing & Inventory",
-                fields: [
-                    { name: "price", label: "Price", type: "number", required: true, prefix: "$" },
-                    { name: "stock", label: "Stock Quantity", type: "number" },
-                    { name: "active", label: "Active", type: "switch", defaultValue: true },
-                ],
-            },
-        ],
-    };
+// Advanced statistics with calculations
+const advancedStats = (data: any[]): StatItem[] => {
+    const total = data.length;
+    const active = data.filter(item => item.active).length;
+    const totalValue = data.reduce((sum, item) => sum + (item.price * item.quantity || 0), 0);
+    const avgValue = total > 0 ? totalValue / total : 0;
 
-    const productStats = data => [
+    return [
         {
-            key: "total",
-            label: "Total Products",
-            value: data.length,
-            color: "#1890ff",
-            icon: <ShoppingOutlined />,
+            key: 'total',
+            label: 'Total Products',
+            value: total.toLocaleString(),
+            color: '#1890ff',
+            icon: <ShopOutlined />
         },
         {
-            key: "revenue",
-            label: "Total Value",
-            value: `$${data.reduce((sum, p) => sum + p.price * p.stock, 0).toLocaleString()}`,
-            color: "#52c41a",
-            icon: <DollarOutlined />,
+            key: 'active',
+            label: 'Active Products',
+            value: `${active} (${total > 0 ? Math.round((active / total) * 100) : 0}%)`,
+            color: '#52c41a',
+            icon: <CheckCircleOutlined />
         },
+        {
+            key: 'value',
+            label: 'Total Inventory Value',
+            value: `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+            color: '#722ed1',
+            icon: <DollarOutlined />
+        },
+        {
+            key: 'average',
+            label: 'Average Value',
+            value: `$${avgValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+            color: '#fa8c16',
+            icon: <BarChartOutlined />
+        }
     ];
-
-    return (
-        <QuickUI
-            title="Product Catalog"
-            formSchema={productSchema}
-            initialData={products}
-            statistics={productStats}
-            crudType="drawer"
-            onRecordCreate={async product => {
-                const response = await api.products.create(product);
-                setProducts(prev => [...prev, response]);
-                return response;
-            }}
-            onRecordUpdate={async product => {
-                const response = await api.products.update(product.id, product);
-                setProducts(prev => prev.map(p => (p.id === product.id ? response : p)));
-                return response;
-            }}
-            onRecordDelete={async product => {
-                await api.products.delete(product.id);
-                setProducts(prev => prev.filter(p => p.id !== product.id));
-            }}
-        />
-    );
 };
+
+// Dynamic statistics with trends
+const trendStats = (data: any[]): StatItem[] => {
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+
+    const recentItems = data.filter(item => new Date(item.createdAt) > lastMonth);
+    const percentageGrowth = data.length > 0 ? (recentItems.length / data.length) * 100 : 0;
+
+    const lowStock = data.filter(item => item.stock < item.minStock).length;
+    const outOfStock = data.filter(item => item.stock === 0).length;
+
+    return [
+        {
+            key: 'total',
+            label: 'Total Products',
+            value: (
+                <div>
+                    <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
+                        {data.length.toLocaleString()}
+                    </div>
+                    {percentageGrowth > 0 && (
+                        <div style={{ color: '#52c41a', fontSize: '12px' }}>
+                            <ArrowUpOutlined /> {percentageGrowth.toFixed(1)}% this month
+                        </div>
+                    )}
+                </div>
+            ),
+            color: '#1890ff',
+            icon: <ShopOutlined />
+        },
+        {
+            key: 'alerts',
+            label: 'Stock Alerts',
+            value: (
+                <div>
+                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: lowStock > 0 ? '#fa541c' : '#52c41a' }}>
+                        {lowStock}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#666' }}>
+                        {outOfStock} out of stock
+                    </div>
+                </div>
+            ),
+            color: lowStock > 0 ? '#fa541c' : '#52c41a',
+            icon: <AlertOutlined />
+        }
+    ];
+};
+
+// Interactive statistics
+const interactiveStats = (data: any[], onStatClick?: (key: string) => void): StatItem[] => [
+    {
+        key: 'total',
+        label: 'Total Items',
+        value: (
+            <Button
+                type="link"
+                size="large"
+                onClick={() => onStatClick?.('total')}
+                style={{ padding: 0, height: 'auto', fontSize: '24px', fontWeight: 'bold' }}
+            >
+                {data.length}
+            </Button>
+        ),
+        color: '#1890ff',
+        icon: <DatabaseOutlined />
+    },
+    {
+        key: 'active',
+        label: 'Active Items',
+        value: (
+            <Button
+                type="link"
+                size="large"
+                onClick={() => onStatClick?.('active')}
+                style={{ padding: 0, height: 'auto', fontSize: '24px', fontWeight: 'bold' }}
+            >
+                {data.filter(item => item.active).length}
+            </Button>
+        ),
+        color: '#52c41a',
+        icon: <CheckCircleOutlined />
+    }
+];
 ```
 
 ## Advanced Examples
 
-### 1. Multi-entity E-commerce Dashboard
+### Complete E-commerce Product Management
 
 ```tsx
-const EcommerceDashboard = () => {
-    const [activeTab, setActiveTab] = useState("products");
+const EcommerceProductCRUD = () => {
+    const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    // Complex product schema with variants
-    const productSchema = {
+    // Complex product schema
+    const productSchema: FormSchema = {
         layout: "vertical",
         tabs: [
             {
                 key: "basic",
-                title: "Basic Info",
+                title: "Basic Information",
+                icon: "InfoCircleOutlined",
                 fields: [
-                    { name: "name", label: "Product Name", type: "text", required: true },
-                    { name: "description", label: "Description", type: "richtext" },
-                    { name: "category", label: "Category", type: "cascader", options: categoryTree, filterable: true },
+                    {
+                        name: "name",
+                        label: "Product Name",
+                        type: "text",
+                        required: true,
+                        filterable: true,
+                        grid: { xs: 24, md: 12 },
+                        rules: [
+                            { required: true, message: "Product name is required" },
+                            { min: 3, message: "Product name must be at least 3 characters" },
+                        ],
+                    },
+                    {
+                        name: "sku",
+                        label: "SKU",
+                        type: "text",
+                        required: true,
+                        grid: { xs: 24, md: 12 },
+                        props: {
+                            placeholder: "e.g., PRD-001",
+                            style: { textTransform: "uppercase" },
+                        },
+                    },
+                    {
+                        name: "category",
+                        label: "Category",
+                        type: "cascader",
+                        required: true,
+                        filterable: true,
+                        options: categories,
+                        grid: { xs: 24, md: 12 },
+                        props: {
+                            showSearch: true,
+                            placeholder: "Select category",
+                        },
+                    },
+                    {
+                        name: "brand",
+                        label: "Brand",
+                        type: "select",
+                        filterable: true,
+                        options: brands,
+                        grid: { xs: 24, md: 12 },
+                        props: {
+                            showSearch: true,
+                            allowClear: true,
+                        },
+                    },
+                    {
+                        name: "description",
+                        label: "Description",
+                        type: "richtext",
+                        grid: { xs: 24 },
+                        props: {
+                            placeholder: "Enter detailed product description...",
+                        },
+                    },
+                    {
+                        name: "tags",
+                        label: "Tags",
+                        type: "multiselect",
+                        options: productTags,
+                        grid: { xs: 24 },
+                        props: {
+                            mode: "tags",
+                            placeholder: "Add tags for better searchability",
+                        },
+                    },
                 ],
             },
             {
                 key: "pricing",
-                title: "Pricing",
-                fields: [
-                    { name: "basePrice", label: "Base Price", type: "number", required: true, prefix: "$" },
-                    { name: "salePrice", label: "Sale Price", type: "number", prefix: "$" },
-                    { name: "costPrice", label: "Cost", type: "number", prefix: "$" },
-                ],
-            },
-            {
-                key: "variants",
-                title: "Variants",
+                title: "Pricing & Inventory",
+                icon: "DollarOutlined",
                 fields: [
                     {
-                        name: "hasVariants",
-                        label: "This product has variants",
-                        type: "switch",
-                        defaultValue: false,
+                        name: "price",
+                        label: "Regular Price",
+                        type: "number",
+                        required: true,
+                        grid: { xs: 24, md: 8 },
+                        props: {
+                            precision: 2,
+                            min: 0,
+                            formatter: value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                            parser: value => value.replace(/\$\s?|(,*)/g, ""),
+                        },
                     },
                     {
-                        name: "variants",
-                        label: "Product Variants",
-                        type: "form.list",
+                        name: "salePrice",
+                        label: "Sale Price",
+                        type: "number",
+                        grid: { xs: 24, md: 8 },
+                        props: {
+                            precision: 2,
+                            min: 0,
+                            formatter: value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                            parser: value => value.replace(/\$\s?|(,*)/g, ""),
+                        },
+                        dependencies: [
+                            {
+                                type: "validate",
+                                conditions: [{ field: "price", operator: "is_not_empty" }],
+                                callback: (form, values) => {
+                                    if (values.salePrice && values.salePrice >= values.price) {
+                                        throw new Error("Sale price must be less than regular price");
+                                    }
+                                },
+                            },
+                        ],
+                    },
+                    {
+                        name: "costPrice",
+                        label: "Cost Price",
+                        type: "number",
+                        grid: { xs: 24, md: 8 },
+                        props: {
+                            precision: 2,
+                            min: 0,
+                        },
+                    },
+                    {
+                        name: "trackInventory",
+                        label: "Track Inventory",
+                        type: "switch",
+                        defaultValue: true,
+                        grid: { xs: 24, md: 12 },
+                    },
+                    {
+                        name: "stock",
+                        label: "Stock Quantity",
+                        type: "number",
+                        grid: { xs: 24, md: 12 },
                         dependencies: [
                             {
                                 type: "show_if",
-                                conditions: [{ field: "hasVariants", operator: "equals", value: true }],
+                                conditions: [{ field: "trackInventory", operator: "equals", value: true }],
                             },
                         ],
-                        formList: {
-                            template: [
-                                { name: "name", label: "Variant Name", type: "text", required: true },
-                                { name: "sku", label: "SKU", type: "text", required: true },
-                                { name: "price", label: "Price", type: "number", prefix: "$" },
-                                { name: "stock", label: "Stock", type: "number" },
-                            ],
+                        props: {
+                            min: 0,
+                            step: 1,
+                        },
+                    },
+                    {
+                        name: "minStock",
+                        label: "Minimum Stock Alert",
+                        type: "number",
+                        grid: { xs: 24, md: 12 },
+                        dependencies: [
+                            {
+                                type: "show_if",
+                                conditions: [{ field: "trackInventory", operator: "equals", value: true }],
+                            },
+                        ],
+                        props: {
+                            min: 0,
+                            step: 1,
+                        },
+                    },
+                ],
+            },
+            {
+                key: "media",
+                title: "Media & Assets",
+                icon: "PictureOutlined",
+                fields: [
+                    {
+                        name: "images",
+                        label: "Product Images",
+                        type: "image",
+                        props: {
+                            listType: "picture-card",
+                            multiple: true,
+                            maxCount: 10,
+                            accept: "image/*",
+                        },
+                    },
+                    {
+                        name: "video",
+                        label: "Product Video",
+                        type: "upload",
+                        props: {
+                            accept: "video/*",
+                            maxCount: 1,
+                        },
+                    },
+                    {
+                        name: "documents",
+                        label: "Product Documents",
+                        type: "upload",
+                        props: {
+                            accept: ".pdf,.doc,.docx",
+                            multiple: true,
                         },
                     },
                 ],
@@ -512,826 +1604,257 @@ const EcommerceDashboard = () => {
         ],
     };
 
-    const orderSchema = {
-        layout: "vertical",
-        fields: [
-            { name: "customerName", label: "Customer", type: "text", required: true },
-            {
-                name: "status",
-                label: "Status",
-                type: "select",
-                options: [
-                    { value: "pending", label: "Pending" },
-                    { value: "processing", label: "Processing" },
-                    { value: "shipped", label: "Shipped" },
-                    { value: "delivered", label: "Delivered" },
-                ],
-                filterable: true,
-            },
-            { name: "total", label: "Total Amount", type: "number", prefix: "$" },
-            { name: "orderDate", label: "Order Date", type: "date", filterable: true },
-        ],
-    };
-
-    return (
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-            <Tabs.TabPane tab="Products" key="products">
-                <QuickUI
-                    title="Products"
-                    formSchema={productSchema}
-                    initialData={products}
-                    crudType="drawer"
-                    statistics={productStats}
-                    batchActions={(keys, rows, perms) => (
-                        <Space>
-                            {perms?.canEdit && (
-                                <Button onClick={() => bulkUpdateStatus(keys, "active")}>Activate Selected</Button>
-                            )}
-                            <Button onClick={() => exportProducts(rows)}>Export Selected</Button>
-                        </Space>
-                    )}
-                    actions={{
-                        view: true,
-                        edit: true,
-                        delete: true,
-                        extraActions: (record, perms) => [
-                            <Button key="duplicate" size="small" onClick={() => duplicateProduct(record)}>
-                                Duplicate
-                            </Button>,
-                        ],
-                    }}
-                />
-            </Tabs.TabPane>
-
-            <Tabs.TabPane tab="Orders" key="orders">
-                <QuickUI
-                    title="Orders"
-                    formSchema={orderSchema}
-                    initialData={orders}
-                    crudType="modal"
-                    tableColumns={customOrderColumns}
-                    onFilter={advancedOrderFilter}
-                />
-            </Tabs.TabPane>
-        </Tabs>
-    );
-};
-```
-
-### 2. Real-time Data with WebSocket
-
-```tsx
-const RealTimeOrderManagement = () => {
-    const [orders, setOrders] = useState([]);
-    const [connectionStatus, setConnectionStatus] = useState("disconnected");
-    const wsRef = useRef<WebSocket | null>(null);
-
-    useEffect(() => {
-        // WebSocket connection
-        const ws = new WebSocket("ws://localhost:8080/orders");
-        wsRef.current = ws;
-
-        ws.onopen = () => setConnectionStatus("connected");
-        ws.onclose = () => setConnectionStatus("disconnected");
-        ws.onerror = () => setConnectionStatus("error");
-
-        ws.onmessage = event => {
-            const update = JSON.parse(event.data);
-
-            switch (update.type) {
-                case "ORDER_CREATED":
-                    setOrders(prev => [...prev, update.data]);
-                    message.success(`New order #${update.data.id} received`);
-                    break;
-                case "ORDER_UPDATED":
-                    setOrders(prev => prev.map(order => (order.id === update.data.id ? update.data : order)));
-                    break;
-                case "ORDER_DELETED":
-                    setOrders(prev => prev.filter(order => order.id !== update.data.id));
-                    break;
-            }
-        };
-
-        return () => ws.close();
-    }, []);
-
-    const connectionIndicator = (
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div
-                style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    backgroundColor: connectionStatus === "connected" ? "#52c41a" : "#ff4d4f",
-                    animation: connectionStatus === "connected" ? "pulse 2s infinite" : "none",
-                }}
-            />
-            <span style={{ fontSize: 12, color: "#666" }}>{connectionStatus === "connected" ? "Live" : "Offline"}</span>
-        </div>
-    );
-
-    return (
-        <QuickUI
-            title="Real-time Orders"
-            formSchema={orderSchema}
-            initialData={orders}
-            tableProps={{
-                title: () => (
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span>Orders</span>
-                        {connectionIndicator}
+    // Custom table columns
+    const columns = [
+        {
+            title: "Product",
+            dataIndex: "name",
+            key: "name",
+            sorter: true,
+            render: (text, record) => (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {record.images?.[0] && <Avatar src={record.images[0].url} size={40} shape="square" />}
+                    <div>
+                        <div style={{ fontWeight: "bold" }}>{text}</div>
+                        <div style={{ fontSize: "12px", color: "#666" }}>SKU: {record.sku}</div>
                     </div>
-                ),
-            }}
-            // Real-time updates disable local CRUD
-            onRecordCreate={() => {
-                message.info("Orders are managed in real-time");
-                return Promise.reject("Real-time mode");
-            }}
-        />
-    );
-};
-```
+                </div>
+            ),
+        },
+        {
+            title: "Category",
+            dataIndex: "category",
+            key: "category",
+            filters: categories.map(cat => ({ text: cat.label, value: cat.value })),
+            render: category => category?.join(" > "),
+        },
+        {
+            title: "Price",
+            dataIndex: "price",
+            key: "price",
+            sorter: true,
+            align: "right",
+            render: (price, record) => (
+                <div>
+                    {record.salePrice ? (
+                        <>
+                            <div style={{ textDecoration: "line-through", color: "#999" }}>${price?.toFixed(2)}</div>
+                            <div style={{ color: "#f50", fontWeight: "bold" }}>${record.salePrice?.toFixed(2)}</div>
+                        </>
+                    ) : (
+                        <div>${price?.toFixed(2)}</div>
+                    )}
+                </div>
+            ),
+        },
+        {
+            title: "Stock",
+            dataIndex: "stock",
+            key: "stock",
+            align: "center",
+            render: (stock, record) => {
+                if (!record.trackInventory) {
+                    return <Tag color="blue">Not Tracked</Tag>;
+                }
 
-## Route-based CRUD with Next.js 15
+                let color = "green";
+                if (stock === 0) color = "red";
+                else if (stock <= record.minStock) color = "orange";
 
-### File Structure
-
-```
-app/
-├── dashboard/
-│   └── users/
-│       ├── page.tsx              # List view
-│       ├── create/
-│       │   └── page.tsx          # Create form
-│       └── [id]/
-│           ├── page.tsx          # View details
-│           └── edit/
-│               └── page.tsx      # Edit form
-```
-
-### Implementation
-
-```tsx
-// app/dashboard/users/UserCRUD.tsx
-'use client';
-
-import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import QuickUI from '@components/common/AppCRUDOperation';
-
-const UserCRUD = () => {
-    const router = useRouter();
-    const pathname = usePathname();
-    const [users, setUsers] = useState([]);
-
-    // Parse current route
-    const pathSegments = pathname.split('/').filter(Boolean);
-    const lastSegment = pathSegments[pathSegments.length - 1];
-    const secondLastSegment = pathSegments[pathSegments.length - 2];
-
-    let currentAction: 'list' | 'create' | 'edit' | 'view' = 'list';
-    let currentRecordId: string | undefined;
-
-    if (lastSegment === 'create') {
-        currentAction = 'create';
-    } else if (lastSegment === 'edit') {
-        currentAction = 'edit';
-        currentRecordId = secondLastSegment;
-    } else if (lastSegment !== 'users' && lastSegment !== 'create') {
-        currentAction = 'view';
-        currentRecordId = lastSegment;
-    }
-
-    // Permission system
-    const checkPermission = (permission: string | string[]): boolean => {
-        const userPerms = getUserPermissions(); // Your auth logic
-        if (Array.isArray(permission)) {
-            return permission.some(p => userPerms.includes(p));
-        }
-        return userPerms.includes(permission);
-    };
-
-    // Form schema
-    const userSchema = {
-        layout: "vertical",
-        sections: [
-            {
-                title: "Personal Information",
-                fields: [
-                    { name: "firstName", label: "First Name", type: "text", required: true },
-                    { name: "lastName", label: "Last Name", type: "text", required: true },
-                    { name: "email", label: "Email", type: "email", required: true, filterable: true },
-                    { name: "phone", label: "Phone", type: "text" }
-                ]
+                return <Tag color={color}>{stock}</Tag>;
             },
-            {
-                title: "Account Settings",
-                fields: [
-                    { name: "role", label: "Role", type: "select",
-                      options: [
-                          { value: "user", label: "User" },
-                          { value: "admin", label: "Administrator" },
-                          { value: "moderator", label: "Moderator" }
-                      ], filterable: true },
-                    { name: "active", label: "Active", type: "switch", defaultValue: true },
-                    { name: "department", label: "Department", type: "select",
-                      options: departments, filterable: true }
-                ]
-            }
-        ]
-    };
+        },
+        {
+            title: "Status",
+            dataIndex: "status",
+            key: "status",
+            filters: [
+                { text: "Active", value: "active" },
+                { text: "Draft", value: "draft" },
+                { text: "Archived", value: "archived" },
+            ],
+            render: status => {
+                const config = {
+                    active: { color: "green", text: "Active" },
+                    draft: { color: "orange", text: "Draft" },
+                    archived: { color: "red", text: "Archived" },
+                };
+                const { color, text } = config[status] || config.draft;
+                return <Tag color={color}>{text}</Tag>;
+            },
+        },
+    ];
 
     return (
         <QuickUI
-            title="User Management"
-            formSchema={userSchema}
-            crudType="route"
-            initialData={users}
-
-            // Route configuration
-            routeConfig={{
-                basePath: "/dashboard/users",
-                createPath: "/dashboard/users/create",
-                editPath: "/dashboard/users/[id]/edit",
-                viewPath: "/dashboard/users/[id]",
-                listPath: "/dashboard/users",
-                paramName: "id"
-            }}
-
-            currentAction={currentAction}
-            currentRecordId={currentRecordId}
-
-            // Permissions
-            permissions={{
-                view: 'users.view',
-                create: 'users.create',
-                edit: ['users.edit', 'users.admin'],
-                delete: 'users.delete',
-                filter: 'users.filter'
-            }}
-            checkPermission={checkPermission}
-
-            // Navigation
-            onNavigate={(path) => router.push(path)}
-
-            // CRUD handlers
-            onRecordCreate={async (userData) => {
-                const response = await fetch('/api/users', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
-                });
-                const newUser = await response.json();
-                setUsers(prev => [...prev, newUser]);
-                return newUser;
-            }}
-
-            onRecordUpdate={async (userData) => {
-                const response = await fetch(`/api/users/${userData.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
-                });
-                const updatedUser = await response.json();
-                setUsers(prev => prev.map(u => u.id === userData.id ? updatedUser : u));
-                return updatedUser;
-            }}
-        );
-};
-
-export default UserCRUD;
-```
-
-### Page Components
-
-```tsx
-// app/dashboard/users/page.tsx
-import UserCRUD from "./UserCRUD";
-
-export default function UsersListPage() {
-    return <UserCRUD />;
-}
-
-export const metadata = {
-    title: "Users | Dashboard",
-    description: "Manage system users and permissions",
-};
-
-// app/dashboard/users/create/page.tsx
-import UserCRUD from "../UserCRUD";
-
-export default function CreateUserPage() {
-    return <UserCRUD />;
-}
-
-// app/dashboard/users/[id]/page.tsx
-import UserCRUD from "../UserCRUD";
-
-interface Props {
-    params: { id: string };
-}
-
-export default function ViewUserPage({ params }: Props) {
-    return <UserCRUD />;
-}
-
-// app/dashboard/users/[id]/edit/page.tsx
-import UserCRUD from "../../UserCRUD";
-
-interface Props {
-    params: { id: string };
-}
-
-export default function EditUserPage({ params }: Props) {
-    return <UserCRUD />;
-}
-```
-
-## Permission System
-
-### Basic Permission Setup
-
-```tsx
-// contexts/PermissionContext.tsx
-import { createContext, useContext } from "react";
-
-interface PermissionContextType {
-    user: User;
-    permissions: string[];
-    roles: string[];
-    checkPermission: (permission: string | string[]) => boolean;
-}
-
-const PermissionContext = createContext<PermissionContextType | null>(null);
-
-export const PermissionProvider = ({ children }: { children: React.ReactNode }) => {
-    const { user } = useAuth(); // Your auth hook
-
-    const checkPermission = (permission: string | string[]): boolean => {
-        if (!user) return false;
-
-        if (Array.isArray(permission)) {
-            return permission.some(p => hasPermission(p, user));
-        }
-
-        return hasPermission(permission, user);
-    };
-
-    return (
-        <PermissionContext.Provider
-            value={{
-                user,
-                permissions: user.permissions || [],
-                roles: user.roles || [],
-                checkPermission,
-            }}
-        >
-            {children}
-        </PermissionContext.Provider>
-    );
-};
-
-export const usePermissions = () => {
-    const context = useContext(PermissionContext);
-    if (!context) throw new Error("usePermissions must be used within PermissionProvider");
-    return context;
-};
-```
-
-### Advanced Permission Patterns
-
-```tsx
-// Complex permission checking
-const AdvancedPermissionExample = () => {
-    const { checkPermission } = usePermissions();
-
-    return (
-        <QuickUI
-            title="Advanced Permissions"
-            formSchema={schema}
-            permissions={{
-                // Multiple permission options (OR logic)
-                view: ["documents.view", "documents.admin", "admin"],
-
-                // Single permission
-                create: "documents.create",
-
-                // Conditional permissions
-                edit: record => {
-                    // Users can edit their own records
-                    if (record.ownerId === getCurrentUser().id) {
-                        return ["documents.edit.own"];
-                    }
-                    // Managers can edit all
-                    return ["documents.edit.all", "manager"];
+            title="Product Management"
+            formSchema={productSchema}
+            initialData={products}
+            tableColumns={columns}
+            crudType="drawer"
+            // Statistics
+            statistics={data => [
+                {
+                    key: "total",
+                    label: "Total Products",
+                    value: data.length,
+                    color: "#1890ff",
+                    icon: <ShopOutlined />,
                 },
-
-                // Time-based permissions
-                delete: record => {
-                    const isRecent = Date.now() - new Date(record.createdAt).getTime() < 24 * 60 * 60 * 1000;
-                    return isRecent ? ["documents.delete.recent"] : ["documents.delete.all"];
+                {
+                    key: "active",
+                    label: "Active Products",
+                    value: data.filter(p => p.status === "active").length,
+                    color: "#52c41a",
+                    icon: <CheckCircleOutlined />,
                 },
-            }}
-            checkPermission={checkPermission}
-            // Permission-aware actions
+                {
+                    key: "lowStock",
+                    label: "Low Stock Alerts",
+                    value: data.filter(p => p.trackInventory && p.stock <= p.minStock).length,
+                    color: "#fa541c",
+                    icon: <AlertOutlined />,
+                },
+                {
+                    key: "value",
+                    label: "Total Value",
+                    value: `$${data.reduce((sum, p) => sum + (p.price * p.stock || 0), 0).toFixed(2)}`,
+                    color: "#722ed1",
+                    icon: <DollarOutlined />,
+                },
+            ]}
+            // Row selection and batch actions
+            rowSelection={true}
+            batchActions={(keys, rows, permissions) => (
+                <Space wrap>
+                    <Button
+                        type="primary"
+                        onClick={() => bulkUpdateStatus(keys, "active")}
+                        disabled={!permissions?.canEdit}
+                    >
+                        Activate Selected ({keys.length})
+                    </Button>
+                    <Button onClick={() => bulkUpdateStatus(keys, "archived")} disabled={!permissions?.canEdit}>
+                        Archive Selected
+                    </Button>
+                    <Button onClick={() => bulkPriceUpdate(keys)} disabled={!permissions?.canEdit}>
+                        Bulk Price Update
+                    </Button>
+                    <Button icon={<ExportOutlined />} onClick={() => exportProducts(rows, "csv")}>
+                        Export CSV
+                    </Button>
+                </Space>
+            )}
+            // Actions
             actions={{
                 view: true,
                 edit: true,
                 delete: true,
                 extraActions: (record, permissions) =>
                     [
-                        permissions?.canEdit && record.status === "draft" && (
-                            <Button key="publish" onClick={() => publishDocument(record)}>
+                        <Button
+                            key="duplicate"
+                            size="small"
+                            icon={<CopyOutlined />}
+                            onClick={() => duplicateProduct(record)}
+                            disabled={!permissions?.canCreate}
+                        >
+                            Duplicate
+                        </Button>,
+                        record.status === "draft" && (
+                            <Button
+                                key="publish"
+                                size="small"
+                                type="primary"
+                                onClick={() => publishProduct(record)}
+                                disabled={!permissions?.canEdit}
+                            >
                                 Publish
-                            </Button>
-                        ),
-                        permissions?.canDelete && (
-                            <Button key="archive" onClick={() => archiveDocument(record)}>
-                                Archive
                             </Button>
                         ),
                     ].filter(Boolean),
             }}
-        />
-    );
-};
-```
+            // CRUD handlers
+            onRecordCreate={async productData => {
+                setLoading(true);
+                try {
+                    const response = await api.products.create(productData);
+                    setProducts(prev => [...prev, response.data]);
+                    message.success("Product created successfully");
+                    return response.data;
+                } catch (error) {
+                    message.error("Failed to create product");
+                    throw error;
+                } finally {
+                    setLoading(false);
+                }
+            }}
+            onRecordUpdate={async productData => {
+                setLoading(true);
+                try {
+                    const response = await api.products.update(productData.id, productData);
+                    setProducts(prev => prev.map(p => (p.id === productData.id ? response.data : p)));
+                    message.success("Product updated successfully");
+                    return response.data;
+                } catch (error) {
+                    message.error("Failed to update product");
+                    throw error;
+                } finally {
+                    setLoading(false);
+                }
+            }}
+            onRecordDelete={async product => {
+                setLoading(true);
+                try {
+                    await api.products.delete(product.id);
+                    setProducts(prev => prev.filter(p => p.id !== product.id));
+                    message.success("Product deleted successfully");
+                } catch (error) {
+                    message.error("Failed to delete product");
+                    throw error;
+                } finally {
+                    setLoading(false);
+                }
+            }}
+            // Advanced filtering
+            onFilter={async (data, filters) => {
+                // Server-side filtering and pagination
+                const params = {
+                    ...filters,
+                    page: filters._pagination?.page || 1,
+                    pageSize: filters._pagination?.pageSize || 10,
+                };
 
-## Performance Optimization
-
-### 1. Large Dataset Handling
-
-```tsx
-// Virtual scrolling for large datasets
-const LargeDatasetExample = () => {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [pagination, setPagination] = useState({ current: 1, pageSize: 50, total: 0 });
-
-    const fetchData = useCallback(async (page = 1, pageSize = 50, filters = {}) => {
-        setLoading(true);
-        try {
-            const response = await api.getData({
-                page,
-                pageSize,
-                filters,
-            });
-            setData(response.data);
-            setPagination({
-                current: page,
-                pageSize,
-                total: response.total,
-            });
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    return (
-        <QuickUI
-            title="Large Dataset"
-            formSchema={schema}
-            initialData={data}
+                const response = await api.products.search(params);
+                return {
+                    data: response.data.products,
+                    total: response.data.total,
+                    current: response.data.page,
+                    pageSize: response.data.pageSize,
+                };
+            }}
+            // Permissions
+            permissions={{
+                view: "products.view",
+                create: "products.create",
+                edit: "products.edit",
+                delete: "products.delete",
+                export: "products.export",
+            }}
+            checkPermission={checkUserPermission}
+            // Table customization
             tableProps={{
                 loading,
+                scroll: { x: 1200 },
                 pagination: {
-                    ...pagination,
                     showSizeChanger: true,
                     showQuickJumper: true,
-                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                    onChange: (page, pageSize) => {
-                        fetchData(page, pageSize);
-                    },
+                    pageSizeOptions: ["10", "25", "50", "100"],
                 },
-                scroll: { y: 400 },
-            }}
-            onFilter={async (_, filters) => {
-                await fetchData(1, pagination.pageSize, filters);
-                return data; // Return current data since we handle filtering server-side
             }}
         />
     );
 };
 ```
 
-### 2. Memoization and Optimization
-
-```tsx
-const OptimizedCRUD = memo(() => {
-    // Memoize expensive calculations
-    const statistics = useMemo(() => calculateStatistics(data), [data]);
-
-    // Memoize callbacks
-    const handleCreate = useCallback(async record => {
-        return await api.create(record);
-    }, []);
-
-    const handleUpdate = useCallback(async record => {
-        return await api.update(record.id, record);
-    }, []);
-
-    // Debounced filter
-    const debouncedFilter = useMemo(
-        () =>
-            debounce(async (data, filters) => {
-                return await api.filter(filters);
-            }, 300),
-        [],
-    );
-
-    return (
-        <QuickUI
-            title="Optimized CRUD"
-            formSchema={memoizedSchema}
-            initialData={data}
-            statistics={statistics}
-            onRecordCreate={handleCreate}
-            onRecordUpdate={handleUpdate}
-            onFilter={debouncedFilter}
-        />
-    );
-});
-```
-
-## Troubleshooting
-
-### Common Issues
-
-#### 1. Redux State Not Updating
-
-**Problem**: Changes don't reflect in the UI
-
-**Solution**:
-
-```tsx
-// Ensure Redux store is properly configured
-const store = configureStore({
-    reducer: {
-        quickUI: quickUIReducer, // Make sure this is included
-    },
-});
-
-// Check that the Provider wraps your app
-<Provider store={store}>
-    <App />
-</Provider>;
-```
-
-#### 2. Form Validation Not Working
-
-**Problem**: Form submits without validation
-
-**Solution**:
-
-```tsx
-// Ensure validation rules are properly defined
-const schema = {
-    fields: [
-        {
-            name: "email",
-            type: "email",
-            required: true,
-            rules: [
-                { required: true, message: "Email is required" },
-                { type: "email", message: "Please enter a valid email" },
-            ],
-        },
-    ],
-};
-```
-
-#### 3. Route Navigation Issues
-
-**Problem**: Navigation doesn't work in route-based CRUD
-
-**Solution**:
-
-```tsx
-// Ensure routeConfig is properly set
-const routeConfig = {
-    basePath: "/users",
-    createPath: "/users/create",     // Must match your file structure
-    editPath: "/users/[id]/edit",    // Use [id] for dynamic segments
-    viewPath: "/users/[id]",
-    listPath: "/users"
-};
-
-// Make sure onNavigate is implemented if using custom navigation
-onNavigate={(path) => router.push(path)}
-```
-
-#### 4. Permissions Not Working
-
-**Problem**: Permission checks always return true/false
-
-**Solution**:
-
-```tsx
-// Ensure checkPermission function is implemented correctly
-const checkPermission = (permission: string | string[]): boolean => {
-    const userPermissions = getCurrentUserPermissions();
-
-    if (Array.isArray(permission)) {
-        return permission.some(p => userPermissions.includes(p));
-    }
-
-    return userPermissions.includes(permission);
-};
-```
-
-### Debug Mode
-
-Enable debug mode to see internal state:
-
-```tsx
-<QuickUI
-    title="Debug Mode"
-    formSchema={schema}
-    // Add this to see internal state in console
-    onDataChange={data => console.log("Data changed:", data)}
-    tableProps={{
-        // Show loading states
-        loading: loading,
-    }}
-/>
-```
-
-## Best Practices
-
-### 1. Schema Design
-
-```tsx
-// ✅ Good: Organized, typed, well-documented
-const userSchema: FormSchema = {
-    layout: "vertical",
-    sections: [
-        {
-            title: "Personal Information",
-            fields: [
-                {
-                    name: "firstName",
-                    label: "First Name",
-                    type: "text",
-                    required: true,
-                    grid: { xs: 24, md: 12 },
-                    rules: [
-                        { required: true, message: "First name is required" },
-                        { min: 2, message: "First name must be at least 2 characters" },
-                    ],
-                },
-            ],
-        },
-    ],
-};
-
-// ❌ Bad: Unorganized, no validation
-const badSchema = {
-    fields: [
-        { name: "name", type: "text" },
-        { name: "email", type: "text" },
-    ],
-};
-```
-
-### 2. Error Handling
-
-```tsx
-// ✅ Good: Comprehensive error handling
-const handleCreate = async (record: any) => {
-    try {
-        const response = await api.users.create(record);
-        message.success("User created successfully");
-        return response;
-    } catch (error) {
-        if (error.status === 409) {
-            message.error("User with this email already exists");
-        } else if (error.status === 422) {
-            message.error("Please check your input data");
-        } else {
-            message.error("An unexpected error occurred");
-        }
-        throw error; // Re-throw to prevent form from closing
-    }
-};
-```
-
-### 3. Performance
-
-```tsx
-// ✅ Good: Memoized and optimized
-const MyComponent = memo(() => {
-    const memoizedSchema = useMemo(() => generateSchema(), []);
-    const memoizedStats = useMemo(() => calculateStats(data), [data]);
-
-    return <QuickUI formSchema={memoizedSchema} statistics={memoizedStats} />;
-});
-
-// ❌ Bad: Creates new objects on every render
-const BadComponent = () => (
-    <QuickUI
-        formSchema={{
-            fields: [{ name: "test", type: "text" }], // New object every render
-        }}
-    />
-);
-```
-
-### 4. Type Safety
-
-```tsx
-// ✅ Good: Strongly typed
-interface User {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: "user" | "admin" | "moderator";
-    active: boolean;
-}
-
-const TypedUserCRUD = () => {
-    const [users, setUsers] = useState<User[]>([]);
-
-    const handleCreate = async (userData: Omit<User, "id">): Promise<User> => {
-        const response = await api.users.create(userData);
-        return response as User;
-    };
-
-    return <QuickUI title="Users" formSchema={userSchema} initialData={users} onRecordCreate={handleCreate} />;
-};
-```
-
-## Migration Guide
-
-### From Version 1.x to 2.x
-
-#### Breaking Changes
-
-1. **Permission system overhaul**
-
-```tsx
-// v1.x
-<QuickUI canEdit={true} canDelete={false} />
-
-// v2.x
-<QuickUI
-    permissions={{
-        edit: 'users.edit',
-        delete: 'users.delete'
-    }}
-    checkPermission={checkPermission}
-/>
-```
-
-2. **Route configuration**
-
-```tsx
-// v1.x
-<QuickUI routeMode="hash" />
-
-// v2.x
-<QuickUI
-    crudType="route"
-    routeConfig={{
-        basePath: "/users",
-        createPath: "/users/create"
-    }}
-/>
-```
-
-#### Migration Steps
-
-1. Update permission props
-2. Replace route configuration
-3. Update form schema if using deprecated fields
-4. Test all CRUD operations
-
-### Upgrading Dependencies
-
-```bash
-# Update to latest versions
-npm update @reduxjs/toolkit react-redux antd
-
-# Check for breaking changes
-npm ls @reduxjs/toolkit
-```
-
----
-
-## Support and Contributing
-
-### Getting Help
-
-- 📚 [Documentation](https://your-docs-url.com)
-- 💬 [Discord Community](https://discord.gg/your-server)
-- 🐛 [GitHub Issues](https://github.com/your-repo/issues)
-- 📧 [Email Support](mailto:support@yourcompany.com)
-
-### Contributing
-
-We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### License
-
-MIT License - see [LICENSE](LICENSE) file for details.
+This comprehensive documentation covers all aspects of the QuickUI component configuration, from basic usage to advanced scenarios with complex forms, permissions, and batch operations.
