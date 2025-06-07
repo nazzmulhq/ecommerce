@@ -306,7 +306,7 @@ export interface FormStep {
 
 export interface FormTab {
     key: string;
-    tab: string;
+    title: string;
     fields: FieldConfig[];
     icon?: React.ReactNode;
     disabled?: boolean;

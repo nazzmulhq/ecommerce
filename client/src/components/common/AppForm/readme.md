@@ -289,7 +289,7 @@ const tabbedFormSchema = {
   tabs: [
     {
       key: "personal",
-      tab: "Personal Info",
+      title: "Personal Info",
       icon: <UserOutlined />,
       fields: [
         // Personal fields...
@@ -297,7 +297,7 @@ const tabbedFormSchema = {
     },
     {
       key: "professional",
-      tab: "Work History",
+      title: "Work History",
       icon: <BriefcaseOutlined />,
       fields: [
         // Professional fields...

@@ -12,6 +12,14 @@
 8. [Statistics Configuration](#statistics-configuration)
 9. [Route Configuration](#route-configuration)
 10. [Advanced Configuration](#advanced-configuration)
+11. [API Integration Examples](#api-integration-examples)
+12. [Real-World Use Cases](#real-world-use-cases)
+13. [Performance Optimization](#performance-optimization)
+14. [Error Handling Patterns](#error-handling-patterns)
+15. [Testing Examples](#testing-examples)
+16. [Responsive & Mobile](#responsive--mobile)
+17. [Integration Patterns](#integration-patterns)
+18. [Best Practices](#best-practices)
 
 ---
 
@@ -1429,5 +1437,924 @@ const contextAwareConfig: QuickUIProps = {
 
         return [...getBaseStatistics(data), ...stats];
     },
+};
+```
+
+---
+
+## API Integration Examples
+
+### 1. Redux Integration
+
+```typescript
+import { useAppDispatch, useAppSelector } from '@hooks/redux';
+import { fetchUsers, createUser, updateUser, deleteUser } from '@store/userSlice';
+
+const ReduxIntegratedExample = () => {
+  const dispatch = useAppDispatch();
+  const { users, loading, error } = useAppSelector(state => state.users);
+
+  useEffect(() => {
+    dispatch(fetchUsers());
+  }, [dispatch]);
+
+  return (
+    <QuickUI
+      title="Redux Users"
+      formSchema={userFormSchema}
+      initialData={users}
+      loading={loading}
+      onRecordCreate={async (record) => {
+        const result = await dispatch(createUser(record)).unwrap();
+        return result;
+      }}
+      onRecordUpdate={async (record) => {
+        const result = await dispatch(updateUser(record)).unwrap();
+        return result;
+      }}
+      onRecordDelete={async (record) => {
+        await dispatch(deleteUser(record.id)).unwrap();
+      }}
+      // Error handling from Redux state
+      onError={(error) => {
+        console.error('CRUD Error:', error);
+      }}
+    />
+  );
+};
+```
+
+### 2. React Query Integration
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+const ReactQueryExample = () => {
+  const queryClient = useQueryClient();
+
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => fetchUsers()
+  });
+
+  const createMutation = useMutation({
+    mutationFn: createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => updateUser(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+
+  return (
+    <QuickUI
+      title="React Query Users"
+      formSchema={userFormSchema}
+      initialData={users || []}
+      loading={isLoading}
+      onRecordCreate={async (record) => {
+        return createMutation.mutateAsync(record);
+      }}
+      onRecordUpdate={async (record) => {
+        return updateMutation.mutateAsync({ id: record.id, data: record });
+      }}
+      onRecordDelete={async (record) => {
+        return deleteMutation.mutateAsync(record.id);
+      }}
+    />
+  );
+};
+```
+
+### 3. Context API Integration
+
+```typescript
+const DataContext = createContext(null);
+
+const DataProvider = ({ children }) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const createRecord = async (record) => {
+    setLoading(true);
+    try {
+      const newRecord = await api.create(record);
+      setData(prev => [...prev, newRecord]);
+      return newRecord;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateRecord = async (record) => {
+    setLoading(true);
+    try {
+      const updatedRecord = await api.update(record.id, record);
+      setData(prev => prev.map(item =>
+        item.id === record.id ? updatedRecord : item
+      ));
+      return updatedRecord;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteRecord = async (record) => {
+    setLoading(true);
+    try {
+      await api.delete(record.id);
+      setData(prev => prev.filter(item => item.id !== record.id));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <DataContext.Provider value={{
+      data, loading, createRecord, updateRecord, deleteRecord
+    }}>
+      {children}
+    </DataContext.Provider>
+  );
+};
+
+const ContextIntegratedExample = () => {
+  const { data, loading, createRecord, updateRecord, deleteRecord } = useContext(DataContext);
+
+  return (
+    <QuickUI
+      title="Context Users"
+      formSchema={userFormSchema}
+      initialData={data}
+      loading={loading}
+      onRecordCreate={createRecord}
+      onRecordUpdate={updateRecord}
+      onRecordDelete={deleteRecord}
+    />
+  );
+};
+```
+
+---
+
+## Real-World Use Cases
+
+### 1. E-commerce Product Management
+
+```typescript
+const productFormSchema: FormSchema = {
+  layout: "vertical",
+  sections: [
+    {
+      title: "Basic Information",
+      fields: [
+        { name: "name", label: "Product Name", type: "text", required: true },
+        { name: "description", label: "Description", type: "textarea", rows: 4 },
+        { name: "price", label: "Price", type: "number", required: true, min: 0 },
+        { name: "sku", label: "SKU", type: "text", required: true },
+        { name: "category", label: "Category", type: "select",
+          options: [
+            { value: "electronics", label: "Electronics" },
+            { value: "clothing", label: "Clothing" },
+            { value: "books", label: "Books" }
+          ]
+        }
+      ]
+    },
+    {
+      title: "Inventory",
+      fields: [
+        { name: "quantity", label: "Quantity", type: "number", required: true, min: 0 },
+        { name: "threshold", label: "Low Stock Threshold", type: "number", min: 0 },
+        { name: "warehouseLocation", label: "Warehouse Location", type: "text" }
+      ]
+    },
+    {
+      title: "Images",
+      fields: [
+        { name: "imageUpload", label: "Product Images", type: "upload", accept: "image/*", multiple: true }
+      ]
+    }
+  ]
+};
+
+const ProductManagement = () => {
+  return (
+    <QuickUI
+      title="Product Management"
+      formSchema={productFormSchema}
+      initialData={productData}
+      onRecordCreate={handleCreateProduct}
+      onRecordUpdate={handleUpdateProduct}
+      onRecordDelete={handleDeleteProduct}
+      tableColumns={productTableColumns}
+      actions={{
+        view: true,
+        edit: true,
+        delete: true,
+        extraActions: (record) => [
+          <Button key="duplicate" size="small" onClick={() => handleDuplicateProduct(record)}>
+            Duplicate
+          </Button>
+        ]
+      }}
+    />
+  );
+};
+```
+
+### 2. Blogging Platform - Post Management
+
+```typescript
+const postFormSchema: FormSchema = {
+  layout: "vertical",
+  sections: [
+    {
+      title: "Post Content",
+      fields: [
+        { name: "title", label: "Title", type: "text", required: true },
+        { name: "slug", label: "Slug", type: "text", required: true },
+        { name: "content", label: "Content", type: "richText", required: true },
+        { name: "excerpt", label: "Excerpt", type: "textarea", rows: 2 },
+        { name: "status", label: "Status", type: "select",
+          options: [
+            { value: "draft", label: "Draft" },
+            { value: "published", label: "Published" },
+            { value: "archived", label: "Archived" }
+          ]
+        }
+      ]
+    },
+    {
+      title: "SEO Settings",
+      fields: [
+        { name: "metaTitle", label: "Meta Title", type: "text" },
+        { name: "metaDescription", label: "Meta Description", type: "textarea", rows: 2 },
+        { name: "keywords", label: "Keywords", type: "text" }
+      ]
+    },
+    {
+      title: "Featured Image",
+      fields: [
+        { name: "featuredImage", label: "Upload Image", type: "upload", accept: "image/*" }
+      ]
+    }
+  ]
+};
+
+const PostManagement = () => {
+  return (
+    <QuickUI
+      title="Post Management"
+      formSchema={postFormSchema}
+      initialData={postData}
+      onRecordCreate={handleCreatePost}
+      onRecordUpdate={handleUpdatePost}
+      onRecordDelete={handleDeletePost}
+      tableColumns={postTableColumns}
+      actions={{
+        view: true,
+        edit: true,
+        delete: true,
+        extraActions: (record) => [
+          <Button key="preview" size="small" onClick={() => handlePreviewPost(record)}>
+            Preview
+          </Button>
+        ]
+      }}
+    />
+  );
+};
+```
+
+---
+
+## Performance Optimization
+
+### 1. Code Splitting and Lazy Loading
+
+```typescript
+const LazyLoadedComponent = React.lazy(() => import('./HeavyComponent'));
+
+const PerformanceOptimizedPage = () => {
+  return (
+    <div>
+      <h1>Welcome to the Performance Optimized Page</h1>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <LazyLoadedComponent />
+      </React.Suspense>
+    </div>
+  );
+};
+```
+
+### 2. Memoization
+
+```typescript
+const MemoizedComponent = React.memo(({ data }) => {
+  // Component that only re-renders if 'data' prop changes
+  return <div>{data.title}</div>;
+});
+
+// Usage
+<MemoizedComponent data={someData} />
+```
+
+### 3. useMemo and useCallback
+
+```typescript
+const ParentComponent = ({ items }) => {
+  const memoizedValue = useMemo(() => computeExpensiveValue(items), [items]);
+  const memoizedCallback = useCallback(() => { handleAction(memoizedValue); }, [memoizedValue]);
+
+  return <ChildComponent onAction={memoizedCallback} />;
+};
+```
+
+---
+
+## Error Handling Patterns
+
+### 1. Try-Catch in Async Functions
+
+```typescript
+const handleSubmit = async values => {
+    try {
+        await api.save(values);
+        message.success("Data saved successfully");
+    } catch (error) {
+        message.error(`Error saving data: ${error.message}`);
+    }
+};
+```
+
+### 2. Global Error Boundary
+
+```typescript
+class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // Log error to an error reporting service
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong. Please try again later.</h1>;
+    }
+
+    return this.props.children;
+  }
+}
+
+// Usage
+<ErrorBoundary>
+  <App />
+</ErrorBoundary>
+```
+
+---
+
+## Testing Examples
+
+### 1. Unit Testing with Jest
+
+```typescript
+test('renders learn react link', () => {
+  const { getByText } = render(<App />);
+  const linkElement = getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+```
+
+### 2. Component Testing with React Testing Library
+
+```typescript
+test('renders header', () => {
+  render(<Header />);
+  expect(screen.getByRole('heading')).toHaveTextContent('Welcome');
+});
+```
+
+### 3. Mocking API Calls
+
+```typescript
+import axios from "axios";
+jest.mock("axios");
+
+test("fetches successfully data from an API", async () => {
+    const data = {
+        /* mock data */
+    };
+    axios.get.mockResolvedValue({ data });
+
+    const result = await fetchData();
+
+    expect(result).toEqual(data);
+});
+```
+
+---
+
+## Responsive & Mobile
+
+### 1. Mobile-First Design
+
+```typescript
+const MobileOptimizedExample = () => {
+  const { isMobile, isTablet } = useBreakpoint();
+
+  return (
+    <QuickUI
+      title="Mobile Orders"
+      crudType={isMobile ? "drawer" : "modal"}
+      formSchema={{
+        layout: isMobile ? "vertical" : "horizontal",
+        labelCol: isMobile ? { span: 24 } : { span: 8 },
+        wrapperCol: isMobile ? { span: 24 } : { span: 16 },
+        fields: [
+          { name: "customer", label: "Customer", type: "input", required: true },
+          { name: "amount", label: "Amount", type: "number", required: true },
+          { name: "status", label: "Status", type: "select",
+            options: statusOptions,
+            // Larger touch targets on mobile
+            size: isMobile ? "large" : "middle"
+          }
+        ]
+      }}
+      tableProps={{
+        size: isMobile ? "small" : "middle",
+        scroll: { x: isMobile ? 600 : undefined },
+        pagination: {
+          pageSize: isMobile ? 5 : 10,
+          showSizeChanger: !isMobile,
+          showQuickJumper: !isMobile,
+          simple: isMobile
+        }
+      }}
+      // Hide complex features on mobile
+      showFilter={!isMobile}
+      showToggleCrudType={!isMobile}
+      // Simplified actions for mobile
+      actions={{
+        view: true,
+        edit: true,
+        delete: !isMobile,
+        extraActions: (record) => isMobile ? [] : [
+          <Button key="share" size="small">Share</Button>
+        ]
+      }}
+      initialData={orderData}
+    />
+  );
+};
+```
+
+### 2. Touch-Friendly Interface
+
+```typescript
+const TouchFriendlyExample = () => {
+  return (
+    <QuickUI
+      title="Touch Interface"
+      formSchema={{
+        fields: [
+          { name: "name", label: "Name", type: "input", size: "large" },
+          { name: "category", label: "Category", type: "select",
+            size: "large",
+            options: categoryOptions
+          },
+          { name: "priority", label: "Priority", type: "radio",
+            // Larger radio buttons for touch
+            buttonStyle: "solid",
+            size: "large",
+            options: [
+              { value: "low", label: "Low" },
+              { value: "medium", label: "Medium" },
+              { value: "high", label: "High" }
+            ]
+          }
+        ]
+      }}
+      tableProps={{
+        // Larger row heights for touch
+        rowClassName: "touch-friendly-row",
+        pagination: {
+          showSizeChanger: false,
+          simple: true,
+          size: "default"
+        }
+      }}
+      // Larger action buttons
+      actions={{
+        view: true,
+        edit: true,
+        delete: true,
+        extraActions: (record) => [
+          <Button key="action" size="large" type="primary">
+            Process
+          </Button>
+        ]
+      }}
+      initialData={data}
+    />
+  );
+};
+```
+
+---
+
+## Integration Patterns
+
+### 1. Redux Integration
+
+```typescript
+import { useAppDispatch, useAppSelector } from '@hooks/redux';
+import { fetchUsers, createUser, updateUser, deleteUser } from '@store/userSlice';
+
+const ReduxIntegratedExample = () => {
+  const dispatch = useAppDispatch();
+  const { users, loading, error } = useAppSelector(state => state.users);
+
+  useEffect(() => {
+    dispatch(fetchUsers());
+  }, [dispatch]);
+
+  return (
+    <QuickUI
+      title="Redux Users"
+      formSchema={userFormSchema}
+      initialData={users}
+      loading={loading}
+      onRecordCreate={async (record) => {
+        const result = await dispatch(createUser(record)).unwrap();
+        return result;
+      }}
+      onRecordUpdate={async (record) => {
+        const result = await dispatch(updateUser(record)).unwrap();
+        return result;
+      }}
+      onRecordDelete={async (record) => {
+        await dispatch(deleteUser(record.id)).unwrap();
+      }}
+      // Error handling from Redux state
+      onError={(error) => {
+        console.error('CRUD Error:', error);
+      }}
+    />
+  );
+};
+```
+
+### 2. React Query Integration
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+const ReactQueryExample = () => {
+  const queryClient = useQueryClient();
+
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => fetchUsers()
+  });
+
+  const createMutation = useMutation({
+    mutationFn: createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => updateUser(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+
+  return (
+    <QuickUI
+      title="React Query Users"
+      formSchema={userFormSchema}
+      initialData={users || []}
+      loading={isLoading}
+      onRecordCreate={async (record) => {
+        return createMutation.mutateAsync(record);
+      }}
+      onRecordUpdate={async (record) => {
+        return updateMutation.mutateAsync({ id: record.id, data: record });
+      }}
+      onRecordDelete={async (record) => {
+        return deleteMutation.mutateAsync(record.id);
+      }}
+    />
+  );
+};
+```
+
+### 3. Context API Integration
+
+```typescript
+const DataContext = createContext(null);
+
+const DataProvider = ({ children }) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const createRecord = async (record) => {
+    setLoading(true);
+    try {
+      const newRecord = await api.create(record);
+      setData(prev => [...prev, newRecord]);
+      return newRecord;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateRecord = async (record) => {
+    setLoading(true);
+    try {
+      const updatedRecord = await api.update(record.id, record);
+      setData(prev => prev.map(item =>
+        item.id === record.id ? updatedRecord : item
+      ));
+      return updatedRecord;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteRecord = async (record) => {
+    setLoading(true);
+    try {
+      await api.delete(record.id);
+      setData(prev => prev.filter(item => item.id !== record.id));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <DataContext.Provider value={{
+      data, loading, createRecord, updateRecord, deleteRecord
+    }}>
+      {children}
+    </DataContext.Provider>
+  );
+};
+
+const ContextIntegratedExample = () => {
+  const { data, loading, createRecord, updateRecord, deleteRecord } = useContext(DataContext);
+
+  return (
+    <QuickUI
+      title="Context Users"
+      formSchema={userFormSchema}
+      initialData={data}
+      loading={loading}
+      onRecordCreate={createRecord}
+      onRecordUpdate={updateRecord}
+      onRecordDelete={deleteRecord}
+    />
+  );
+};
+```
+
+---
+
+## Best Practices
+
+### 1. Form Schema Organization
+
+```typescript
+// Organize schemas by domain
+const schemas = {
+  user: {
+    basic: {
+      fields: [
+        { name: "name", label: "Name", type: "input", required: true },
+        { name: "email", label: "Email", type: "email", required: true }
+      ]
+    },
+    detailed: {
+      sections: [
+        {
+          title: "Personal Information",
+          fields: [
+            { name: "firstName", label: "First Name", type: "input", required: true },
+            { name: "lastName", label: "Last Name", type: "input", required: true },
+            { name: "birthDate", label: "Birth Date", type: "date" }
+          ]
+        },
+        {
+          title: "Contact Information",
+          fields: [
+            { name: "email", label: "Email", type: "email", required: true },
+            { name: "phone", label: "Phone", type: "tel" },
+            { name: "address", label: "Address", type: "textarea" }
+          ]
+        }
+      ]
+    }
+  }
+};
+
+// Use based on context
+const UserManagement = ({ detailed = false }) => {
+  const schema = detailed ? schemas.user.detailed : schemas.user.basic;
+
+  return (
+    <QuickUI
+      title="Users"
+      formSchema={schema}
+      // ... other props
+    />
+  );
+};
+```
+
+### 2. Error Boundary Integration
+
+```typescript
+class CRUDErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('CRUD Error:', error, errorInfo);
+    // Log to error reporting service
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card>
+          <Result
+            status="error"
+            title="Something went wrong"
+            subTitle="There was an error loading the data. Please try again."
+            extra={
+              <Button
+                type="primary"
+                onClick={() => this.setState({ hasError: false, error: null })}
+              >
+                Try Again
+              </Button>
+            }
+          />
+        </Card>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Usage
+<ErrorBoundary>
+  <QuickUI
+    title="Safe Users"
+    formSchema={userFormSchema}
+    // ... other props
+  />
+</ErrorBoundary>
+```
+
+### 3. Performance Monitoring
+
+```typescript
+const PerformanceMonitoredCRUD = () => {
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    renderTime: 0,
+    filterTime: 0,
+    apiCallTime: 0
+  });
+
+  const measurePerformance = useCallback((operation, fn) => {
+    return async (...args) => {
+      const start = performance.now();
+      const result = await fn(...args);
+      const end = performance.now();
+
+      setPerformanceMetrics(prev => ({
+        ...prev,
+        [`${operation}Time`]: end - start
+      }));
+
+      return result;
+    };
+  }, []);
+
+  return (
+    <>
+      {process.env.NODE_ENV === 'development' && (
+        <Card size="small" style={{ marginBottom: 16 }}>
+          <Space>
+            <Text type="secondary">Render: {performanceMetrics.renderTime.toFixed(2)}ms</Text>
+            <Text type="secondary">Filter: {performanceMetrics.filterTime.toFixed(2)}ms</Text>
+            <Text type="secondary">API: {performanceMetrics.apiCallTime.toFixed(2)}ms</Text>
+          </Space>
+        </Card>
+      )}
+
+      <QuickUI
+        title="Performance Monitored"
+        formSchema={userFormSchema}
+        onFilter={measurePerformance('filter', filterUsers)}
+        onRecordCreate={measurePerformance('apiCall', createUser)}
+        onRecordUpdate={measurePerformance('apiCall', updateUser)}
+        onRecordDelete={measurePerformance('apiCall', deleteUser)}
+        initialData={userData}
+      />
+    </>
+  );
+};
+```
+
+### 4. Accessibility Best Practices
+
+```typescript
+const AccessibleCRUDExample = () => {
+  return (
+    <QuickUI
+      title="Accessible User Management"
+      formSchema={{
+        fields: [
+          {
+            name: "name",
+            label: "Full Name",
+            type: "input",
+            required: true,
+            // Accessibility attributes
+            'aria-describedby': 'name-help',
+            'aria-label': 'Enter user full name'
+          },
+          {
+            name: "email",
+            label: "Email Address",
+            type: "email",
+            required: true,
+            'aria-describedby': 'email-help'
+          },
+          {
+            name: "status",
+            label: "Account Status",
+            type: "select",
+            options: [
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" }
+            ],
+            'aria-label': 'Select account status'
+          }
+        ]
+      }}
+      tableProps={{
+        // Accessible table properties
+        'aria-label': 'Users table',
+        'role': 'grid'
+      }}
+      // Screen reader friendly messages
+      successMessages={{
+        create: "User has been successfully created and added to the system",
+        update: "User information has been successfully updated",
+        delete: "User has been successfully removed from the system"
+      }}
+      confirmTexts={{
+        delete: "Are you sure you want to delete this user? This action cannot be undone and will permanently remove the user from the system."
+      }}
+      initialData={userData}
+    />
+  );
 };
 ```

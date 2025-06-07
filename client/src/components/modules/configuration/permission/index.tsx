@@ -121,7 +121,9 @@ const permissionFormSchema: FormSchema = {
             name: "slug",
             label: "Slug",
             type: "input",
-            hideInForm: true,
+            grid: {
+                xs: 12,
+            },
             filterable: true,
             rules: [
                 { required: true, message: "Please enter a unique slug" },
@@ -137,6 +139,9 @@ const permissionFormSchema: FormSchema = {
             label: "Permission Name",
             type: "input",
             filterable: true,
+            grid: {
+                xs: 12,
+            },
             rules: [{ required: true, message: "Please enter the permission name" }],
             placeholder: "Enter permission name",
             tooltip: "The name of the permission, e.g., 'Create User'",
@@ -397,7 +402,7 @@ const PermissionPage = () => {
                     size: "large",
                 }}
                 emptyText="No permissions found. Create your first permission to get started."
-                showToggleCrudType={true}
+                showToggleCrudType={false}
                 showFilter={true}
                 actions={{
                     view: true,

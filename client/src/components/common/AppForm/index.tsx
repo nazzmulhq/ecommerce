@@ -731,6 +731,12 @@ const AppForm: React.FC<AppFormProps> = ({
             hidden: field.hidden || fieldState.hidden,
         };
 
+        // If field is hidden via props, render without Col wrapper
+        if (field.hidden || fieldState.hidden) {
+            const hiddenField = <Form.Item {...formItemProps}>{component}</Form.Item>;
+            return renderField ? renderField(field, hiddenField) : hiddenField;
+        }
+
         const renderedField = (
             <Col {...field.grid} key={field.name}>
                 <Form.Item {...formItemProps}>{component}</Form.Item>
@@ -741,9 +747,29 @@ const AppForm: React.FC<AppFormProps> = ({
         return renderField ? renderField(field, renderedField) : renderedField;
     };
 
+    // Helper function to separate visible and hidden fields
+    const separateFields = (fields: FieldConfig[]) => {
+        const visibleFields: FieldConfig[] = [];
+        const hiddenFields: FieldConfig[] = [];
+
+        fields.forEach(field => {
+            const fieldState = fieldStates[field.name] || {};
+            if (field.hidden || fieldState.hidden) {
+                hiddenFields.push(field);
+            } else {
+                visibleFields.push(field);
+            }
+        });
+
+        return { visibleFields, hiddenFields };
+    };
+
     // Render form sections
     const renderSections = () => {
         if (!schema.sections?.length) return null;
+
+        // Collect all hidden fields from all sections
+        const allHiddenFields: FieldConfig[] = [];
 
         // Convert sections to items format for Collapse
         const items = schema.sections.map((section, index) => {
@@ -752,35 +778,44 @@ const AppForm: React.FC<AppFormProps> = ({
                 a.order !== undefined && b.order !== undefined ? a.order - b.order : 0,
             );
 
+            const { visibleFields, hiddenFields } = separateFields(sortedFields);
+            allHiddenFields.push(...hiddenFields);
+
             return {
                 key: index.toString(),
                 label: section.title,
                 children: (
-                    <>
-                        {section.description && (
-                            <Alert message={section.description} type="info" style={{ marginBottom: 16 }} />
-                        )}
+                    <div>
+                        {section.description && <Text type="secondary">{section.description}</Text>}
                         <Row gutter={24}>
-                            {sortedFields.map(field => renderFieldItem(field, form.getFieldsValue()))}
+                            {visibleFields.map(field => renderFieldItem(field, form.getFieldsValue()))}
                         </Row>
-                    </>
+                    </div>
                 ),
-                extra: section.extra,
             };
         });
 
-        return <Collapse defaultActiveKey={schema.sections.map((_, index) => index.toString())} items={items} />;
+        return (
+            <div>
+                <Collapse items={items} defaultActiveKey={items.map(item => item.key)} />
+                {/* Render all hidden fields outside sections */}
+                {allHiddenFields.map(field => (
+                    <div key={`hidden-${field.name}`}>{renderFieldItem(field, form.getFieldsValue())}</div>
+                ))}
+            </div>
+        );
     };
 
     // Render form steps
     const renderSteps = () => {
         if (!schema.steps?.length) return null;
 
-        const currentStepFields = schema.steps[currentStep]?.fields || [];
-        // Sort fields by order property if available
-        const sortedFields = [...currentStepFields].sort((a, b) =>
+        const currentStepConfig = schema.steps[currentStep];
+        const sortedFields = [...currentStepConfig.fields].sort((a, b) =>
             a.order !== undefined && b.order !== undefined ? a.order - b.order : 0,
         );
+
+        const { visibleFields, hiddenFields } = separateFields(sortedFields);
 
         return (
             <div>
@@ -796,7 +831,12 @@ const AppForm: React.FC<AppFormProps> = ({
                     ))}
                 </Steps>
 
-                <Row gutter={24}>{sortedFields.map(field => renderFieldItem(field, form.getFieldsValue()))}</Row>
+                <Row gutter={24}>{visibleFields.map(field => renderFieldItem(field, form.getFieldsValue()))}</Row>
+
+                {/* Render hidden fields outside Row */}
+                {hiddenFields.map(field => (
+                    <div key={`hidden-${field.name}`}>{renderFieldItem(field, form.getFieldsValue())}</div>
+                ))}
 
                 <div style={{ marginTop: 24, textAlign: "center" }}>
                     <Space>
@@ -832,33 +872,47 @@ const AppForm: React.FC<AppFormProps> = ({
     const renderTabs = () => {
         if (!schema.tabs?.length) return null;
 
-        return (
-            <Tabs activeKey={activeTab || schema.tabs[0]?.key} onChange={setActiveTab} type="card">
-                {schema.tabs.map(tab => {
-                    // Sort fields by order property if available
-                    const sortedFields = [...tab.fields].sort((a, b) =>
-                        a.order !== undefined && b.order !== undefined ? a.order - b.order : 0,
-                    );
+        // Collect all hidden fields from all tabs
+        const allHiddenFields: FieldConfig[] = [];
 
-                    return (
-                        <TabPane
-                            tab={
-                                <span>
-                                    {tab.icon}
-                                    {tab.tab}
-                                </span>
-                            }
-                            key={tab.key}
-                            disabled={tab.disabled}
-                            closable={tab.closable}
-                        >
-                            <Row gutter={24}>
-                                {sortedFields.map(field => renderFieldItem(field, form.getFieldsValue()))}
-                            </Row>
-                        </TabPane>
-                    );
-                })}
-            </Tabs>
+        const tabItems = schema.tabs.map(tab => {
+            // Sort fields by order property if available
+            const sortedFields = [...tab.fields].sort((a, b) =>
+                a.order !== undefined && b.order !== undefined ? a.order - b.order : 0,
+            );
+
+            const { visibleFields, hiddenFields } = separateFields(sortedFields);
+            allHiddenFields.push(...hiddenFields);
+
+            return {
+                key: tab.key,
+                label: (
+                    <span>
+                        {tab.icon}
+                        {tab.title}
+                    </span>
+                ),
+                disabled: tab.disabled,
+                closable: tab.closable,
+                children: (
+                    <Row gutter={24}>{visibleFields.map(field => renderFieldItem(field, form.getFieldsValue()))}</Row>
+                ),
+            };
+        });
+
+        return (
+            <div>
+                <Tabs
+                    activeKey={activeTab || schema.tabs[0]?.key}
+                    onChange={setActiveTab}
+                    type="card"
+                    items={tabItems}
+                />
+                {/* Render all hidden fields outside tabs */}
+                {allHiddenFields.map(field => (
+                    <div key={`hidden-${field.name}`}>{renderFieldItem(field, form.getFieldsValue())}</div>
+                ))}
+            </div>
         );
     };
 
@@ -968,11 +1022,28 @@ const AppForm: React.FC<AppFormProps> = ({
                 ) : schema.sections ? (
                     renderSections()
                 ) : (
-                    <Row gutter={24}>
+                    <div>
+                        <Row gutter={24}>
+                            {schema.fields
+                                ?.sort((a, b) =>
+                                    a.order !== undefined && b.order !== undefined ? a.order - b.order : 0,
+                                )
+                                .filter(field => {
+                                    const fieldState = fieldStates[field.name] || {};
+                                    return !(field.hidden || fieldState.hidden);
+                                })
+                                .map(field => renderFieldItem(field, form.getFieldsValue()))}
+                        </Row>
+                        {/* Render hidden fields outside Row for basic fields */}
                         {schema.fields
-                            ?.sort((a, b) => (a.order !== undefined && b.order !== undefined ? a.order - b.order : 0))
-                            .map(field => renderFieldItem(field, form.getFieldsValue()))}
-                    </Row>
+                            ?.filter(field => {
+                                const fieldState = fieldStates[field.name] || {};
+                                return field.hidden || fieldState.hidden;
+                            })
+                            .map(field => (
+                                <div key={`hidden-${field.name}`}>{renderFieldItem(field, form.getFieldsValue())}</div>
+                            ))}
+                    </div>
                 )}
 
                 {/* Custom footer or default buttons */}

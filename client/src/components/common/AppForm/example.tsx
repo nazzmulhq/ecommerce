@@ -411,7 +411,7 @@ export const tabFormSchema: FormSchema = {
     tabs: [
         {
             key: "personal",
-            tab: "Personal Info",
+            title: "Personal Info",
             icon: <UserOutlined />,
             fields: [
                 {
@@ -452,7 +452,7 @@ export const tabFormSchema: FormSchema = {
         },
         {
             key: "professional",
-            tab: "Professional",
+            title: "Professional",
             icon: <ShopOutlined />,
             fields: [
                 {
@@ -519,7 +519,7 @@ export const tabFormSchema: FormSchema = {
         },
         {
             key: "documents",
-            tab: "Documents",
+            title: "Documents",
             icon: <UploadOutlined />,
             fields: [
                 {

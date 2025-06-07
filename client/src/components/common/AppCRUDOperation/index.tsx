@@ -841,7 +841,7 @@ const QuickUI = ({
         ];
 
         const columns: any = fieldsFromSchema
-            .filter(field => !field.hideInTable && !field.hidden) // Filter out hidden fields
+            .filter(field => !field.hideInTable)
             .map(field => ({
                 title: field.label,
                 dataIndex: field.name,
