@@ -4,7 +4,6 @@ import AppContextProvider from "@lib/context/AppContextProvider";
 import AppLocaleProvider from "@lib/context/AppLocaleProvider";
 import AppThemeProvider from "@lib/context/AppThemeProvider";
 import { GlobalStyles } from "@lib/theme/GlobalStyle";
-import { App } from "antd";
 import "antd/dist/reset.css";
 import { FC, ReactNode } from "react";
 import "simplebar-react/dist/simplebar.min.css";
@@ -27,7 +26,7 @@ const Providers: FC<IProviders> = ({ children }) => {
                             <StyledComponentsRegistry>
                                 <GlobalStyles />
                                 <Normalize />
-                                <App>{children}</App>
+                                {children}
                             </StyledComponentsRegistry>
                         </AntdRegistry>
                     </AppLocaleProvider>

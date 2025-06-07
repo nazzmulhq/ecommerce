@@ -1,6 +1,5 @@
 "use client";
 import {
-    CopyOutlined,
     DeleteOutlined,
     EditOutlined,
     ExportOutlined,
@@ -8,14 +7,13 @@ import {
     SecurityScanOutlined,
     TeamOutlined,
     UnlockOutlined,
-    UserOutlined,
 } from "@ant-design/icons";
 import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
-import { Button, Form, message, Modal, Select, Space, Tag } from "antd";
+import { Button, Form, message, Modal, Select, Space } from "antd";
 import { useState } from "react";
 
-// Define a type for permission records
+// Define a type for permission records matching your API structure
 interface Permission {
     id: string;
     slug: string;
@@ -29,89 +27,81 @@ interface Permission {
     permissions?: string[];
     level: "basic" | "advanced" | "admin";
     isSystemPermission: boolean;
+    // API-specific fields
+    message_id?: number | null;
+    created_by: number;
+    updated_by: number;
+    deleted_by: number;
+    deleted_at: string | null;
+    deleted: number;
 }
 
-// Sample permissions data with comprehensive fields
+// Transform API data to UI format
+const transformApiToUI = (apiData: any): Permission => ({
+    id: String(apiData.id),
+    slug: apiData.slug,
+    name: apiData.name,
+    description: `Permission for ${apiData.name}`,
+    module: "System", // Default module
+    status: apiData.status === 1 ? "active" : "inactive",
+    createdAt: new Date(apiData.created_at).toISOString().split("T")[0],
+    updatedAt: new Date(apiData.updated_at).toISOString().split("T")[0],
+    createdBy: `User ${apiData.created_by}`,
+    level: "basic" as const,
+    isSystemPermission: apiData.created_by === 0, // System created permissions
+    // Keep API fields
+    message_id: apiData.message_id,
+    created_by: apiData.created_by,
+    updated_by: apiData.updated_by,
+    deleted_by: apiData.deleted_by,
+    deleted_at: apiData.deleted_at,
+    deleted: apiData.deleted,
+});
+
+// Sample permissions data based on your API structure
 const initialPermissions: Permission[] = [
-    {
-        id: "1",
-        name: "Create Users",
-        slug: "users.create",
-        description: "Allows creating new user accounts",
-        module: "User Management",
-        status: "active",
-        createdAt: "2024-01-01",
-        updatedAt: "2024-01-15",
-        createdBy: "admin",
-        level: "basic",
-        isSystemPermission: false,
-    },
-    {
-        id: "2",
-        name: "View Users",
-        slug: "users.view",
-        description: "Allows viewing user information",
-        module: "User Management",
-        status: "active",
-        createdAt: "2024-01-01",
-        updatedAt: "2024-01-10",
-        createdBy: "admin",
-        level: "basic",
-        isSystemPermission: true,
-    },
-    {
-        id: "3",
-        name: "Edit Users",
-        slug: "users.edit",
-        description: "Allows editing user information",
-        module: "User Management",
-        status: "active",
-        createdAt: "2024-01-02",
-        updatedAt: "2024-01-12",
-        createdBy: "admin",
-        level: "advanced",
-        isSystemPermission: false,
-    },
-    {
-        id: "4",
-        name: "Delete Users",
-        slug: "users.delete",
-        description: "Allows deleting user accounts",
-        module: "User Management",
-        status: "inactive",
-        createdAt: "2024-01-03",
-        updatedAt: "2024-01-14",
-        createdBy: "admin",
-        level: "admin",
-        isSystemPermission: false,
-    },
-    {
-        id: "5",
-        name: "Manage Roles",
-        slug: "roles.manage",
-        description: "Full access to role management",
-        module: "Role Management",
-        status: "active",
-        createdAt: "2024-01-05",
-        updatedAt: "2024-01-20",
-        createdBy: "superadmin",
-        level: "admin",
-        isSystemPermission: true,
-    },
-    // Add more sample data...
-    ...Array.from({ length: 15 }, (_, i) => ({
-        id: `${i + 6}`,
-        name: `Permission ${i + 6}`,
-        slug: `module${Math.floor(i / 3)}.permission${i + 6}`,
-        description: `Description for permission ${i + 6}`,
-        module: ["User Management", "Role Management", "System", "Reports", "Settings"][Math.floor(i / 3)],
-        status: ["active", "inactive", "pending"][i % 3] as "active" | "inactive" | "pending",
-        createdAt: `2024-01-${String(i + 10).padStart(2, "0")}`,
-        updatedAt: `2024-01-${String(i + 15).padStart(2, "0")}`,
-        createdBy: ["admin", "superadmin", "manager"][i % 3],
-        level: ["basic", "advanced", "admin"][i % 3] as "basic" | "advanced" | "admin",
-        isSystemPermission: i % 4 === 0,
-    })),
+    transformApiToUI({
+        id: 1,
+        slug: "create",
+        name: "no-permission-required",
+        message_id: null,
+        status: 1,
+        created_by: 0,
+        updated_by: 1,
+        deleted_by: 0,
+        created_at: "2025-05-02T18:22:52.489Z",
+        updated_at: "2025-05-02T18:24:18.000Z",
+        deleted_at: null,
+        deleted: 0,
+    }),
+    transformApiToUI({
+        id: 2,
+        slug: "read",
+        name: "view-permission-required",
+        message_id: null,
+        status: 1,
+        created_by: 1,
+        updated_by: 1,
+        deleted_by: 0,
+        created_at: "2025-05-02T18:22:52.489Z",
+        updated_at: "2025-05-02T18:24:18.000Z",
+        deleted_at: null,
+        deleted: 0,
+    }),
+    transformApiToUI({
+        id: 3,
+        slug: "update",
+        name: "edit-permission-required",
+        message_id: null,
+        status: 0,
+        created_by: 1,
+        updated_by: 1,
+        deleted_by: 0,
+        created_at: "2025-05-02T18:22:52.489Z",
+        updated_at: "2025-05-02T18:24:18.000Z",
+        deleted_at: null,
+        deleted: 0,
+    }),
 ];
 
 // Comprehensive form schema demonstrating all field types and configurations
@@ -119,163 +109,37 @@ const permissionFormSchema: FormSchema = {
     layout: "vertical",
     size: "middle",
     // Using tabs to organize complex forms
-    tabs: [
+    fields: [
         {
-            key: "basic",
-            title: "Basic Information",
-            icon: "InfoCircleOutlined",
-            fields: [
-                {
-                    name: "id",
-                    label: "ID",
-                    type: "text",
-                    hidden: true, // Hidden fields won't show in table or form
-                },
-                {
-                    name: "name",
-                    label: "Permission Name",
-                    type: "text",
-                    required: true,
-                    placeholder: "Enter permission name",
-                    grid: { xs: 24, sm: 12 },
-                    filterable: true, // Will appear in filter form
-                    // Will be sortable in table
-                    rules: [
-                        { required: true, message: "Permission name is required" },
-                        { min: 3, message: "Name must be at least 3 characters" },
-                        { max: 100, message: "Name cannot exceed 100 characters" },
-                    ],
-                },
-                {
-                    name: "slug",
-                    label: "Permission Slug",
-                    type: "text",
-                    required: true,
-                    placeholder: "e.g., users.create",
-                    grid: { xs: 24, sm: 12 },
-                    filterable: true,
-
-                    rules: [
-                        { required: true, message: "Slug is required" },
-                        {
-                            pattern: /^[a-z0-9._-]+$/,
-                            message: "Slug can only contain lowercase letters, numbers, dots, hyphens and underscores",
-                        },
-                    ],
-                },
-                {
-                    name: "description",
-                    label: "Description",
-                    type: "input.text_area",
-                    placeholder: "Describe what this permission allows",
-                    grid: { xs: 24 },
-                    props: {
-                        rows: 3,
-                        maxLength: 500,
-                        showCount: true,
-                    },
-                },
-                {
-                    name: "module",
-                    label: "Module",
-                    type: "select",
-                    required: true,
-                    filterable: true,
-
-                    grid: { xs: 24, sm: 12 },
-                    options: [
-                        { value: "User Management", label: "User Management" },
-                        { value: "Role Management", label: "Role Management" },
-                        { value: "System", label: "System" },
-                        { value: "Reports", label: "Reports" },
-                        { value: "Settings", label: "Settings" },
-                    ],
-                    props: {
-                        showSearch: true,
-                        allowClear: true,
-                        placeholder: "Select module",
-                    },
-                },
-                {
-                    name: "level",
-                    label: "Permission Level",
-                    type: "radio",
-                    required: true,
-                    filterable: true,
-                    grid: { xs: 24, sm: 12 },
-                    options: [
-                        { value: "basic", label: "Basic" },
-                        { value: "advanced", label: "Advanced" },
-                        { value: "admin", label: "Admin" },
-                    ],
-                    defaultValue: "basic",
-                },
-            ],
+            name: "id",
+            label: "Permission ID",
+            type: "input",
+            hidden: true,
+            hideInTable: true,
         },
         {
-            key: "settings",
-            title: "Settings",
-            icon: "SettingOutlined",
-            fields: [
+            name: "slug",
+            label: "Slug",
+            type: "input",
+            hideInForm: true,
+            filterable: true,
+            rules: [
+                { required: true, message: "Please enter a unique slug" },
                 {
-                    name: "status",
-                    label: "Status",
-                    type: "select",
-                    required: true,
-                    filterable: true,
-
-                    grid: { xs: 24, sm: 12 },
-                    options: [
-                        { value: "active", label: "Active" },
-                        { value: "inactive", label: "Inactive" },
-                        { value: "pending", label: "Pending" },
-                    ],
-                    defaultValue: "active",
-                    render: (value: any) => {
-                        const colors = { active: "green", inactive: "red", pending: "orange" };
-                        return <Tag color={colors[value as keyof typeof colors]}>{value?.toUpperCase()}</Tag>;
-                    },
-                },
-                {
-                    name: "isSystemPermission",
-                    label: "System Permission",
-                    type: "switch",
-                    grid: { xs: 24, sm: 12 },
-                    defaultValue: false,
-                    props: {
-                        checkedChildren: "Yes",
-                        unCheckedChildren: "No",
-                    },
-                    render: (value: any) => (
-                        <Tag color={value ? "blue" : "default"} icon={value ? <LockOutlined /> : <UnlockOutlined />}>
-                            {value ? "System" : "Custom"}
-                        </Tag>
-                    ),
-                },
-                {
-                    name: "createdBy",
-                    label: "Created By",
-                    type: "select",
-                    disabled: true, // Non-editable field
-                    grid: { xs: 24, sm: 12 },
-                    filterable: true,
-                    options: [
-                        { value: "admin", label: "Admin" },
-                        { value: "superadmin", label: "Super Admin" },
-                        { value: "manager", label: "Manager" },
-                    ],
-                },
-                {
-                    name: "createdAt",
-                    label: "Created Date",
-                    type: "date_picker",
-                    disabled: true,
-                    grid: { xs: 24, sm: 12 },
-                    props: {
-                        format: "YYYY-MM-DD",
-                    },
+                    pattern: /^[a-z0-9_-]+$/,
+                    message: "Slug must be lowercase and can contain letters, numbers, underscores, and hyphens",
                 },
             ],
+            placeholder: "Enter unique slug (e.g., create_user)",
+        },
+        {
+            name: "name",
+            label: "Permission Name",
+            type: "input",
+            filterable: true,
+            rules: [{ required: true, message: "Please enter the permission name" }],
+            placeholder: "Enter permission name",
+            tooltip: "The name of the permission, e.g., 'Create User'",
         },
     ],
     validation: {
@@ -283,105 +147,6 @@ const permissionFormSchema: FormSchema = {
         scrollToError: true,
     },
 };
-
-// Custom table columns demonstrating advanced rendering
-const customTableColumns = [
-    {
-        title: "Permission Details",
-        dataIndex: "name",
-        key: "name",
-        sorter: true,
-        width: 300,
-        render: (text: string, record: Permission) => (
-            <div>
-                <div style={{ fontWeight: "bold", fontSize: "14px" }}>{text}</div>
-                <div style={{ color: "#666", fontSize: "12px" }}>{record.slug}</div>
-                {record.description && (
-                    <div style={{ color: "#999", fontSize: "11px", marginTop: 2 }}>
-                        {record.description.length > 50
-                            ? `${record.description.substring(0, 50)}...`
-                            : record.description}
-                    </div>
-                )}
-            </div>
-        ),
-    },
-    {
-        title: "Module",
-        dataIndex: "module",
-        key: "module",
-        sorter: true,
-        filters: [
-            { text: "User Management", value: "User Management" },
-            { text: "Role Management", value: "Role Management" },
-            { text: "System", value: "System" },
-            { text: "Reports", value: "Reports" },
-            { text: "Settings", value: "Settings" },
-        ],
-        render: (module: string) => <Tag color="blue">{module}</Tag>,
-    },
-    {
-        title: "Level",
-        dataIndex: "level",
-        key: "level",
-        sorter: true,
-        filters: [
-            { text: "Basic", value: "basic" },
-            { text: "Advanced", value: "advanced" },
-            { text: "Admin", value: "admin" },
-        ],
-        render: (level: string) => {
-            const colors = { basic: "green", advanced: "orange", admin: "red" };
-            const icons = { basic: <UserOutlined />, advanced: <TeamOutlined />, admin: <SecurityScanOutlined /> };
-            return (
-                <Tag color={colors[level as keyof typeof colors]} icon={icons[level as keyof typeof icons]}>
-                    {level?.toUpperCase()}
-                </Tag>
-            );
-        },
-    },
-    {
-        title: "Status",
-        dataIndex: "status",
-        key: "status",
-        sorter: true,
-        filters: [
-            { text: "Active", value: "active" },
-            { text: "Inactive", value: "inactive" },
-            { text: "Pending", value: "pending" },
-        ],
-        render: (status: string) => {
-            const colors = { active: "green", inactive: "red", pending: "orange" };
-            return <Tag color={colors[status as keyof typeof colors]}>{status?.toUpperCase()}</Tag>;
-        },
-    },
-    {
-        title: "Type",
-        dataIndex: "isSystemPermission",
-        key: "isSystemPermission",
-        filters: [
-            { text: "System", value: true },
-            { text: "Custom", value: false },
-        ],
-        render: (isSystem: boolean) => (
-            <Tag color={isSystem ? "blue" : "default"} icon={isSystem ? <LockOutlined /> : <UnlockOutlined />}>
-                {isSystem ? "System" : "Custom"}
-            </Tag>
-        ),
-    },
-    {
-        title: "Created",
-        dataIndex: "createdAt",
-        key: "createdAt",
-        sorter: true,
-        render: (date: string, record: Permission) => (
-            <div>
-                <div>{date}</div>
-                <div style={{ fontSize: "11px", color: "#666" }}>by {record.createdBy}</div>
-            </div>
-        ),
-    },
-];
 
 const PermissionPage = () => {
     const [permissions, setPermissions] = useState<Permission[]>(initialPermissions);
@@ -391,11 +156,10 @@ const PermissionPage = () => {
     // Simulate permission checking
     const checkPermission = (permission: string | string[]): boolean => {
         console.log("Checking permission:", permission);
-        // For demo purposes, assume all permissions are granted
         return true;
     };
 
-    // CRUD Handlers with detailed API simulation
+    // CRUD Handlers for API integration
     const handleCreate = async (record: Partial<Permission>): Promise<Permission> => {
         console.log("Creating permission:", record);
 
@@ -408,13 +172,26 @@ const PermissionPage = () => {
         // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const newPermission: Permission = {
+        // Transform to API format for creation
+        const apiData = {
+            id: Date.now(),
+            slug: record.slug,
+            name: record.name,
+            message_id: record.message_id || null,
+            status: record.status === "active" ? 1 : 0,
+            created_by: 1, // Current user
+            updated_by: 1,
+            deleted_by: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            deleted_at: null,
+            deleted: 0,
+        };
+
+        const newPermission = transformApiToUI({
+            ...apiData,
             ...record,
-            id: Date.now().toString(),
-            createdAt: new Date().toISOString().split("T")[0],
-            updatedAt: new Date().toISOString().split("T")[0],
-            createdBy: "current-user",
-        } as Permission;
+        });
 
         setPermissions(prev => [...prev, newPermission]);
         return newPermission;
@@ -423,44 +200,40 @@ const PermissionPage = () => {
     const handleUpdate = async (record: Permission): Promise<Permission> => {
         console.log("Updating permission:", record);
 
-        // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 800));
 
-        const updatedPermission = {
+        const updatedRecord = {
             ...record,
             updatedAt: new Date().toISOString().split("T")[0],
+            updated_by: 1, // Current user
         };
 
-        setPermissions(prev => prev.map(item => (item.id === record.id ? updatedPermission : item)));
-        return updatedPermission;
+        setPermissions(prev => prev.map(item => (item.id === record.id ? updatedRecord : item)));
+        return updatedRecord;
     };
 
     const handleDelete = async (record: Permission): Promise<Permission> => {
         console.log("Deleting permission:", record);
 
-        // Simulate API validation
         if (record.isSystemPermission) {
             throw new Error("Cannot delete system permissions");
         }
 
-        // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 500));
 
         setPermissions(prev => prev.filter(item => item.id !== record.id));
         return record;
     };
 
-    // Advanced filtering with server-side simulation
+    // Enhanced filtering with API data structure
     const handleFilter = async (data: Permission[], filters: Record<string, any>): Promise<any> => {
         console.log("Applying filters:", filters);
 
-        // Simulate server-side filtering with pagination
         let filteredData = [...data];
 
-        // Apply filters
         Object.entries(filters).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== "") {
-                if (key === "_pagination") return; // Skip pagination meta
+                if (key === "_pagination") return;
 
                 filteredData = filteredData.filter(item => {
                     const itemValue = item[key as keyof Permission];
@@ -478,10 +251,8 @@ const PermissionPage = () => {
         const startIndex = (pagination.page - 1) * pagination.pageSize;
         const endIndex = startIndex + pagination.pageSize;
 
-        // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 300));
 
-        // Return paginated response format
         return {
             data: filteredData.slice(startIndex, endIndex),
             total: filteredData.length,
@@ -583,7 +354,8 @@ const PermissionPage = () => {
             ...record,
             name: `${record.name} (Copy)`,
             slug: `${record.slug}_copy_${Date.now()}`,
-            isSystemPermission: false, // Duplicates are always custom
+            isSystemPermission: false,
+            message_id: null, // Reset for duplicated
         };
 
         await handleCreate(duplicated);
@@ -591,28 +363,24 @@ const PermissionPage = () => {
     };
 
     return (
-        <div style={{ padding: "24px" }}>
+        <div>
             <QuickUI
-                // === BASIC CONFIGURATION ===
                 title="Permission Management"
                 formSchema={permissionFormSchema}
-                crudType="modal" // Options: "modal" | "drawer" | "page" | "route"
+                crudType="modal"
                 icon="AiOutlineSecurityScan"
                 initialData={permissions}
-                // === DATA MANAGEMENT ===
                 onDataChange={data => {
                     console.log("Data changed:", data.length, "items");
                 }}
                 onRecordView={record => {
                     console.log("Viewing record:", record.name);
-                    message.info(`Viewing permission: ${record.name}`);
+                    // message.info(`Viewing permission: ${record.name}`);
                 }}
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
                 onRecordDelete={handleDelete}
                 onFilter={handleFilter}
-                // === UI CUSTOMIZATION ===
-                tableColumns={customTableColumns}
                 tableProps={{
                     bordered: true,
                     size: "middle",
@@ -629,91 +397,13 @@ const PermissionPage = () => {
                     size: "large",
                 }}
                 emptyText="No permissions found. Create your first permission to get started."
-                showToggleCrudType={true} // Allow switching between modal/drawer/page modes
+                showToggleCrudType={true}
                 showFilter={true}
-                // === ACTIONS CONFIGURATION ===
                 actions={{
                     view: true,
                     edit: true,
                     delete: true,
-                    extraActions: (record, permissions) => {
-                        const actions = [];
-
-                        // Duplicate action for all records
-                        actions.push(
-                            <Button
-                                key="duplicate"
-                                size="small"
-                                icon={<CopyOutlined />}
-                                onClick={() => duplicatePermission(record)}
-                                disabled={!permissions?.canCreate}
-                                title="Duplicate Permission"
-                            >
-                                Duplicate
-                            </Button>,
-                        );
-
-                        // Status toggle for non-system permissions
-                        if (!record.isSystemPermission) {
-                            const isActive = record.status === "active";
-                            actions.push(
-                                <Button
-                                    key="toggle-status"
-                                    size="small"
-                                    type={isActive ? "default" : "primary"}
-                                    icon={isActive ? <LockOutlined /> : <UnlockOutlined />}
-                                    onClick={async () => {
-                                        const newStatus = isActive ? "inactive" : "active";
-                                        await handleUpdate({ ...record, status: newStatus });
-                                        message.success(
-                                            `Permission ${newStatus === "active" ? "activated" : "deactivated"}`,
-                                        );
-                                    }}
-                                    disabled={!permissions?.canEdit}
-                                >
-                                    {isActive ? "Deactivate" : "Activate"}
-                                </Button>,
-                            );
-                        }
-
-                        return actions;
-                    },
                 }}
-                // === FILTERING ===
-                filterFields={[
-                    { name: "name", label: "Name", type: "text" },
-                    {
-                        name: "module",
-                        label: "Module",
-                        type: "select",
-                        options: [
-                            { value: "User Management", label: "User Management" },
-                            { value: "Role Management", label: "Role Management" },
-                            { value: "System", label: "System" },
-                        ],
-                    },
-                    {
-                        name: "status",
-                        label: "Status",
-                        type: "select",
-                        options: [
-                            { value: "active", label: "Active" },
-                            { value: "inactive", label: "Inactive" },
-                            { value: "pending", label: "Pending" },
-                        ],
-                    },
-                    {
-                        name: "level",
-                        label: "Level",
-                        type: "select",
-                        options: [
-                            { value: "basic", label: "Basic" },
-                            { value: "advanced", label: "Advanced" },
-                            { value: "admin", label: "Admin" },
-                        ],
-                    },
-                ]}
-                // === MESSAGES ===
                 confirmTexts={{
                     delete: "Are you sure you want to delete this permission? This action cannot be undone.",
                     create: "Create Permission",
@@ -724,7 +414,6 @@ const PermissionPage = () => {
                     update: "Permission updated successfully!",
                     delete: "Permission deleted successfully!",
                 }}
-                // === STATISTICS ===
                 statistics={data => [
                     {
                         key: "total",
@@ -748,14 +437,13 @@ const PermissionPage = () => {
                         icon: <LockOutlined />,
                     },
                     {
-                        key: "admin-level",
-                        label: "Admin Level",
-                        value: data.filter(p => p.level === "admin").length,
+                        key: "custom",
+                        label: "Custom Permissions",
+                        value: data.filter(p => !p.isSystemPermission).length,
                         color: "#fa541c",
                         icon: <TeamOutlined />,
                     },
                 ]}
-                // === BATCH ACTIONS ===
                 rowSelection={true}
                 batchActions={(selectedRowKeys, selectedRows, permissions) => {
                     const hasActivePermissions = selectedRows.some(row => row.status === "active");
@@ -764,7 +452,6 @@ const PermissionPage = () => {
 
                     return (
                         <Space wrap>
-                            {/* Status Actions */}
                             {permissions?.canEdit && hasInactivePermissions && (
                                 <Button
                                     type="primary"
@@ -784,19 +471,16 @@ const PermissionPage = () => {
                                 </Button>
                             )}
 
-                            {/* Bulk Edit */}
                             {permissions?.canEdit && (
                                 <Button icon={<EditOutlined />} onClick={() => handleBulkEdit(selectedRowKeys)}>
                                     Bulk Edit
                                 </Button>
                             )}
 
-                            {/* Export Actions */}
                             <Button icon={<ExportOutlined />} onClick={() => handleExport(selectedRows, "csv")}>
                                 Export CSV
                             </Button>
 
-                            {/* Delete Action (only for non-system permissions) */}
                             {permissions?.canDelete && hasNonSystemPermissions && (
                                 <Button
                                     danger
@@ -815,13 +499,10 @@ const PermissionPage = () => {
                         </Space>
                     );
                 }}
-                // === ADVANCED FORM CONFIGURATION ===
                 validateOnMount={false}
                 preserveFormData={false}
                 beforeFormSubmit={async values => {
                     console.log("Before form submit:", values);
-
-                    // Transform data before submission
                     return {
                         ...values,
                         slug: values.slug?.toLowerCase().replace(/\s+/g, "_"),
@@ -830,7 +511,6 @@ const PermissionPage = () => {
                 }}
                 afterFormSubmit={(values, result) => {
                     console.log("After form submit:", { values, result });
-                    // Could trigger additional actions like audit logging
                 }}
                 renderExtraFormActions={(form, editingRecord, permissions) => (
                     <Space>
@@ -849,7 +529,6 @@ const PermissionPage = () => {
                         )}
                     </Space>
                 )}
-                // === PERMISSIONS ===
                 permissions={{
                     view: "permissions.view",
                     create: "permissions.create",
@@ -859,7 +538,6 @@ const PermissionPage = () => {
                     export: "permissions.export",
                 }}
                 checkPermission={checkPermission}
-                // === ROUTE CONFIGURATION (for route-based CRUD) ===
                 routeConfig={{
                     basePath: "/admin/permissions",
                     createPath: "/admin/permissions/create",
@@ -868,11 +546,9 @@ const PermissionPage = () => {
                     listPath: "/admin/permissions",
                     paramName: "id",
                 }}
-                currentAction="list" // For route-based: "list" | "create" | "edit" | "view"
-                // currentRecordId="1" // For route-based edit/view
+                currentAction="list"
                 onNavigate={(path, params) => {
                     console.log("Navigate to:", path, params);
-                    // Custom navigation logic
                 }}
             />
 

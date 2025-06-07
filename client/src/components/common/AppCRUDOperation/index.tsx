@@ -27,6 +27,7 @@ import {
 import { AppDispatch, RootState } from "@lib/redux/store"; // Adjust import path as needed
 import { TIconName } from "@src/types/iconName";
 import {
+    App,
     Button,
     Card,
     Col,
@@ -910,6 +911,7 @@ const QuickUI = ({
 
     // Render filter form
     const renderFilterForm = () => {
+        // console.log("Rendering filter form with fields:", processedFilterFields);
         if (!showFilter || !hasFilterFields || processedFilterFields.length === 0) return null;
 
         const activeFilterCount = Object.keys(filters).length;
@@ -1330,7 +1332,7 @@ const QuickUI = ({
     };
 
     return (
-        <div>
+        <App>
             {renderContent()}
 
             {/* Modal Form */}
@@ -1451,7 +1453,7 @@ const QuickUI = ({
             >
                 {renderDetailView()}
             </Drawer>
-        </div>
+        </App>
     );
 };
 
