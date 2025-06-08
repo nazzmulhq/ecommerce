@@ -1,16 +1,6 @@
 "use client";
-import {
-    DeleteOutlined,
-    EditOutlined,
-    ExportOutlined,
-    LockOutlined,
-    SecurityScanOutlined,
-    TeamOutlined,
-    UnlockOutlined,
-} from "@ant-design/icons";
 import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
-import { Button, Form, message, Modal, Select, Space } from "antd";
 import { useState } from "react";
 
 // Define a type for permission records matching your API structure
@@ -155,14 +145,6 @@ const permissionFormSchema: FormSchema = {
 
 const PermissionPage = () => {
     const [permissions, setPermissions] = useState<Permission[]>(initialPermissions);
-    const [bulkEditModalVisible, setBulkEditModalVisible] = useState(false);
-    const [bulkEditForm] = Form.useForm();
-
-    // Simulate permission checking
-    const checkPermission = (permission: string | string[]): boolean => {
-        console.log("Checking permission:", permission);
-        return true;
-    };
 
     // CRUD Handlers for API integration
     const handleCreate = async (record: Partial<Permission>): Promise<Permission> => {
@@ -266,107 +248,6 @@ const PermissionPage = () => {
         };
     };
 
-    // Bulk operations
-    const handleBulkStatusUpdate = async (selectedKeys: string[], status: string) => {
-        console.log("Bulk status update:", selectedKeys, status);
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        setPermissions(prev =>
-            prev.map(permission =>
-                selectedKeys.includes(permission.id)
-                    ? {
-                          ...permission,
-                          status: status as Permission["status"],
-                          updatedAt: new Date().toISOString().split("T")[0],
-                      }
-                    : permission,
-            ),
-        );
-
-        message.success(`${selectedKeys.length} permissions updated to ${status}`);
-    };
-
-    const handleBulkEdit = (selectedKeys: string[]) => {
-        setBulkEditModalVisible(true);
-        // Pre-fill form with common values from selected items
-        const selectedItems = permissions.filter(p => selectedKeys.includes(p.id));
-        const commonModule = selectedItems.every(item => item.module === selectedItems[0].module)
-            ? selectedItems[0].module
-            : undefined;
-
-        bulkEditForm.setFieldsValue({
-            module: commonModule,
-        });
-    };
-
-    const handleBulkEditSubmit = async (values: any) => {
-        // Get currently selected rows (you'd need to track this in real implementation)
-        const selectedKeys = ["1", "2"]; // Example
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        setPermissions(prev =>
-            prev.map(permission =>
-                selectedKeys.includes(permission.id)
-                    ? {
-                          ...permission,
-                          ...values,
-                          updatedAt: new Date().toISOString().split("T")[0],
-                      }
-                    : permission,
-            ),
-        );
-
-        setBulkEditModalVisible(false);
-        bulkEditForm.resetFields();
-        message.success(`${selectedKeys.length} permissions updated`);
-    };
-
-    const handleExport = (selectedRows: Permission[], format: string) => {
-        console.log("Exporting data:", selectedRows, format);
-
-        // Simulate export functionality
-        const dataToExport = selectedRows.map(row => ({
-            Name: row.name,
-            Slug: row.slug,
-            Module: row.module,
-            Status: row.status,
-            Level: row.level,
-            Created: row.createdAt,
-        }));
-
-        if (format === "csv") {
-            // Simple CSV generation for demo
-            const csv = [
-                Object.keys(dataToExport[0]).join(","),
-                ...dataToExport.map(row => Object.values(row).join(",")),
-            ].join("\n");
-
-            const blob = new Blob([csv], { type: "text/csv" });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `permissions-${new Date().toISOString().split("T")[0]}.csv`;
-            a.click();
-        }
-
-        message.success(`Exported ${selectedRows.length} records as ${format.toUpperCase()}`);
-    };
-
-    const duplicatePermission = async (record: Permission) => {
-        const duplicated: Partial<Permission> = {
-            ...record,
-            name: `${record.name} (Copy)`,
-            slug: `${record.slug}_copy_${Date.now()}`,
-            isSystemPermission: false,
-            message_id: null, // Reset for duplicated
-        };
-
-        await handleCreate(duplicated);
-        message.success("Permission duplicated successfully");
-    };
-
     return (
         <div>
             <QuickUI
@@ -375,13 +256,6 @@ const PermissionPage = () => {
                 crudType="modal"
                 icon="AiOutlineSecurityScan"
                 initialData={permissions}
-                onDataChange={data => {
-                    console.log("Data changed:", data.length, "items");
-                }}
-                onRecordView={record => {
-                    console.log("Viewing record:", record.name);
-                    // Remove message.info as it can interfere with navigation
-                }}
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
                 onRecordDelete={handleDelete}
@@ -419,180 +293,10 @@ const PermissionPage = () => {
                     update: "Permission updated successfully!",
                     delete: "Permission deleted successfully!",
                 }}
-                statistics={data => [
-                    {
-                        key: "total",
-                        label: "Total Permissions",
-                        value: data.length,
-                        color: "#1890ff",
-                        icon: <SecurityScanOutlined />,
-                    },
-                    {
-                        key: "active",
-                        label: "Active Permissions",
-                        value: data.filter(p => p.status === "active").length,
-                        color: "#52c41a",
-                        icon: <UnlockOutlined />,
-                    },
-                    {
-                        key: "system",
-                        label: "System Permissions",
-                        value: data.filter(p => p.isSystemPermission).length,
-                        color: "#722ed1",
-                        icon: <LockOutlined />,
-                    },
-                    {
-                        key: "custom",
-                        label: "Custom Permissions",
-                        value: data.filter(p => !p.isSystemPermission).length,
-                        color: "#fa541c",
-                        icon: <TeamOutlined />,
-                    },
-                ]}
-                rowSelection={true}
-                batchActions={(selectedRowKeys, selectedRows, permissions) => {
-                    const hasActivePermissions = selectedRows.some(row => row.status === "active");
-                    const hasInactivePermissions = selectedRows.some(row => row.status === "inactive");
-                    const hasNonSystemPermissions = selectedRows.some(row => !row.isSystemPermission);
-
-                    return (
-                        <Space wrap>
-                            {permissions?.canEdit && hasInactivePermissions && (
-                                <Button
-                                    type="primary"
-                                    icon={<UnlockOutlined />}
-                                    onClick={() => handleBulkStatusUpdate(selectedRowKeys, "active")}
-                                >
-                                    Activate Selected ({selectedRowKeys.length})
-                                </Button>
-                            )}
-
-                            {permissions?.canEdit && hasActivePermissions && (
-                                <Button
-                                    icon={<LockOutlined />}
-                                    onClick={() => handleBulkStatusUpdate(selectedRowKeys, "inactive")}
-                                >
-                                    Deactivate Selected ({selectedRowKeys.length})
-                                </Button>
-                            )}
-
-                            {permissions?.canEdit && (
-                                <Button icon={<EditOutlined />} onClick={() => handleBulkEdit(selectedRowKeys)}>
-                                    Bulk Edit
-                                </Button>
-                            )}
-
-                            <Button icon={<ExportOutlined />} onClick={() => handleExport(selectedRows, "csv")}>
-                                Export CSV
-                            </Button>
-
-                            {permissions?.canDelete && hasNonSystemPermissions && (
-                                <Button
-                                    danger
-                                    icon={<DeleteOutlined />}
-                                    onClick={async () => {
-                                        const nonSystemRows = selectedRows.filter(row => !row.isSystemPermission);
-                                        for (const row of nonSystemRows) {
-                                            await handleDelete(row);
-                                        }
-                                        message.success(`${nonSystemRows.length} permissions deleted`);
-                                    }}
-                                >
-                                    Delete Non-System ({selectedRows.filter(row => !row.isSystemPermission).length})
-                                </Button>
-                            )}
-                        </Space>
-                    );
-                }}
                 validateOnMount={false}
                 preserveFormData={false}
-                beforeFormSubmit={async values => {
-                    console.log("Before form submit:", values);
-                    return {
-                        ...values,
-                        slug: values.slug?.toLowerCase().replace(/\s+/g, "_"),
-                        updatedAt: new Date().toISOString().split("T")[0],
-                    };
-                }}
-                afterFormSubmit={(values, result) => {
-                    console.log("After form submit:", { values, result });
-                }}
-                renderExtraFormActions={(form, editingRecord, permissions) => (
-                    <Space>
-                        {editingRecord && !editingRecord.isSystemPermission && (
-                            <Button
-                                onClick={() => duplicatePermission(editingRecord)}
-                                disabled={!permissions?.canCreate}
-                            >
-                                Save & Duplicate
-                            </Button>
-                        )}
-                        {editingRecord && (
-                            <Button type="link" onClick={() => console.log("View audit log")}>
-                                View History
-                            </Button>
-                        )}
-                    </Space>
-                )}
-                permissions={{
-                    view: "permissions.view",
-                    create: "permissions.create",
-                    edit: "permissions.edit",
-                    delete: "permissions.delete",
-                    filter: "permissions.filter",
-                    export: "permissions.export",
-                }}
-                checkPermission={checkPermission}
-                routeConfig={{
-                    basePath: "/admin/permissions",
-                    createPath: "/admin/permissions/create",
-                    editPath: "/admin/permissions/[id]/edit",
-                    viewPath: "/admin/permissions/[id]",
-                    listPath: "/admin/permissions",
-                    paramName: "id",
-                }}
                 currentAction="list"
-                onNavigate={(path, params) => {
-                    console.log("Navigate to:", path, params);
-                }}
             />
-
-            {/* Bulk Edit Modal */}
-            <Modal
-                title="Bulk Edit Permissions"
-                open={bulkEditModalVisible}
-                onCancel={() => setBulkEditModalVisible(false)}
-                onOk={() => bulkEditForm.submit()}
-                width={600}
-            >
-                <Form form={bulkEditForm} layout="vertical" onFinish={handleBulkEditSubmit}>
-                    <Form.Item name="module" label="Module">
-                        <Select placeholder="Select module (leave empty to keep current values)" allowClear>
-                            <Select.Option value="User Management">User Management</Select.Option>
-                            <Select.Option value="Role Management">Role Management</Select.Option>
-                            <Select.Option value="System">System</Select.Option>
-                            <Select.Option value="Reports">Reports</Select.Option>
-                            <Select.Option value="Settings">Settings</Select.Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item name="status" label="Status">
-                        <Select placeholder="Select status (leave empty to keep current values)" allowClear>
-                            <Select.Option value="active">Active</Select.Option>
-                            <Select.Option value="inactive">Inactive</Select.Option>
-                            <Select.Option value="pending">Pending</Select.Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item name="level" label="Permission Level">
-                        <Select placeholder="Select level (leave empty to keep current values)" allowClear>
-                            <Select.Option value="basic">Basic</Select.Option>
-                            <Select.Option value="advanced">Advanced</Select.Option>
-                            <Select.Option value="admin">Admin</Select.Option>
-                        </Select>
-                    </Form.Item>
-                </Form>
-            </Modal>
         </div>
     );
 };
