@@ -7,9 +7,7 @@ import {
     PlusOutlined,
     SearchOutlined,
 } from "@ant-design/icons";
-import { setSearchParams } from "@lib/actions";
 import {
-    clearFilters,
     createRecord,
     deleteRecord,
     resetState,
@@ -49,7 +47,7 @@ import {
 } from "antd";
 import { ColumnType } from "antd/lib/table";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AppForm from "../AppForm";
 import { FormSchema } from "../AppForm/form.type";
@@ -227,16 +225,6 @@ const QuickUI = ({
         error,
     } = useSelector((state: RootState) => state.quickUI);
 
-    // Local pagination state synchronized with URL
-    const [pagination, setPagination] = useState({
-        current: 1,
-        pageSize: 10,
-        total: 0,
-        showSizeChanger: true,
-        showQuickJumper: true,
-        showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} items`,
-    });
-
     // Form instance
     const [form] = Form.useForm();
     const filterFormRef = useRef(form);
@@ -244,8 +232,8 @@ const QuickUI = ({
     // Initialize from URL parameters on mount
     useEffect(() => {
         const urlFilters: Record<string, any> = {};
-        const currentPageFromUrl = parseInt(searchParams.get("page") || "1");
-        const pageSizeFromUrl = parseInt(searchParams.get("pageSize") || "10");
+        const pageParam = searchParams.get("page");
+        const pageSizeParam = searchParams.get("pageSize");
 
         // Extract filter parameters from URL
         Array.from(searchParams.entries()).forEach(([key, value]) => {
@@ -260,79 +248,68 @@ const QuickUI = ({
             }
         });
 
-        // Set filters from URL if any
-        if (Object.keys(urlFilters).length > 0) {
-            dispatch(setFilters(urlFilters));
-            // Set filter form values
-            if (filterFormRef.current) {
-                filterFormRef.current.setFieldsValue(urlFilters);
-            }
+        // Set defaults if not in URL, otherwise use URL values
+        const initialFilters = {
+            ...urlFilters,
+            page: pageParam ? parseInt(pageParam) : 1,
+            pageSize: pageSizeParam ? parseInt(pageSizeParam) : 5,
+            total: 0,
+        };
+
+        dispatch(setFilters(initialFilters));
+
+        // Set filter form values (excluding pagination)
+        if (filterFormRef.current && Object.keys(urlFilters).length > 0) {
+            filterFormRef.current.setFieldsValue(urlFilters);
         }
-
-        setSearchParams(
-            {
-                page: currentPageFromUrl || "1",
-                pageSize: pageSizeFromUrl || "10",
-            },
-            searchParams,
-            router,
-            pathname,
-        );
-
-        // Set pagination from URL
-        setPagination(prev => ({
-            ...prev,
-            current: currentPageFromUrl,
-            pageSize: pageSizeFromUrl,
-        }));
     }, [searchParams, dispatch]);
 
-    // Update URL when filters or pagination change
+    // Update URL when filters change - always update for persistence
     const updateURL = useCallback(
-        (newFilters: Record<string, any> = filters, newPagination = pagination) => {
-            const url = new URL(window.location.href);
+        (newFilters: Record<string, any> = filters) => {
+            const params = new URLSearchParams();
 
-            // Clear existing params
-            url.search = "";
-
-            // Add filter params
+            // Add or update all filter params including pagination
             Object.entries(newFilters).forEach(([key, value]) => {
+                if (key === "total") return; // Skip total
+
                 if (value !== undefined && value !== null && value !== "") {
                     const encodedValue =
                         typeof value === "object"
                             ? encodeURIComponent(JSON.stringify(value))
                             : encodeURIComponent(String(value));
-                    url.searchParams.set(key, encodedValue);
+                    params.set(key, encodedValue);
                 }
             });
 
-            // Add pagination params
-            if (newPagination.current > 1) {
-                url.searchParams.set("page", String(newPagination.current));
-            }
-            if (newPagination.pageSize !== 10) {
-                url.searchParams.set("pageSize", String(newPagination.pageSize));
-            }
+            const newUrl = `${pathname}?${params.toString()}`;
+            const currentUrl = `${pathname}?${searchParams.toString()}`;
 
-            // Update URL without navigation
-            window.history.replaceState({}, "", url.toString());
+            // Always update URL if it has changed for filter and pagination persistence
+            if (newUrl !== currentUrl) {
+                router.replace(newUrl);
+            }
         },
-        [filters, pagination],
+        [filters, pathname, router, searchParams],
     );
 
     // Enhanced data loading with pagination support
     const loadData = useCallback(
-        async (currentFilters = filters, currentPagination = pagination) => {
+        async (currentFilters: any) => {
             if (onFilter) {
                 try {
                     dispatch({ type: "quickUI/setLoading", payload: true });
+
+                    // Use filters from state or defaults
+                    const finalPage = currentFilters.page || 1;
+                    const finalPageSize = currentFilters.pageSize || 5;
 
                     // Call onFilter with pagination info
                     const filteredData = await onFilter(initialData, {
                         ...currentFilters,
                         _pagination: {
-                            page: currentPagination.current,
-                            pageSize: currentPagination.pageSize,
+                            page: finalPage,
+                            pageSize: finalPageSize,
                         },
                     });
 
@@ -341,24 +318,33 @@ const QuickUI = ({
                         // Server-side pagination response
                         const { data: responseData, total, current, pageSize } = filteredData as any;
                         dispatch(setData(responseData || []));
-                        setPagination(prev => ({
-                            ...prev,
+
+                        const updatedFilters = {
+                            ...currentFilters,
                             total: total || responseData?.length || 0,
-                            current: current || currentPagination.current,
-                            pageSize: pageSize || currentPagination.pageSize,
-                        }));
+                            page: current || finalPage,
+                            pageSize: pageSize || finalPageSize,
+                        };
+
+                        dispatch(setFilters(updatedFilters));
+                        updateURL(updatedFilters);
                     } else {
                         // Client-side pagination
                         const dataArray = Array.isArray(filteredData) ? filteredData : [];
-                        const startIndex = (currentPagination.current - 1) * currentPagination.pageSize;
-                        const endIndex = startIndex + currentPagination.pageSize;
+                        const startIndex = (finalPage - 1) * finalPageSize;
+                        const endIndex = startIndex + finalPageSize;
                         const paginatedData = dataArray.slice(startIndex, endIndex);
 
                         dispatch(setData(paginatedData));
-                        setPagination(prev => ({
-                            ...prev,
+                        const updatedFilters = {
+                            ...currentFilters,
                             total: dataArray.length,
-                        }));
+                            page: finalPage,
+                            pageSize: finalPageSize,
+                        };
+
+                        dispatch(setFilters(updatedFilters));
+                        updateURL(updatedFilters);
                     }
                 } catch (error) {
                     console.error("Error loading data:", error);
@@ -370,9 +356,18 @@ const QuickUI = ({
                 // Client-side filtering and pagination
                 let filteredData = [...initialData];
 
-                // Apply filters
+                // Use filters from state or defaults
+                const finalPage = currentFilters.page || 1;
+                const finalPageSize = currentFilters.pageSize || 5;
+
+                // Apply filters (exclude pagination params)
                 Object.entries(currentFilters).forEach(([key, value]) => {
-                    if (value !== undefined && value !== null && value !== "") {
+                    if (
+                        value !== undefined &&
+                        value !== null &&
+                        value !== "" &&
+                        !["page", "pageSize", "total"].includes(key)
+                    ) {
                         filteredData = filteredData.filter(record => {
                             const recordValue = record[key];
                             if (typeof value === "string" && typeof recordValue === "string") {
@@ -384,34 +379,31 @@ const QuickUI = ({
                 });
 
                 // Apply pagination
-                const startIndex = (currentPagination.current - 1) * currentPagination.pageSize;
-                const endIndex = startIndex + currentPagination.pageSize;
+                const startIndex = (finalPage - 1) * finalPageSize;
+                const endIndex = startIndex + finalPageSize;
                 const paginatedData = filteredData.slice(startIndex, endIndex);
 
                 dispatch(setData(paginatedData));
-                setPagination(prev => ({
-                    ...prev,
-                    total: filteredData.length,
-                }));
-            }
 
-            // Update URL
-            updateURL(currentFilters, currentPagination);
+                const updatedFilters = {
+                    ...currentFilters,
+                    total: filteredData.length,
+                    page: finalPage,
+                    pageSize: finalPageSize,
+                };
+
+                dispatch(setFilters(updatedFilters));
+                updateURL(updatedFilters);
+            }
         },
-        [filters, pagination, initialData, onFilter, dispatch, updateURL],
+        [filters, initialData, onFilter, dispatch, updateURL],
     );
 
     // Initialize data when component mounts or initialData changes
     useEffect(() => {
         if (initialData.length > 0) {
-            // Set total for initial pagination
-            setPagination(prev => ({
-                ...prev,
-                total: initialData.length,
-            }));
-
-            // Load data with current filters and pagination
-            loadData();
+            // Load data with current filters
+            loadData({});
         }
 
         // Set initial crud type
@@ -536,45 +528,40 @@ const QuickUI = ({
                 }
             });
 
-            dispatch(setFilters(newFilters));
+            // Reset to first page when applying filters and keep current pageSize
+            const mergedFilters = {
+                ...newFilters,
+                page: 1,
+                pageSize: filters.pageSize || 5,
+                total: filters.total || 0,
+            };
 
-            // Reset to first page when applying filters
-            const newPagination = { ...pagination, current: 1 };
-            setPagination(newPagination);
-
-            // Load data with new filters
-            await loadData(newFilters, newPagination);
+            dispatch(setFilters(mergedFilters));
+            await loadData(mergedFilters);
         },
-        [dispatch, pagination, loadData],
+        [filters, loadData, dispatch],
     );
 
     // Enhanced clear filters
     const handleClearFilters = useCallback(async () => {
-        dispatch(clearFilters());
-
         if (filterFormRef.current) {
             filterFormRef.current.resetFields();
         }
 
-        // Reset to first page when clearing filters
-        const newPagination = { ...pagination, current: 1 };
-        setPagination(newPagination);
+        // Keep only pagination when clearing filters
+        const clearedFilters = {
+            page: 1,
+            pageSize: filters.pageSize || 5,
+            total: filters.total || 0,
+        };
 
-        // Load data without filters
-        await loadData({}, newPagination);
-    }, [dispatch, pagination, loadData]);
+        dispatch(setFilters(clearedFilters));
+        await loadData(clearedFilters);
+    }, [filters, loadData, dispatch]);
 
     // Enhanced table change handler
     const handleTableChange = useCallback(
         async (paginationInfo: any, filtersInfo: any, sorter: any) => {
-            const newPagination = {
-                ...pagination,
-                current: paginationInfo.current,
-                pageSize: paginationInfo.pageSize,
-            };
-
-            setPagination(newPagination);
-
             // Handle table filters (column filters)
             const tableFilters: Record<string, any> = {};
             Object.entries(filtersInfo || {}).forEach(([key, value]) => {
@@ -583,10 +570,16 @@ const QuickUI = ({
                 }
             });
 
-            // Merge with existing filters
-            const mergedFilters = { ...filters, ...tableFilters };
+            // Merge with existing filters and add pagination
+            const mergedFilters = {
+                ...filters,
+                ...tableFilters,
+                page: paginationInfo.current || filters.page || 1,
+                pageSize: paginationInfo.pageSize || filters.pageSize || 5,
+            };
+
             if (Object.keys(tableFilters).length > 0) {
-                dispatch(setFilters(mergedFilters));
+                dispatch(setFilters({ ...filters, ...tableFilters }));
             }
 
             // Handle sorting
@@ -596,27 +589,27 @@ const QuickUI = ({
                     _sort: sorter.field,
                     _order: sorter.order === "ascend" ? "asc" : "desc",
                 };
-                await loadData(sortFilters, newPagination);
+                await loadData(sortFilters);
             } else {
-                await loadData(mergedFilters, newPagination);
+                await loadData(mergedFilters);
             }
         },
-        [pagination, filters, dispatch, loadData],
+        [filters, dispatch, loadData],
     );
 
     // Enhanced page size change handler
     const handleShowSizeChange = useCallback(
         async (current: number, size: number) => {
-            const newPagination = {
-                ...pagination,
-                current: 1, // Reset to first page when changing page size
+            const updatedFilters = {
+                ...filters,
+                page: current,
                 pageSize: size,
             };
 
-            setPagination(newPagination);
-            await loadData(filters, newPagination);
+            dispatch(setFilters(updatedFilters));
+            await loadData(updatedFilters);
         },
-        [pagination, filters, loadData],
+        [filters, loadData, dispatch],
     );
 
     // Enhanced row selection with persistence
@@ -1080,16 +1073,26 @@ const QuickUI = ({
             locale={{ emptyText }}
             loading={loading}
             pagination={{
-                ...pagination,
+                current: searchParams.get("page") || 1,
+                pageSize: searchParams.get("pageSize") || 5,
+                total: filters.total || 20,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} items`,
                 onChange: async (page, pageSize) => {
-                    const newPagination = { ...pagination, current: page, pageSize: pageSize || pagination.pageSize };
-                    setPagination(newPagination);
-                    await loadData(filters, newPagination);
+                    const updatedFilters = {
+                        ...filters,
+                        page,
+                        pageSize: pageSize || filters.pageSize || 5,
+                    };
+
+                    dispatch(setFilters(updatedFilters));
+                    await loadData(updatedFilters);
                 },
                 onShowSizeChange: handleShowSizeChange,
             }}
             onChange={handleTableChange}
-            scroll={{ x: "max-content" }} // Responsive horizontal scroll
+            scroll={{ x: "max-content" }}
             {...tableProps}
         />
     );

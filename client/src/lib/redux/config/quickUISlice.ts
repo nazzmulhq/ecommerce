@@ -26,7 +26,11 @@ const initialState: QuickUIState = {
     isFormVisible: false,
     isViewVisible: false,
     currentPage: "list",
-    filters: {},
+    filters: {
+        page: 1,
+        pageSize: 5,
+        total: 20,
+    },
     loading: false,
     activeCrudType: "modal",
     error: null,
@@ -122,7 +126,11 @@ const quickUISlice = createSlice({
             state.filters = action.payload;
         },
         clearFilters: state => {
-            state.filters = {};
+            state.filters = {
+                page: 1,
+                pageSize: 5,
+                total: 0,
+            };
         },
         setActiveCrudType: (state, action: PayloadAction<CrudType>) => {
             state.activeCrudType = action.payload;

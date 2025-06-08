@@ -54,7 +54,7 @@ const initialPermissions: Permission[] = Array.from({ length: 20 }, (_, i) =>
     transformApiToUI({
         key: `permission-${i + 1}`,
         id: i,
-        slug: "create",
+        slug: `permission-${i + 1}`,
         name: "no-permission-required",
         message_id: null,
         status: 1,
@@ -204,17 +204,10 @@ const PermissionPage = () => {
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
                 onRecordDelete={handleDelete}
-                // onFilter={handleFilter}
                 tableProps={{
                     bordered: true,
                     size: "middle",
                     scroll: { x: 1200 },
-                    // pagination: {
-                    //     pageSize: 10,
-                    //     showSizeChanger: true,
-                    //     showQuickJumper: true,
-                    //     showTotal: (total: any, range: any) => `${range[0]}-${range[1]} of ${total} permissions`,
-                    // },
                 }}
                 formProps={{
                     layout: "vertical",
