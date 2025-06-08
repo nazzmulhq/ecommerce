@@ -54,7 +54,8 @@ export async function middleware(req: NextRequest) {
         // Helper to forward pathname in headers
         const nextWithPathname = () => {
             const requestHeaders = new Headers(req.headers);
-            requestHeaders.set("x-pathname", pathname);
+            const fullPath = pathname + (req.nextUrl.search ? req.nextUrl.search : "");
+            requestHeaders.set("x-pathname", fullPath);
             return NextResponse.next({
                 request: {
                     headers: requestHeaders,

@@ -12,6 +12,18 @@ export async function deleteCookie(name: string) {
     (await cookies()).delete(name);
 }
 
+export const setSearchParams = async (object: Record<string, any>, searchParams: any, router: any, pathname: any) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(object).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+            params.set(key, String(value));
+        } else {
+            params.delete(key);
+        }
+    });
+    router.push(`${pathname}?${params.toString()}`);
+};
+
 export async function getMetaData(
     slug: string,
     options: Metadata,

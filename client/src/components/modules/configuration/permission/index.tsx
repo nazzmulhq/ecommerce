@@ -1,6 +1,7 @@
 "use client";
 import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 // Define a type for permission records matching your API structure
@@ -49,9 +50,10 @@ const transformApiToUI = (apiData: any): Permission => ({
 });
 
 // Sample permissions data based on your API structure
-const initialPermissions: Permission[] = [
+const initialPermissions: Permission[] = Array.from({ length: 20 }, (_, i) =>
     transformApiToUI({
-        id: 1,
+        key: `permission-${i + 1}`,
+        id: i,
         slug: "create",
         name: "no-permission-required",
         message_id: null,
@@ -64,35 +66,7 @@ const initialPermissions: Permission[] = [
         deleted_at: null,
         deleted: 0,
     }),
-    transformApiToUI({
-        id: 2,
-        slug: "read",
-        name: "view-permission-required",
-        message_id: null,
-        status: 1,
-        created_by: 1,
-        updated_by: 1,
-        deleted_by: 0,
-        created_at: "2025-05-02T18:22:52.489Z",
-        updated_at: "2025-05-02T18:24:18.000Z",
-        deleted_at: null,
-        deleted: 0,
-    }),
-    transformApiToUI({
-        id: 3,
-        slug: "update",
-        name: "edit-permission-required",
-        message_id: null,
-        status: 0,
-        created_by: 1,
-        updated_by: 1,
-        deleted_by: 0,
-        created_at: "2025-05-02T18:22:52.489Z",
-        updated_at: "2025-05-02T18:24:18.000Z",
-        deleted_at: null,
-        deleted: 0,
-    }),
-];
+);
 
 // Comprehensive form schema demonstrating all field types and configurations
 const permissionFormSchema: FormSchema = {
@@ -145,6 +119,10 @@ const permissionFormSchema: FormSchema = {
 
 const PermissionPage = () => {
     const [permissions, setPermissions] = useState<Permission[]>(initialPermissions);
+
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
 
     // CRUD Handlers for API integration
     const handleCreate = async (record: Partial<Permission>): Promise<Permission> => {
@@ -212,42 +190,6 @@ const PermissionPage = () => {
         return record;
     };
 
-    // Enhanced filtering with API data structure
-    const handleFilter = async (data: Permission[], filters: Record<string, any>): Promise<any> => {
-        console.log("Applying filters:", filters);
-
-        let filteredData = [...data];
-
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-                if (key === "_pagination") return;
-
-                filteredData = filteredData.filter(item => {
-                    const itemValue = item[key as keyof Permission];
-
-                    if (typeof value === "string" && typeof itemValue === "string") {
-                        return itemValue.toLowerCase().includes(value.toLowerCase());
-                    }
-                    return itemValue === value;
-                });
-            }
-        });
-
-        // Handle pagination
-        const pagination = filters._pagination || { page: 1, pageSize: 10 };
-        const startIndex = (pagination.page - 1) * pagination.pageSize;
-        const endIndex = startIndex + pagination.pageSize;
-
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        return {
-            data: filteredData.slice(startIndex, endIndex),
-            total: filteredData.length,
-            current: pagination.page,
-            pageSize: pagination.pageSize,
-        };
-    };
-
     return (
         <div>
             <QuickUI
@@ -255,21 +197,24 @@ const PermissionPage = () => {
                 formSchema={permissionFormSchema}
                 crudType="modal"
                 icon="AiOutlineSecurityScan"
+                validateOnMount={false}
+                preserveFormData={false}
+                currentAction="list"
                 initialData={permissions}
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
                 onRecordDelete={handleDelete}
-                onFilter={handleFilter}
+                // onFilter={handleFilter}
                 tableProps={{
                     bordered: true,
                     size: "middle",
                     scroll: { x: 1200 },
-                    pagination: {
-                        pageSize: 10,
-                        showSizeChanger: true,
-                        showQuickJumper: true,
-                        showTotal: (total: any, range: any) => `${range[0]}-${range[1]} of ${total} permissions`,
-                    },
+                    // pagination: {
+                    //     pageSize: 10,
+                    //     showSizeChanger: true,
+                    //     showQuickJumper: true,
+                    //     showTotal: (total: any, range: any) => `${range[0]}-${range[1]} of ${total} permissions`,
+                    // },
                 }}
                 formProps={{
                     layout: "vertical",
@@ -293,9 +238,6 @@ const PermissionPage = () => {
                     update: "Permission updated successfully!",
                     delete: "Permission deleted successfully!",
                 }}
-                validateOnMount={false}
-                preserveFormData={false}
-                currentAction="list"
             />
         </div>
     );

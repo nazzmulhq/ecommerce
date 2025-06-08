@@ -7,6 +7,7 @@ import {
     PlusOutlined,
     SearchOutlined,
 } from "@ant-design/icons";
+import { setSearchParams } from "@lib/actions";
 import {
     clearFilters,
     createRecord,
@@ -267,6 +268,16 @@ const QuickUI = ({
                 filterFormRef.current.setFieldsValue(urlFilters);
             }
         }
+
+        setSearchParams(
+            {
+                page: currentPageFromUrl || "1",
+                pageSize: pageSizeFromUrl || "10",
+            },
+            searchParams,
+            router,
+            pathname,
+        );
 
         // Set pagination from URL
         setPagination(prev => ({
