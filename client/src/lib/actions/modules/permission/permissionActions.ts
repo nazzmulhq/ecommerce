@@ -42,7 +42,7 @@ export async function fetchPermissions(filters: PermissionFilter = {}) {
 
 export async function createPermission(permissionData: any) {
     try {
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions`;
+        const url = `${process.env.API_URL}/permissions`;
         const token = getCookie("token");
 
         const response = await fetch(url, {

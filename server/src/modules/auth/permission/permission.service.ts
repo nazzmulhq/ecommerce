@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PaginationParams } from 'modules/pagination/interfaces/pagination-params.interface';
 import { Repository } from 'typeorm';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { Permission } from './entities/permission.entity';
@@ -8,17 +9,17 @@ import { Permission } from './entities/permission.entity';
 export class PermissionService {
     constructor(
         @InjectRepository(Permission)
-        private readonly userRepository: Repository<Permission>,
+        private readonly permissionRepository: Repository<Permission>,
     ) {}
 
     async create(
         createPermissionDto: CreatePermissionDto,
         id: number,
     ): Promise<Permission> {
-        const existingPermission = await this.userRepository.findOne({
+        const existingPermission = await this.permissionRepository.findOne({
             where: {
                 name: createPermissionDto.name,
-                status: 1,
+                deleted: 0,
             },
         });
         if (existingPermission) {
@@ -26,23 +27,28 @@ export class PermissionService {
         }
         createPermissionDto.createBy = id;
         createPermissionDto.createdAt = new Date();
-        const permission = this.userRepository.create(createPermissionDto);
-        return this.userRepository.save(permission);
+
+        const permission =
+            this.permissionRepository.create(createPermissionDto);
+        return this.permissionRepository.save(permission);
     }
 
-    async findAll(): Promise<Permission[]> {
-        return await this.userRepository.find({
-            where: {
-                status: 1,
-            },
-            order: {
-                id: 'DESC',
-            },
-        });
+    async findAll(params: PaginationParams) {
+        const { skip, limit, sortBy = 'name', sortOrder = 'ASC' } = params;
+        const queryBuilder =
+            this.permissionRepository.createQueryBuilder('permission');
+
+        queryBuilder.where('permission.deleted = 0').skip(skip).take(limit);
+
+        if (typeof sortBy !== 'symbol' && sortOrder) {
+            queryBuilder.orderBy(`permission.${sortBy}`, sortOrder);
+        }
+        const [permission, total] = await queryBuilder.getManyAndCount();
+        return [permission, total];
     }
 
     async findOne(id: number): Promise<Permission> {
-        return await this.userRepository.findOne({
+        return await this.permissionRepository.findOne({
             where: {
                 id,
                 status: 1,
@@ -55,7 +61,7 @@ export class PermissionService {
         updateData: Partial<Permission>,
         userId: number,
     ): Promise<Permission> {
-        const existingPermission = await this.userRepository.findOne({
+        const existingPermission = await this.permissionRepository.findOne({
             where: {
                 id,
                 status: 1,
@@ -67,15 +73,15 @@ export class PermissionService {
 
         updateData.updated_by = userId;
 
-        const permission = this.userRepository.merge(
+        const permission = this.permissionRepository.merge(
             existingPermission,
             updateData,
         );
-        return this.userRepository.save(permission);
+        return this.permissionRepository.save(permission);
     }
 
     async remove(id: number, userId: number): Promise<void> {
-        const existingPermission = await this.userRepository.findOne({
+        const existingPermission = await this.permissionRepository.findOne({
             where: {
                 id,
             },
@@ -89,11 +95,11 @@ export class PermissionService {
             updateBy: userId,
         };
 
-        const permission = this.userRepository.merge(
+        const permission = this.permissionRepository.merge(
             existingPermission,
             updateData,
         );
 
-        this.userRepository.save(permission);
+        this.permissionRepository.save(permission);
     }
 }

@@ -2,6 +2,7 @@
 import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
 import { createPermission } from "@lib/actions/modules/permission/permissionActions";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 // Define a type for permission records matching your API structure
@@ -119,12 +120,14 @@ const permissionFormSchema: FormSchema = {
 
 const PermissionPage = ({ data }: any) => {
     console.log("PermissionPage data:", data);
-    const [permissions, setPermissions] = useState<Permission[]>(data?.data?.data);
+    const [permissions, setPermissions] = useState<Permission[]>(data?.data?.list);
+    const pathname = usePathname();
 
     // CRUD Handlers for API integration
     const handleCreate = async (record: Partial<Permission>): Promise<Permission> => {
         try {
             const data = await createPermission(record);
+
             return data;
         } catch (error) {
             console.error("Error creating permission:", error);

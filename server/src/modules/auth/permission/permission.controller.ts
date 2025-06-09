@@ -14,6 +14,9 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'modules/auth/jwt-auth.guard';
 import { AccessRoles } from 'modules/auth/role/role.decorator';
 import { RoleGuard } from 'modules/auth/role/role.guard';
+import { AutoPaginate } from 'modules/pagination/decorators/auto-paginate.decorator';
+import { Pagination } from 'modules/pagination/decorators/pagination.decorator';
+import { PaginationParams } from 'modules/pagination/interfaces/pagination-params.interface';
 import { UserAndRequest } from 'types';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
@@ -55,20 +58,21 @@ export class PermissionController {
     }
 
     @Get()
+    @AutoPaginate({
+        resource: 'route',
+        route: 'route',
+    })
     @ApiBearerAuth()
     @AccessRoles({
         roles: ['admin'],
         permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
-    async findAll() {
+    async findAll(@Pagination() params: PaginationParams) {
         try {
-            const data = await this.permissionService.findAll();
-            return {
-                success: true,
-                data,
-                message: 'Permissions Fetched Successfully',
-            };
+            const [permission, _] =
+                await this.permissionService.findAll(params);
+            return permission;
         } catch (error) {
             return {
                 success: false,
