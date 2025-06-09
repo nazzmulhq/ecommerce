@@ -117,7 +117,8 @@ const permissionFormSchema: FormSchema = {
     },
 };
 
-const PermissionPage = () => {
+const PermissionPage = ({ data }: any) => {
+    console.log("PermissionPage data:", data);
     const [permissions, setPermissions] = useState<Permission[]>(initialPermissions);
 
     const router = useRouter();

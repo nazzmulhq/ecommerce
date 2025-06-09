@@ -14,10 +14,10 @@ export async function fetchPermissions(filters: PermissionFilter = {}) {
         // Build query parameters from filters object
         const queryParams = new URLSearchParams(filters as Record<string, string>);
         const queryString = queryParams.toString();
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions`;
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions?${queryString}`;
 
         // Get the token from cookies
-        const token = getCookie("token");
+        const token = await getCookie("token");
 
         // You would replace this with your actual API call
         // For example:
@@ -27,8 +27,6 @@ export async function fetchPermissions(filters: PermissionFilter = {}) {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
             },
-            // Include query parameters in the request
-            body: JSON.stringify(filters),
         });
         const result = await response.json();
 
