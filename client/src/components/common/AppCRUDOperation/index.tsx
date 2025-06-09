@@ -18,6 +18,8 @@ import {
     setError,
     setFilters,
     setFormVisible,
+    setLoading,
+    setMetadata,
     setSelectedRows,
     setViewVisible,
     setViewingRecord,
@@ -225,6 +227,10 @@ const QuickUI = ({
         error,
     } = useSelector((state: RootState) => state.quickUI);
 
+    // Extract list and metadata from the nested structure
+    const dataList = data.list;
+    const metadata = data.meta;
+
     // Form instance
     const [form] = Form.useForm();
     const filterFormRef = useRef(form);
@@ -235,7 +241,7 @@ const QuickUI = ({
         const pageParam = searchParams.get("page");
         const pageSizeParam = searchParams.get("pageSize");
 
-        // Extract filter parameters from URL
+        // Extract filter parameters from URL (excluding pagination)
         Array.from(searchParams.entries()).forEach(([key, value]) => {
             if (!["page", "pageSize"].includes(key) && value) {
                 try {
@@ -248,17 +254,18 @@ const QuickUI = ({
             }
         });
 
-        // Set defaults if not in URL, otherwise use URL values
-        const initialFilters = {
-            ...urlFilters,
-            page: pageParam ? parseInt(pageParam) : 1,
-            pageSize: pageSizeParam ? parseInt(pageSizeParam) : 5,
-            total: 0,
+        // Set filters (without pagination)
+        dispatch(setFilters(urlFilters));
+
+        // Set metadata with URL pagination or defaults
+        const initialMetadata = {
+            ...metadata,
+            currentPage: pageParam ? parseInt(pageParam) : 1,
+            itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : 10,
         };
+        dispatch(setMetadata(initialMetadata));
 
-        dispatch(setFilters(initialFilters));
-
-        // Set filter form values (excluding pagination)
+        // Set filter form values
         if (filterFormRef.current && Object.keys(urlFilters).length > 0) {
             filterFormRef.current.setFieldsValue(urlFilters);
         }
@@ -266,13 +273,11 @@ const QuickUI = ({
 
     // Update URL when filters change - always update for persistence
     const updateURL = useCallback(
-        (newFilters: Record<string, any> = filters) => {
+        (newFilters: Record<string, any> = filters, newMetadata = metadata) => {
             const params = new URLSearchParams();
 
-            // Add or update all filter params including pagination
+            // Add filter params (excluding pagination)
             Object.entries(newFilters).forEach(([key, value]) => {
-                if (key === "total") return; // Skip total
-
                 if (value !== undefined && value !== null && value !== "") {
                     const encodedValue =
                         typeof value === "object"
@@ -282,6 +287,14 @@ const QuickUI = ({
                 }
             });
 
+            // Add pagination params from metadata
+            if (newMetadata.currentPage) {
+                params.set("page", newMetadata.currentPage.toString());
+            }
+            if (newMetadata.itemsPerPage) {
+                params.set("pageSize", newMetadata.itemsPerPage.toString());
+            }
+
             const newUrl = `${pathname}?${params.toString()}`;
             const currentUrl = `${pathname}?${searchParams.toString()}`;
 
@@ -290,84 +303,81 @@ const QuickUI = ({
                 router.replace(newUrl);
             }
         },
-        [filters, pathname, router, searchParams],
+        [filters, metadata, pathname, router, searchParams],
     );
 
     // Enhanced data loading with pagination support
     const loadData = useCallback(
-        async (currentFilters: any) => {
+        async (currentFilters: any = filters, currentMetadata = metadata) => {
             if (onFilter) {
                 try {
-                    dispatch({ type: "quickUI/setLoading", payload: true });
-
-                    // Use filters from state or defaults
-                    const finalPage = currentFilters.page || 1;
-                    const finalPageSize = currentFilters.pageSize || 5;
+                    dispatch(setLoading(true));
 
                     // Call onFilter with pagination info
-                    const filteredData = await onFilter(initialData, {
+                    const result = await onFilter(initialData, {
                         ...currentFilters,
                         _pagination: {
-                            page: finalPage,
-                            pageSize: finalPageSize,
+                            page: currentMetadata.currentPage,
+                            pageSize: currentMetadata.itemsPerPage,
                         },
                     });
 
-                    // Handle paginated response
-                    if (filteredData && typeof filteredData === "object" && "data" in filteredData) {
-                        // Server-side pagination response
-                        const { data: responseData, total, current, pageSize } = filteredData as any;
-                        dispatch(setData(responseData || []));
+                    // Handle API response structure
+                    if (result && typeof result === "object") {
+                        if ("data" in result && result.data) {
+                            // API response format: { data: { list: [], meta: {} } }
+                            const { list, meta } = result.data as any;
+                            dispatch(setData(list || []));
 
-                        const updatedFilters = {
-                            ...currentFilters,
-                            total: total || responseData?.length || 0,
-                            page: current || finalPage,
-                            pageSize: pageSize || finalPageSize,
-                        };
+                            if (meta) {
+                                dispatch(
+                                    setMetadata({
+                                        totalItems: meta.totalItems || 0,
+                                        itemCount: meta.itemCount || 0,
+                                        itemsPerPage: meta.itemsPerPage || currentMetadata.itemsPerPage,
+                                        totalPages: meta.totalPages || 1,
+                                        currentPage: meta.currentPage || currentMetadata.currentPage,
+                                        hasNextPage: meta.hasNextPage || false,
+                                        hasPreviousPage: meta.hasPreviousPage || false,
+                                    }),
+                                );
+                                updateURL(currentFilters, {
+                                    ...currentMetadata,
+                                    ...meta,
+                                });
+                            }
+                        } else if (Array.isArray(result)) {
+                            // Array response - client-side pagination
+                            const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
+                            const endIndex = startIndex + currentMetadata.itemsPerPage;
+                            const paginatedData = result.slice(startIndex, endIndex);
 
-                        dispatch(setFilters(updatedFilters));
-                        updateURL(updatedFilters);
-                    } else {
-                        // Client-side pagination
-                        const dataArray = Array.isArray(filteredData) ? filteredData : [];
-                        const startIndex = (finalPage - 1) * finalPageSize;
-                        const endIndex = startIndex + finalPageSize;
-                        const paginatedData = dataArray.slice(startIndex, endIndex);
-
-                        dispatch(setData(paginatedData));
-                        const updatedFilters = {
-                            ...currentFilters,
-                            total: dataArray.length,
-                            page: finalPage,
-                            pageSize: finalPageSize,
-                        };
-
-                        dispatch(setFilters(updatedFilters));
-                        updateURL(updatedFilters);
+                            dispatch(setData(paginatedData));
+                            const updatedMetadata = {
+                                ...currentMetadata,
+                                totalItems: result.length,
+                                itemCount: paginatedData.length,
+                                totalPages: Math.ceil(result.length / currentMetadata.itemsPerPage),
+                                hasNextPage: endIndex < result.length,
+                                hasPreviousPage: currentMetadata.currentPage > 1,
+                            };
+                            dispatch(setMetadata(updatedMetadata));
+                            updateURL(currentFilters, updatedMetadata);
+                        }
                     }
                 } catch (error) {
                     console.error("Error loading data:", error);
                     dispatch(setError("Failed to load data"));
                 } finally {
-                    dispatch({ type: "quickUI/setLoading", payload: false });
+                    dispatch(setLoading(false));
                 }
             } else {
                 // Client-side filtering and pagination
                 let filteredData = [...initialData];
 
-                // Use filters from state or defaults
-                const finalPage = currentFilters.page || 1;
-                const finalPageSize = currentFilters.pageSize || 5;
-
-                // Apply filters (exclude pagination params)
+                // Apply filters
                 Object.entries(currentFilters).forEach(([key, value]) => {
-                    if (
-                        value !== undefined &&
-                        value !== null &&
-                        value !== "" &&
-                        !["page", "pageSize", "total"].includes(key)
-                    ) {
+                    if (value !== undefined && value !== null && value !== "") {
                         filteredData = filteredData.filter(record => {
                             const recordValue = record[key];
                             if (typeof value === "string" && typeof recordValue === "string") {
@@ -379,24 +389,24 @@ const QuickUI = ({
                 });
 
                 // Apply pagination
-                const startIndex = (finalPage - 1) * finalPageSize;
-                const endIndex = startIndex + finalPageSize;
+                const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
+                const endIndex = startIndex + currentMetadata.itemsPerPage;
                 const paginatedData = filteredData.slice(startIndex, endIndex);
 
                 dispatch(setData(paginatedData));
-
-                const updatedFilters = {
-                    ...currentFilters,
-                    total: filteredData.length,
-                    page: finalPage,
-                    pageSize: finalPageSize,
+                const updatedMetadata = {
+                    ...currentMetadata,
+                    totalItems: filteredData.length,
+                    itemCount: paginatedData.length,
+                    totalPages: Math.ceil(filteredData.length / currentMetadata.itemsPerPage),
+                    hasNextPage: endIndex < filteredData.length,
+                    hasPreviousPage: currentMetadata.currentPage > 1,
                 };
-
-                dispatch(setFilters(updatedFilters));
-                updateURL(updatedFilters);
+                dispatch(setMetadata(updatedMetadata));
+                updateURL(currentFilters, updatedMetadata);
             }
         },
-        [filters, initialData, onFilter, dispatch, updateURL],
+        [initialData, onFilter, dispatch, updateURL, filters, metadata],
     );
 
     // Initialize data when component mounts or initialData changes
@@ -420,9 +430,9 @@ const QuickUI = ({
     // Handle data changes callback
     useEffect(() => {
         if (onDataChange) {
-            onDataChange(data);
+            onDataChange(dataList);
         }
-    }, [data, onDataChange]);
+    }, [dataList, onDataChange]);
 
     // Handle errors
     useEffect(() => {
@@ -528,18 +538,17 @@ const QuickUI = ({
                 }
             });
 
-            // Reset to first page when applying filters and keep current pageSize
-            const mergedFilters = {
-                ...newFilters,
-                page: 1,
-                pageSize: filters.pageSize || 5,
-                total: filters.total || 0,
+            // Reset to first page when applying filters
+            const resetMetadata = {
+                ...metadata,
+                currentPage: 1,
             };
 
-            dispatch(setFilters(mergedFilters));
-            await loadData(mergedFilters);
+            dispatch(setFilters(newFilters));
+            dispatch(setMetadata(resetMetadata));
+            await loadData(newFilters, resetMetadata);
         },
-        [filters, loadData, dispatch],
+        [metadata, loadData, dispatch],
     );
 
     // Enhanced clear filters
@@ -548,16 +557,16 @@ const QuickUI = ({
             filterFormRef.current.resetFields();
         }
 
-        // Keep only pagination when clearing filters
-        const clearedFilters = {
-            page: 1,
-            pageSize: filters.pageSize || 5,
-            total: filters.total || 0,
+        // Reset to first page when clearing filters
+        const resetMetadata = {
+            ...metadata,
+            currentPage: 1,
         };
 
-        dispatch(setFilters(clearedFilters));
-        await loadData(clearedFilters);
-    }, [filters, loadData, dispatch]);
+        dispatch(setFilters({}));
+        dispatch(setMetadata(resetMetadata));
+        await loadData({}, resetMetadata);
+    }, [metadata, loadData, dispatch]);
 
     // Enhanced table change handler
     const handleTableChange = useCallback(
@@ -570,17 +579,24 @@ const QuickUI = ({
                 }
             });
 
-            // Merge with existing filters and add pagination
+            // Merge with existing filters
             const mergedFilters = {
                 ...filters,
                 ...tableFilters,
-                page: paginationInfo.current || filters.page || 1,
-                pageSize: paginationInfo.pageSize || filters.pageSize || 5,
+            };
+
+            // Update metadata with pagination info
+            const updatedMetadata = {
+                ...metadata,
+                currentPage: paginationInfo.current || metadata.currentPage,
+                itemsPerPage: paginationInfo.pageSize || metadata.itemsPerPage,
             };
 
             if (Object.keys(tableFilters).length > 0) {
-                dispatch(setFilters({ ...filters, ...tableFilters }));
+                dispatch(setFilters(mergedFilters));
             }
+
+            dispatch(setMetadata(updatedMetadata));
 
             // Handle sorting
             if (sorter && sorter.field) {
@@ -589,27 +605,27 @@ const QuickUI = ({
                     _sort: sorter.field,
                     _order: sorter.order === "ascend" ? "asc" : "desc",
                 };
-                await loadData(sortFilters);
+                await loadData(sortFilters, updatedMetadata);
             } else {
-                await loadData(mergedFilters);
+                await loadData(mergedFilters, updatedMetadata);
             }
         },
-        [filters, dispatch, loadData],
+        [filters, metadata, dispatch, loadData],
     );
 
     // Enhanced page size change handler
     const handleShowSizeChange = useCallback(
         async (current: number, size: number) => {
-            const updatedFilters = {
-                ...filters,
-                page: current,
-                pageSize: size,
+            const updatedMetadata = {
+                ...metadata,
+                currentPage: current,
+                itemsPerPage: size,
             };
 
-            dispatch(setFilters(updatedFilters));
-            await loadData(updatedFilters);
+            dispatch(setMetadata(updatedMetadata));
+            await loadData(filters, updatedMetadata);
         },
-        [filters, loadData, dispatch],
+        [filters, metadata, loadData, dispatch],
     );
 
     // Enhanced row selection with persistence
@@ -1034,7 +1050,7 @@ const QuickUI = ({
     const renderStatistics = () => {
         if (!statistics) return null;
 
-        const statItems = typeof statistics === "function" ? statistics(data) : statistics;
+        const statItems = typeof statistics === "function" ? statistics(dataList) : statistics;
 
         return (
             <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -1059,7 +1075,7 @@ const QuickUI = ({
     const renderTable = () => (
         <Table
             columns={generatedColumns}
-            dataSource={data}
+            dataSource={dataList}
             rowKey="id"
             rowSelection={
                 rowSelection
@@ -1073,21 +1089,21 @@ const QuickUI = ({
             locale={{ emptyText }}
             loading={loading}
             pagination={{
-                current: searchParams.get("page") || 1,
-                pageSize: searchParams.get("pageSize") || 5,
-                total: filters.total || 20,
+                current: metadata.currentPage,
+                pageSize: metadata.itemsPerPage,
+                total: metadata.totalItems,
                 showSizeChanger: true,
                 showQuickJumper: true,
                 showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} items`,
                 onChange: async (page, pageSize) => {
-                    const updatedFilters = {
-                        ...filters,
-                        page,
-                        pageSize: pageSize || filters.pageSize || 5,
+                    const updatedMetadata = {
+                        ...metadata,
+                        currentPage: page,
+                        itemsPerPage: pageSize || metadata.itemsPerPage,
                     };
 
-                    dispatch(setFilters(updatedFilters));
-                    await loadData(updatedFilters);
+                    dispatch(setMetadata(updatedMetadata));
+                    await loadData(filters, updatedMetadata);
                 },
                 onShowSizeChange: handleShowSizeChange,
             }}
@@ -1102,7 +1118,8 @@ const QuickUI = ({
         // Route-based rendering
         if (crudType === "route") {
             if (currentAction === "create" || currentAction === "edit") {
-                const recordToEdit = currentAction === "edit" ? data.find(item => item.id === currentRecordId) : null;
+                const recordToEdit =
+                    currentAction === "edit" ? dataList.find(item => item.id === currentRecordId) : null;
 
                 return (
                     <div>
@@ -1145,7 +1162,7 @@ const QuickUI = ({
             }
 
             if (currentAction === "view") {
-                const recordToView = data.find(item => item.id === currentRecordId);
+                const recordToView = dataList.find(item => item.id === currentRecordId);
                 return (
                     <div>
                         <Space style={{ marginBottom: 16 }}>

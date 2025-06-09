@@ -3,7 +3,18 @@ import { CrudType } from "@components/common/AppCRUDOperation";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface QuickUIState {
-    data: any[];
+    data: {
+        list: any[];
+        meta: {
+            totalItems: number;
+            itemCount: number;
+            itemsPerPage: number;
+            totalPages: number;
+            currentPage: number;
+            hasNextPage: boolean;
+            hasPreviousPage: boolean;
+        };
+    };
     editingRecord: any | null;
     viewingRecord: any | null;
     selectedRowKeys: any[];
@@ -18,7 +29,18 @@ export interface QuickUIState {
 }
 
 const initialState: QuickUIState = {
-    data: [],
+    data: {
+        list: [],
+        meta: {
+            totalItems: 20,
+            itemCount: 0,
+            itemsPerPage: 10,
+            totalPages: 1,
+            currentPage: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+        },
+    },
     editingRecord: null,
     viewingRecord: null,
     selectedRowKeys: [],
@@ -26,11 +48,7 @@ const initialState: QuickUIState = {
     isFormVisible: false,
     isViewVisible: false,
     currentPage: "list",
-    filters: {
-        page: 1,
-        pageSize: 5,
-        total: 20,
-    },
+    filters: {},
     loading: false,
     activeCrudType: "modal",
     error: null,
@@ -101,7 +119,13 @@ const quickUISlice = createSlice({
     initialState,
     reducers: {
         setData: (state, action: PayloadAction<any[]>) => {
-            state.data = action.payload;
+            state.data.list = action.payload;
+        },
+        setMeta: (state, action: PayloadAction<QuickUIState["data"]["meta"]>) => {
+            state.data.meta = action.payload;
+        },
+        setMetadata: (state, action: PayloadAction<QuickUIState["data"]["meta"]>) => {
+            state.data.meta = action.payload;
         },
         setEditingRecord: (state, action: PayloadAction<any | null>) => {
             state.editingRecord = action.payload;
@@ -126,11 +150,7 @@ const quickUISlice = createSlice({
             state.filters = action.payload;
         },
         clearFilters: state => {
-            state.filters = {
-                page: 1,
-                pageSize: 5,
-                total: 0,
-            };
+            state.filters = {};
         },
         setActiveCrudType: (state, action: PayloadAction<CrudType>) => {
             state.activeCrudType = action.payload;
@@ -154,7 +174,7 @@ const quickUISlice = createSlice({
             })
             .addCase(createRecord.fulfilled, (state, action) => {
                 state.loading = false;
-                state.data.push(action.payload);
+                state.data.list.push(action.payload);
                 state.isFormVisible = false;
                 state.editingRecord = null;
                 state.currentPage = "list";
@@ -171,9 +191,9 @@ const quickUISlice = createSlice({
             })
             .addCase(updateRecord.fulfilled, (state, action) => {
                 state.loading = false;
-                const index = state.data.findIndex(item => item.id === action.payload.id);
+                const index = state.data.list.findIndex(item => item.id === action.payload.id);
                 if (index !== -1) {
-                    state.data[index] = action.payload;
+                    state.data.list[index] = action.payload;
                 }
                 state.isFormVisible = false;
                 state.editingRecord = null;
@@ -191,7 +211,7 @@ const quickUISlice = createSlice({
             })
             .addCase(deleteRecord.fulfilled, (state, action) => {
                 state.loading = false;
-                state.data = state.data.filter(item => item.id !== action.payload.id);
+                state.data.list = state.data.list.filter(item => item.id !== action.payload.id);
             })
             .addCase(deleteRecord.rejected, (state, action) => {
                 state.loading = false;
@@ -205,7 +225,7 @@ const quickUISlice = createSlice({
             })
             .addCase(applyFilters.fulfilled, (state, action) => {
                 state.loading = false;
-                state.data = action.payload;
+                state.data.list = action.payload;
             })
             .addCase(applyFilters.rejected, (state, action) => {
                 state.loading = false;
@@ -216,6 +236,8 @@ const quickUISlice = createSlice({
 
 export const {
     setData,
+    setMeta,
+    setMetadata,
     setEditingRecord,
     setViewingRecord,
     setSelectedRows,
