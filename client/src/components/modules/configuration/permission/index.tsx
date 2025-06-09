@@ -1,7 +1,7 @@
 "use client";
 import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { createPermission } from "@lib/actions/modules/permission/permissionActions";
 import { useState } from "react";
 
 // Define a type for permission records matching your API structure
@@ -119,76 +119,142 @@ const permissionFormSchema: FormSchema = {
 
 const PermissionPage = ({ data }: any) => {
     console.log("PermissionPage data:", data);
-    const [permissions, setPermissions] = useState<Permission[]>(initialPermissions);
-
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
+    const [permissions, setPermissions] = useState<Permission[]>(data?.data?.data);
 
     // CRUD Handlers for API integration
     const handleCreate = async (record: Partial<Permission>): Promise<Permission> => {
-        console.log("Creating permission:", record);
-
-        // Simulate API validation
-        const existingSlug = permissions.find(p => p.slug === record.slug);
-        if (existingSlug) {
-            throw new Error("Permission slug already exists");
+        try {
+            const data = await createPermission(record);
+            return data;
+        } catch (error) {
+            console.error("Error creating permission:", error);
+            throw new Error("Failed to create permission. Please try again.");
         }
-
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Transform to API format for creation
-        const apiData = {
-            id: Date.now(),
-            slug: record.slug,
-            name: record.name,
-            message_id: record.message_id || null,
-            status: record.status === "active" ? 1 : 0,
-            created_by: 1, // Current user
-            updated_by: 1,
-            deleted_by: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            deleted_at: null,
-            deleted: 0,
-        };
-
-        const newPermission = transformApiToUI({
-            ...apiData,
-            ...record,
-        });
-
-        setPermissions(prev => [...prev, newPermission]);
-        return newPermission;
     };
 
     const handleUpdate = async (record: Permission): Promise<Permission> => {
-        console.log("Updating permission:", record);
+        try {
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 800));
 
-        await new Promise(resolve => setTimeout(resolve, 800));
+            // Transform UI data to API format
+            const apiPayload = {
+                slug: record.slug,
+                name: record.name,
+                status: record.status === "active" ? 1 : 0,
+                updated_by: 1,
+                // Add other required API fields
+            };
 
-        const updatedRecord = {
-            ...record,
-            updatedAt: new Date().toISOString().split("T")[0],
-            updated_by: 1, // Current user
-        };
+            // TODO: Replace with actual API call
+            // const response = await fetch(`/api/permissions/${record.id}`, {
+            //     method: 'PUT',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(apiPayload)
+            // });
+            // const apiData = await response.json();
 
-        setPermissions(prev => prev.map(item => (item.id === record.id ? updatedRecord : item)));
-        return updatedRecord;
+            // Mock API response
+            const mockApiResponse = {
+                id: parseInt(record.id),
+                slug: record.slug,
+                name: record.name,
+                message_id: record.message_id,
+                status: record.status === "active" ? 1 : 0,
+                created_by: record.created_by,
+                updated_by: 1,
+                deleted_by: record.deleted_by,
+                created_at: record.createdAt,
+                updated_at: new Date().toISOString(),
+                deleted_at: record.deleted_at,
+                deleted: record.deleted,
+            };
+
+            // Transform API response back to UI format
+            const updatedPermission = transformApiToUI(mockApiResponse);
+
+            // Update local state
+            setPermissions(prev => prev.map(p => (p.id === record.id ? updatedPermission : p)));
+
+            return updatedPermission;
+        } catch (error) {
+            console.error("Error updating permission:", error);
+            throw new Error("Failed to update permission. Please try again.");
+        }
     };
 
     const handleDelete = async (record: Permission): Promise<Permission> => {
-        console.log("Deleting permission:", record);
+        try {
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (record.isSystemPermission) {
-            throw new Error("Cannot delete system permissions");
+            // TODO: Replace with actual API call
+            // const response = await fetch(`/api/permissions/${record.id}`, {
+            //     method: 'DELETE'
+            // });
+            // if (!response.ok) throw new Error('Delete failed');
+
+            // Simulate successful deletion
+            console.log(`Deleting permission with ID: ${record.id}`);
+
+            // Update local state
+            setPermissions(prev => prev.filter(p => p.id !== record.id));
+
+            return record;
+        } catch (error) {
+            console.error("Error deleting permission:", error);
+            throw new Error("Failed to delete permission. Please try again.");
         }
+    };
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+    // Optional: Handle filtering with API integration
+    const handleFilter = async (data: Permission[], filters: Record<string, any>): Promise<Permission[]> => {
+        try {
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 300));
 
-        setPermissions(prev => prev.filter(item => item.id !== record.id));
-        return record;
+            console.log("Applying filters:", filters);
+
+            // TODO: Replace with actual API call
+            // const queryParams = new URLSearchParams();
+            // Object.entries(filters).forEach(([key, value]) => {
+            //     if (value && key !== '_pagination') {
+            //         queryParams.append(key, value);
+            //     }
+            // });
+            //
+            // const response = await fetch(`/api/permissions?${queryParams.toString()}`);
+            // const apiData = await response.json();
+            // return apiData.data.map(transformApiToUI);
+
+            // Client-side filtering for demonstration
+            let filteredData = [...data];
+
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value && key !== "_pagination") {
+                    filteredData = filteredData.filter(item => {
+                        const itemValue = item[key as keyof Permission];
+                        if (typeof value === "string" && typeof itemValue === "string") {
+                            return itemValue.toLowerCase().includes(value.toLowerCase());
+                        }
+                        return itemValue === value;
+                    });
+                }
+            });
+
+            // Handle pagination if provided
+            if (filters._pagination) {
+                const { page, pageSize } = filters._pagination;
+                const startIndex = (page - 1) * pageSize;
+                const endIndex = startIndex + pageSize;
+                return filteredData.slice(startIndex, endIndex);
+            }
+
+            return filteredData;
+        } catch (error) {
+            console.error("Error filtering permissions:", error);
+            throw new Error("Failed to filter permissions. Please try again.");
+        }
     };
 
     return (
@@ -205,6 +271,10 @@ const PermissionPage = ({ data }: any) => {
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
                 onRecordDelete={handleDelete}
+                onDataChange={newData => {
+                    console.log("Data changed:", newData);
+                    // Optional: Sync with parent component or global state
+                }}
                 tableProps={{
                     bordered: true,
                     size: "middle",
@@ -231,6 +301,18 @@ const PermissionPage = ({ data }: any) => {
                     create: "Permission created successfully!",
                     update: "Permission updated successfully!",
                     delete: "Permission deleted successfully!",
+                }}
+                beforeFormSubmit={values => {
+                    // Optional: Transform or validate data before submission
+                    console.log("Form values before submit:", values);
+                    return {
+                        ...values,
+                        slug: values.slug?.toLowerCase().replace(/\s+/g, "_"),
+                    };
+                }}
+                afterFormSubmit={(values, result) => {
+                    // Optional: Handle post-submission actions
+                    console.log("Form submitted successfully:", { values, result });
                 }}
             />
         </div>
