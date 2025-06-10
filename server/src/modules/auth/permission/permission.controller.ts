@@ -58,7 +58,7 @@ export class PermissionController {
     @AutoPaginate({
         resource: 'permission',
         route: 'permissions',
-        totalItemsKey: 'total', // Specify the key that contains total count
+        totalItemsKey: 'total',
     })
     @ApiBearerAuth()
     @AccessRoles({
