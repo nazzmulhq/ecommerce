@@ -56,8 +56,9 @@ export class PermissionController {
 
     @Get()
     @AutoPaginate({
-        resource: 'route',
-        route: 'route',
+        resource: 'permission',
+        route: 'permissions',
+        totalItemsKey: 'total', // Specify the key that contains total count
     })
     @ApiBearerAuth()
     @AccessRoles({
@@ -67,9 +68,14 @@ export class PermissionController {
     @UseGuards(JwtAuthGuard, RoleGuard)
     async findAll(@Pagination() params: PaginationParams) {
         try {
-            const [permission, _] =
+            const [permissions, total] =
                 await this.permissionService.findAll(params);
-            return permission;
+
+            // Return in format that interceptor can handle
+            return {
+                items: permissions,
+                total: total,
+            };
         } catch (error) {
             return {
                 success: false,

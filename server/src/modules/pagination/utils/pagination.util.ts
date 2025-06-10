@@ -178,17 +178,34 @@ function buildUrl(
 export function extractTotalItems<T>(
     data: any,
     totalItemsKey?: string,
-    defaultValue?: number,
+    defaultValue: number = 0,
 ): number {
     if (typeof data === 'object' && data !== null) {
         // Try to extract from meta.totalItems if it exists
         if (data.meta && typeof data.meta.totalItems === 'number') {
-            return data.meta.totalItems;
+            return Math.max(0, data.meta.totalItems);
         }
 
         // Try to extract from specified key
         if (totalItemsKey && typeof data[totalItemsKey] === 'number') {
-            return data[totalItemsKey];
+            return Math.max(0, data[totalItemsKey]);
+        }
+
+        // Try common total property names
+        if (typeof data.total === 'number') {
+            return Math.max(0, data.total);
+        }
+
+        if (typeof data.totalItems === 'number') {
+            return Math.max(0, data.totalItems);
+        }
+
+        if (typeof data.count === 'number') {
+            return Math.max(0, data.count);
+        }
+
+        if (typeof data.totalCount === 'number') {
+            return Math.max(0, data.totalCount);
         }
 
         // For arrays, return length
@@ -196,16 +213,16 @@ export function extractTotalItems<T>(
             return data.length;
         }
 
-        // If the data has a count property, use that
-        if (typeof data.count === 'number') {
-            return data.count;
+        // If data has items property and it's an array
+        if (data.items && Array.isArray(data.items)) {
+            return data.items.length;
         }
 
-        // If the data has a total property, use that
-        if (typeof data.total === 'number') {
-            return data.total;
+        // If data has data property and it's an array
+        if (data.data && Array.isArray(data.data)) {
+            return data.data.length;
         }
     }
 
-    return defaultValue || 0;
+    return Math.max(0, defaultValue);
 }

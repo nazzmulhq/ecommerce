@@ -67,21 +67,52 @@ export class RouteService {
     }
 
     async findAll(params: PaginationParams) {
-        const { skip, limit, sortBy, sortOrder } = params;
+        const { skip, limit, sortBy, sortOrder, search, filters } = params;
         await this.cacheService.del('/route');
+
         const queryBuilder = this.routeRepository.createQueryBuilder('route');
         queryBuilder
             .leftJoinAndSelect('route.permissions', 'permissions')
             .leftJoinAndSelect('route.parent', 'parent')
             .leftJoinAndSelect('route.children', 'children')
-            .where('route.deleted = 0')
-            .skip(skip)
-            .take(limit);
+            .where('route.deleted = 0');
+
+        // Apply search if provided
+        if (search) {
+            queryBuilder.andWhere(
+                '(route.name ILIKE :search OR route.path ILIKE :search)',
+                { search: `%${search}%` },
+            );
+        }
+
+        // Apply filters if provided
+        if (filters && typeof filters === 'object') {
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    queryBuilder.andWhere(`route.${key} = :${key}`, {
+                        [key]: value,
+                    });
+                }
+            });
+        }
+
+        // Apply sorting
         if (typeof sortBy !== 'symbol' && sortOrder) {
             queryBuilder.orderBy(`route.${sortBy}`, sortOrder);
+        } else {
+            queryBuilder.orderBy('route.position', 'ASC');
         }
-        const [route, total] = await queryBuilder.getManyAndCount();
-        return [route, total];
+
+        // Get total count BEFORE applying pagination
+        const totalCount = await queryBuilder.getCount();
+
+        // Apply pagination
+        queryBuilder.skip(skip).take(limit);
+
+        // Get the results
+        const routes = await queryBuilder.getMany();
+
+        return [routes, totalCount];
     }
 
     async findOne(id: string) {

@@ -32,9 +32,44 @@ export class PaginationInterceptor implements NestInterceptor {
 
         return next.handle().pipe(
             map((data) => {
-                // If already paginated, just return
-                if (data && data.meta && Array.isArray(data.data)) {
-                    return data;
+                // If already paginated with proper structure, just return
+                if (
+                    data &&
+                    data.meta &&
+                    typeof data.meta.totalItems === 'number'
+                ) {
+                    return {
+                        list: data.items || data.data || data.list || [],
+                        meta: data.meta,
+                        links: data.links,
+                    };
+                }
+
+                // Handle responses with items and total properties
+                if (
+                    data &&
+                    typeof data === 'object' &&
+                    data.items &&
+                    typeof data.total === 'number'
+                ) {
+                    const paginationParams: PaginationParams =
+                        request.paginationParams || {
+                            page: 1,
+                            limit: data.items.length,
+                            skip: 0,
+                        };
+
+                    return createPaginationResponse(
+                        data.items,
+                        data.total, // Use the actual total from database
+                        paginationParams,
+                        {
+                            route: metadata.route,
+                            transform: metadata.transform,
+                            preserveQueryParams: true,
+                            ...(metadata.options || {}),
+                        },
+                    );
                 }
 
                 // Handle array responses automatically
@@ -63,29 +98,14 @@ export class PaginationInterceptor implements NestInterceptor {
 
                 // Handle responses with data and totalItems
                 if (data && typeof data === 'object') {
-                    let items = data;
+                    let items = data.data || data.items || data;
                     let totalItems: number;
 
-                    // If data has items property and it's an array, use that
-                    if (data.items && Array.isArray(data.items)) {
-                        items = data.items;
-                        totalItems = extractTotalItems(
-                            data,
-                            metadata.totalItemsKey,
-                            items.length,
-                        );
-                    } else {
-                        // Try to extract total items using the provided key
-                        totalItems = extractTotalItems(
-                            data,
-                            metadata.totalItemsKey,
-                        );
-
-                        // If we couldn't extract total items but have an array, use its length
-                        if (totalItems === 0 && Array.isArray(items)) {
-                            totalItems = items.length;
-                        }
-                    }
+                    // Try to extract total items using different possible keys
+                    totalItems = extractTotalItems(
+                        data,
+                        metadata.totalItemsKey,
+                    );
 
                     // If we have items as an array, paginate
                     if (Array.isArray(items)) {
@@ -98,7 +118,7 @@ export class PaginationInterceptor implements NestInterceptor {
 
                         return createPaginationResponse(
                             items,
-                            totalItems,
+                            totalItems || items.length,
                             paginationParams,
                             {
                                 route: metadata.route,
