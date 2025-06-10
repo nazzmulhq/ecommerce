@@ -118,16 +118,7 @@ const permissionFormSchema: FormSchema = {
     },
 };
 
-const PermissionPage = ({
-    data,
-    searchParams: initialSearchParams,
-}: {
-    data: any;
-    searchParams?: Record<string, string>;
-}) => {
-    console.log("PermissionPage data:", data);
-    console.log("Initial search params:", initialSearchParams);
-
+const PermissionPage = () => {
     // CRUD Handlers for API integration
     const handleCreate = async (record: Partial<Permission>): Promise<Permission> => {
         try {
@@ -184,7 +175,7 @@ const PermissionPage = ({
         }
     };
 
-    const onFilter = async (data: any[], filter: Record<string, any>) => {
+    const handleFilter = async (data: any[], filter: Record<string, any>) => {
         try {
             console.log("Filtering with params:", filter);
 
@@ -230,9 +221,7 @@ const PermissionPage = ({
                 validateOnMount={false}
                 preserveFormData={false}
                 currentAction="list"
-                initialData={data.data}
-                filterMode="server"
-                onRecordFilter={onFilter}
+                onRecordFilter={handleFilter}
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
                 onRecordDelete={handleDelete}

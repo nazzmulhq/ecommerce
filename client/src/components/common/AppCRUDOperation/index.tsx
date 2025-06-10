@@ -8,8 +8,6 @@ import {
     SearchOutlined,
 } from "@ant-design/icons";
 import {
-    createRecord,
-    deleteRecord,
     resetState,
     setActiveCrudType,
     setApiData,
@@ -24,7 +22,6 @@ import {
     setSelectedRows,
     setViewVisible,
     setViewingRecord,
-    updateRecord,
 } from "@lib/redux/config/quickUISlice"; // Adjust import path as needed
 import { AppDispatch, RootState } from "@lib/redux/store"; // Adjust import path as needed
 import { TIconName } from "@src/types/iconName";
@@ -95,38 +92,16 @@ export interface QuickUIProps {
     title: string;
     formSchema: FormSchema;
     crudType?: CrudType;
-    initialData?: {
-        list: any[];
-        meta: {
-            totalItems?: number;
-            itemCount?: number;
-            itemsPerPage?: number;
-            totalPages?: number;
-            currentPage?: number;
-            hasNextPage?: boolean;
-            hasPreviousPage?: boolean;
-        };
-        links: {
-            self?: string;
-            first?: string;
-            last?: string;
-            next?: string;
-            previous?: string;
-        };
-    }; // Support both new and legacy format
     icon?: TIconName;
     initialPageSize?: number; // Optional initial page size for pagination
 
-    // Filtering configuration
-    filterMode?: "server" | "client"; // New prop to control filtering mode
-
-    // Action handlers
+    // Action handlers - onRecordFilter is now required
     onDataChange?: (data: any[]) => void;
     onRecordView?: (record: any) => void;
     onRecordCreate?: (record: any) => Promise<any> | void;
     onRecordUpdate?: (record: any) => Promise<any> | void;
     onRecordDelete?: (record: any) => Promise<any> | void;
-    onRecordFilter?: (data: any[], filter: Record<string, any>) => Promise<any[]> | void;
+    onRecordFilter: (data: any[], filter: Record<string, any>) => Promise<any>; // Required prop
 
     // UI customization
     tableColumns?: any[];
@@ -187,29 +162,9 @@ const QuickUI = ({
     title,
     formSchema,
     crudType = "modal",
-    initialData = {
-        list: [],
-        meta: {
-            totalItems: 0,
-            itemCount: 0,
-            itemsPerPage: 5,
-            totalPages: 0,
-            currentPage: 1,
-            hasNextPage: false,
-            hasPreviousPage: false,
-        },
-        links: {
-            self: "",
-            first: "",
-            last: "",
-            next: "",
-            previous: "",
-        },
-    },
     initialPageSize = 5, // Default initial page size
-    filterMode = "server", // Default to server-side filtering
     icon,
-    onRecordFilter,
+    onRecordFilter, // Now required
     showFilter = true,
     onDataChange,
     onRecordView,
@@ -278,56 +233,19 @@ const QuickUI = ({
     const [form] = Form.useForm();
     const filterFormRef = useRef(form);
 
-    // Normalize initialData to ensure consistent structure
-    const normalizedInitialData = useMemo(() => {
-        if (!initialData) {
-            return {
-                list: [],
-                meta: {
-                    totalItems: 0,
-                    itemCount: 0,
-                    itemsPerPage: initialPageSize,
-                    totalPages: 0,
-                    currentPage: 1,
-                    hasNextPage: false,
-                    hasPreviousPage: false,
-                },
-            };
-        }
-
-        // Handle legacy array format
-        if (Array.isArray(initialData)) {
-            return {
-                list: initialData,
-                meta: {
-                    totalItems: initialData.length,
-                    itemCount: initialData.length,
-                    itemsPerPage: initialPageSize,
-                    totalPages: Math.ceil(initialData.length / initialPageSize),
-                    currentPage: 1,
-                    hasNextPage: initialData.length > initialPageSize,
-                    hasPreviousPage: false,
-                },
-            };
-        }
-
-        // Handle new API format with proper meta mapping
-        return {
-            list: initialData.list || [],
-            meta: {
-                totalItems: initialData.meta?.totalItems || initialData.list?.length || 0,
-                itemCount: initialData.meta?.itemCount || initialData.list?.length || 0,
-                itemsPerPage: initialData.meta?.itemsPerPage || initialPageSize,
-                totalPages:
-                    initialData.meta?.totalPages ||
-                    Math.ceil((initialData.list?.length || 0) / (initialData.meta?.itemsPerPage || initialPageSize)),
-                currentPage: initialData.meta?.currentPage || 1,
-                hasNextPage: initialData.meta?.hasNextPage || false,
-                hasPreviousPage: initialData.meta?.hasPreviousPage || false,
-            },
-            links: initialData.links || undefined,
-        };
-    }, [initialData]);
+    // Initialize default metadata
+    const defaultMetadata = useMemo(
+        () => ({
+            totalItems: 0,
+            itemCount: 0,
+            itemsPerPage: initialPageSize,
+            totalPages: 0,
+            currentPage: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+        }),
+        [initialPageSize],
+    );
 
     // Helper function to apply client-side filtering
     const applyClientSideFilters = useCallback((data: any[], filters: Record<string, any>) => {
@@ -413,104 +331,57 @@ const QuickUI = ({
         [filters, metadata, pathname, router, searchParams],
     );
 
-    // Simplified data loading with proper logic for all 3 scenarios
+    // Simplified data loading - always uses onRecordFilter
     const loadData = useCallback(
         async (currentFilters: any = filters, currentMetadata = metadata, updateUrl = true) => {
-            // Scenario 1: Server-side with onRecordFilter function
-            if (filterMode === "server" && onRecordFilter) {
-                try {
-                    dispatch(setLoading(true));
+            try {
+                dispatch(setLoading(true));
 
-                    const result = await onRecordFilter([], {
-                        ...currentFilters,
-                        _pagination: {
-                            page: currentMetadata.currentPage,
-                            pageSize: currentMetadata.itemsPerPage,
-                        },
-                    });
+                const result = await onRecordFilter([], {
+                    ...currentFilters,
+                    _pagination: {
+                        page: currentMetadata.currentPage,
+                        pageSize: currentMetadata.itemsPerPage,
+                    },
+                });
 
-                    handleFilterResult(result);
-
-                    if (updateUrl) {
-                        updateURL(currentFilters, currentMetadata);
-                    }
-                } catch (error) {
-                    console.error("Error loading data:", error);
-                    dispatch(setError("Failed to load data"));
-                } finally {
-                    dispatch(setLoading(false));
-                }
-            }
-            // Scenario 2: Server-side without onRecordFilter (use initial data only)
-            else if (filterMode === "server" && !onRecordFilter) {
-                // Use the initial data directly - server already handled filtering/pagination
-                dispatch(setApiData(normalizedInitialData));
+                handleFilterResult(result);
 
                 if (updateUrl) {
                     updateURL(currentFilters, currentMetadata);
                 }
-            }
-            // Scenario 3: Client-side filtering (no onRecordFilter, filter locally)
-            else if (filterMode === "client") {
-                if (normalizedInitialData.list.length > 0) {
-                    // Apply client-side filtering
-                    const filteredData = applyClientSideFilters(normalizedInitialData.list, currentFilters);
-
-                    // Calculate pagination for filtered data
-                    const totalPages = Math.ceil(filteredData.length / currentMetadata.itemsPerPage);
-                    const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                    const paginatedData = filteredData.slice(startIndex, startIndex + currentMetadata.itemsPerPage);
-
-                    // Update data and metadata
-                    dispatch(setData(paginatedData));
-                    dispatch(
-                        setMetadata({
-                            ...currentMetadata,
-                            totalItems: filteredData.length,
-                            itemCount: paginatedData.length,
-                            totalPages,
-                            hasNextPage: currentMetadata.currentPage < totalPages,
-                            hasPreviousPage: currentMetadata.currentPage > 1,
-                        }),
-                    );
-
-                    if (updateUrl) {
-                        updateURL(currentFilters, currentMetadata);
-                    }
-                } else {
-                    // No data available for client-side filtering
-                    dispatch(setData([]));
-                    dispatch(
-                        setMetadata({
-                            ...currentMetadata,
-                            totalItems: 0,
-                            itemCount: 0,
-                            totalPages: 0,
-                            hasNextPage: false,
-                            hasPreviousPage: false,
-                        }),
-                    );
-
-                    if (updateUrl) {
-                        updateURL(currentFilters, currentMetadata);
-                    }
-                }
+            } catch (error) {
+                console.error("Error loading data:", error);
+                dispatch(setError("Failed to load data"));
+            } finally {
+                dispatch(setLoading(false));
             }
         },
-        [
-            filterMode,
-            onRecordFilter,
-            dispatch,
-            handleFilterResult,
-            applyClientSideFilters,
-            updateURL,
-            filters,
-            metadata,
-            normalizedInitialData,
-        ],
+        [onRecordFilter, dispatch, handleFilterResult, updateURL, filters, metadata],
     );
 
-    // Initialize from URL parameters on mount - always sync for persistence
+    // Add revalidation helper for CRUD operations
+    const revalidateData = useCallback(async () => {
+        try {
+            dispatch(setLoading(true));
+            const result = await onRecordFilter([], {
+                ...filters,
+                _pagination: {
+                    page: metadata.currentPage,
+                    pageSize: metadata.itemsPerPage,
+                },
+                _revalidate: true, // Flag to indicate revalidation
+            });
+            handleFilterResult(result);
+        } catch (error) {
+            console.error("Error revalidating data:", error);
+            dispatch(setError("Failed to reload data"));
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }, [onRecordFilter, filters, metadata, dispatch, handleFilterResult]);
+
+    // Initialize from URL parameters on mount
     useEffect(() => {
         const urlFilters: Record<string, any> = {};
         const pageParam = searchParams.get("page");
@@ -531,11 +402,9 @@ const QuickUI = ({
         dispatch(setFilters(urlFilters));
 
         const urlMetadata = {
-            ...normalizedInitialData.meta,
+            ...defaultMetadata,
             currentPage: pageParam ? parseInt(pageParam) : 1,
-            itemsPerPage: pageSizeParam
-                ? parseInt(pageSizeParam)
-                : normalizedInitialData.meta.itemsPerPage || initialPageSize,
+            itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : defaultMetadata.itemsPerPage,
         };
         dispatch(setMetadata(urlMetadata));
 
@@ -548,59 +417,15 @@ const QuickUI = ({
         if (!pageParam && !pageSizeParam && Object.keys(urlFilters).length === 0) {
             updateURL({}, urlMetadata);
         }
-    }, [searchParams.toString(), dispatch, normalizedInitialData.meta]); // Remove updateURL from dependencies
+    }, [searchParams.toString(), dispatch, defaultMetadata]);
 
-    // Simplified initial data loading
+    // Combined initial data loading and URL change handling
     useEffect(() => {
         let isMounted = true;
 
-        const loadInitialData = async () => {
-            if (isMounted) {
-                // Always use the initial data first
-                dispatch(
-                    setApiData({
-                        list: normalizedInitialData.list,
-                        meta: normalizedInitialData.meta,
-                        links: normalizedInitialData.links,
-                    }),
-                );
+        const loadDataFromParams = async () => {
+            if (!isMounted) return;
 
-                // For server-side with onRecordFilter, load fresh data
-                if (filterMode === "server" && onRecordFilter) {
-                    try {
-                        const result = await onRecordFilter([], {
-                            ...filters,
-                            _pagination: {
-                                page: metadata.currentPage,
-                                pageSize: metadata.itemsPerPage,
-                            },
-                        });
-
-                        if (isMounted) {
-                            handleFilterResult(result);
-                        }
-                    } catch (error) {
-                        if (isMounted) {
-                            console.error("Error loading initial data:", error);
-                            dispatch(setError("Failed to load data"));
-                        }
-                    }
-                }
-            }
-        };
-
-        loadInitialData();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [normalizedInitialData.list.length, filterMode, onRecordFilter]); // Simplified dependencies
-
-    // Load data when URL changes - simplified to prevent infinite loops
-    useEffect(() => {
-        let isMounted = true;
-
-        const loadDataFromUrl = async () => {
             const urlFilters: Record<string, any> = {};
             const pageParam = searchParams.get("page");
             const pageSizeParam = searchParams.get("pageSize") || searchParams.get("limit");
@@ -616,23 +441,42 @@ const QuickUI = ({
             });
 
             const urlMetadata = {
-                ...metadata,
+                ...defaultMetadata,
                 currentPage: pageParam ? parseInt(pageParam) : 1,
-                itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : metadata.itemsPerPage || initialPageSize,
+                itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : defaultMetadata.itemsPerPage,
             };
 
-            // Only load data if there's a meaningful change
-            if (isMounted && onRecordFilter) {
-                await loadData(urlFilters, urlMetadata, false);
+            try {
+                dispatch(setLoading(true));
+                const result = await onRecordFilter([], {
+                    ...urlFilters,
+                    _pagination: {
+                        page: urlMetadata.currentPage,
+                        pageSize: urlMetadata.itemsPerPage,
+                    },
+                });
+
+                if (isMounted) {
+                    handleFilterResult(result);
+                }
+            } catch (error) {
+                if (isMounted) {
+                    console.error("Error loading data:", error);
+                    dispatch(setError("Failed to load data"));
+                }
+            } finally {
+                if (isMounted) {
+                    dispatch(setLoading(false));
+                }
             }
         };
 
-        loadDataFromUrl();
+        loadDataFromParams();
 
         return () => {
             isMounted = false;
         };
-    }, [searchParams.toString()]); // Only depend on search params string
+    }, [searchParams.toString(), onRecordFilter, defaultMetadata, dispatch, handleFilterResult]);
 
     // Separate effect for CRUD type initialization - prevent infinite loops
     useEffect(() => {
@@ -648,51 +492,13 @@ const QuickUI = ({
         };
     }, []); // Empty dependency array for cleanup only
 
-    // Load data when URL changes
-    useEffect(() => {
-        let isMounted = true;
-
-        const loadDataFromUrl = async () => {
-            const urlFilters: Record<string, any> = {};
-            const pageParam = searchParams.get("page");
-            const pageSizeParam = searchParams.get("pageSize") || searchParams.get("limit");
-
-            Array.from(searchParams.entries()).forEach(([key, value]) => {
-                if (!["page", "pageSize", "limit"].includes(key) && value) {
-                    try {
-                        urlFilters[key] = JSON.parse(decodeURIComponent(value));
-                    } catch {
-                        urlFilters[key] = decodeURIComponent(value);
-                    }
-                }
-            });
-
-            const urlMetadata = {
-                ...metadata,
-                currentPage: pageParam ? parseInt(pageParam) : 1,
-                itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : metadata.itemsPerPage || initialPageSize,
-            };
-
-            // Only load data if there's a meaningful change
-            if (isMounted && onRecordFilter) {
-                await loadData(urlFilters, urlMetadata, false);
-            }
-        };
-
-        loadDataFromUrl();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [searchParams.toString()]);
-
     // Handle data changes callback - add guard to prevent infinite loops
     useEffect(() => {
-        if (onDataChange && dataList.length >= 0) {
+        if (onDataChange && dataList && dataList.length >= 0) {
             // Add condition to prevent unnecessary calls
             onDataChange(dataList);
         }
-    }, [dataList.length, onDataChange]); // Depend on length instead of entire array
+    }, [dataList?.length, onDataChange]); // Depend on length instead of entire array
 
     // Handle errors - add guard
     useEffect(() => {
@@ -975,14 +781,18 @@ const QuickUI = ({
             return;
         }
         try {
-            await dispatch(deleteRecord({ record, onRecordDelete })).unwrap();
+            // Execute the delete callback if provided
+            if (onRecordDelete) {
+                await onRecordDelete(record);
+            }
 
-            // Reload data to sync with server state
-            await loadData(filters, metadata);
+            // Revalidate and reload data to get latest values from server
+            await revalidateData();
 
             message.success(successMessages.delete);
         } catch (error) {
             console.error("Delete error:", error);
+            message.error("Delete operation failed. Please try again.");
         }
     };
 
@@ -996,15 +806,15 @@ const QuickUI = ({
 
                 if (editingRecord) {
                     const updatedRecord = { ...editingRecord, ...processedValues };
-                    const result = await dispatch(
-                        updateRecord({
-                            record: updatedRecord,
-                            onRecordUpdate,
-                        }),
-                    ).unwrap();
 
-                    // Reload data to sync with server state
-                    await loadData(filters, metadata);
+                    // Execute the update callback if provided
+                    let result = updatedRecord;
+                    if (onRecordUpdate) {
+                        result = await onRecordUpdate(updatedRecord);
+                    }
+
+                    // Revalidate and reload data to get latest values from server
+                    await revalidateData();
 
                     afterFormSubmit?.(processedValues, result);
                     message.success(successMessages.update);
@@ -1014,15 +824,14 @@ const QuickUI = ({
                         ...processedValues,
                     };
 
-                    const result = await dispatch(
-                        createRecord({
-                            record: newRecord,
-                            onRecordCreate,
-                        }),
-                    ).unwrap();
+                    // Execute the create callback if provided
+                    let result = newRecord;
+                    if (onRecordCreate) {
+                        result = await onRecordCreate(newRecord);
+                    }
 
-                    // Reload data to sync with server state
-                    await loadData(filters, metadata);
+                    // Revalidate and reload data to get latest values from server
+                    await revalidateData();
 
                     afterFormSubmit?.(processedValues, result);
                     message.success(successMessages.create);
@@ -1031,6 +840,7 @@ const QuickUI = ({
                 handleCancel();
             } catch (error) {
                 console.error("Form submission error:", error);
+                message.error("Operation failed. Please try again.");
             }
         },
         [
@@ -1042,9 +852,7 @@ const QuickUI = ({
             successMessages.update,
             successMessages.create,
             dispatch,
-            loadData,
-            filters,
-            metadata,
+            revalidateData,
         ],
     );
 
@@ -1335,7 +1143,7 @@ const QuickUI = ({
         );
     };
 
-    // Enhanced table rendering for server-side pagination
+    // Enhanced table rendering - simplified since we always use server-side filtering
     const renderTable = () => (
         <Table
             columns={generatedColumns}
@@ -1352,40 +1160,16 @@ const QuickUI = ({
             }
             locale={{ emptyText }}
             loading={loading}
-            pagination={
-                filterMode === "client"
-                    ? {
-                          current: metadata.currentPage,
-                          pageSize: metadata.itemsPerPage,
-                          total: metadata.totalItems,
-                          showSizeChanger: true,
-                          showQuickJumper: true,
-                          showTotal: (total: number, range: [number, number]) =>
-                              `${range[0]}-${range[1]} of ${total} items`,
-                          onChange: async (page, pageSize) => {
-                              const updatedMetadata = {
-                                  ...metadata,
-                                  currentPage: page,
-                                  itemsPerPage: pageSize || metadata.itemsPerPage,
-                              };
-
-                              dispatch(setMetadata(updatedMetadata));
-                              await loadData(filters, updatedMetadata);
-                          },
-                          onShowSizeChange: handleShowSizeChange,
-                      }
-                    : {
-                          current: metadata.currentPage,
-                          pageSize: metadata.itemsPerPage,
-                          total: metadata.totalItems,
-                          showSizeChanger: true,
-                          showQuickJumper: true,
-                          showTotal: (total: number, range: [number, number]) =>
-                              `${range[0]}-${range[1]} of ${total} items`,
-                          onChange: handleShowSizeChange,
-                          onShowSizeChange: handleShowSizeChange,
-                      }
-            }
+            pagination={{
+                current: metadata.currentPage,
+                pageSize: metadata.itemsPerPage,
+                total: metadata.totalItems,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} items`,
+                onChange: handleShowSizeChange,
+                onShowSizeChange: handleShowSizeChange,
+            }}
             onChange={handleTableChange}
             scroll={{ x: "max-content" }}
             {...tableProps}
