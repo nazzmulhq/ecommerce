@@ -1,6 +1,6 @@
 export const DEFAULT_PAGINATION_OPTIONS = {
     defaultPage: 1,
-    defaultLimit: 10,
+    defaultLimit: 5,
     maxLimit: 100,
     pageParam: 'page',
     limitParam: 'limit',

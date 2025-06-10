@@ -34,15 +34,41 @@ export class PermissionService {
     }
 
     async findAll(params: PaginationParams) {
-        const { skip, limit, sortBy = 'name', sortOrder = 'ASC' } = params;
+        const {
+            skip,
+            limit,
+            sortBy = 'created_at',
+            sortOrder = 'DESC',
+            name,
+            slug,
+        } = params;
         const queryBuilder =
             this.permissionRepository.createQueryBuilder('permission');
 
-        queryBuilder.where('permission.deleted = 0').skip(skip).take(limit);
+        queryBuilder.where('permission.deleted = 0');
 
-        if (typeof sortBy !== 'symbol' && sortOrder) {
-            queryBuilder.orderBy(`permission.${sortBy}`, sortOrder);
+        // Apply filters
+        if (name) {
+            queryBuilder.andWhere('permission.name LIKE :name', {
+                name: `%${name}%`,
+            });
         }
+        if (slug) {
+            queryBuilder.andWhere('permission.slug LIKE :slug', {
+                slug: `%${slug}%`,
+            });
+        }
+
+        queryBuilder.skip(skip).take(limit);
+
+        // Apply sorting based on provided parameters
+        if (sortBy && typeof sortBy !== 'symbol' && sortOrder) {
+            queryBuilder.orderBy(`permission.${sortBy}`, sortOrder);
+        } else {
+            // Default sort by created_at DESC if no valid sortBy provided
+            queryBuilder.orderBy('permission.created_at', 'DESC');
+        }
+
         const [permission, total] = await queryBuilder.getManyAndCount();
         return [permission, total];
     }

@@ -309,7 +309,6 @@ const PermissionPage = ({
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
                 onRecordDelete={handleDelete}
-                initialPageSize={5}
                 onDataChange={newData => {
                     console.log("Data changed:", newData);
                     // Optional: Sync with parent component or global state

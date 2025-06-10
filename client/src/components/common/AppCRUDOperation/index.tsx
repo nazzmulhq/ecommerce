@@ -206,7 +206,7 @@ const QuickUI = ({
             previous: "",
         },
     },
-    initialPageSize = 5,
+    initialPageSize = 5, // Default initial page size
     filterMode = "server", // Default to server-side filtering
     icon,
     onFilter,
