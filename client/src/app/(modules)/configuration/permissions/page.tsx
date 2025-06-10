@@ -16,13 +16,38 @@ export interface IPage {
 }
 
 const Page: FC<IPage> = async ({ searchParams }) => {
-    const data = await fetchPermissions(await searchParams);
+    // Resolve searchParams and normalize them
+    const resolvedSearchParams = await searchParams;
+    const normalizedSearchParams: Record<string, string> = {};
+
+    // Convert searchParams to a normalized format
+    if (resolvedSearchParams) {
+        Object.entries(resolvedSearchParams).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                normalizedSearchParams[key] = value[0]; // Take first value if array
+            } else if (value) {
+                normalizedSearchParams[key] = value;
+            }
+        });
+    }
+
+    // Set default pagination if not provided
+    if (!normalizedSearchParams.page) {
+        normalizedSearchParams.page = "1";
+    }
+    if (!normalizedSearchParams.pageSize && !normalizedSearchParams.limit) {
+        normalizedSearchParams.pageSize = "10";
+    }
+
+    // Fetch initial data with search parameters
+    const data = await fetchPermissions(normalizedSearchParams);
 
     console.log("Permissions data:", data);
+    console.log("Search params:", normalizedSearchParams);
 
     return (
         <AppSuspense>
-            <Permissions data={data} />
+            <Permissions data={data} searchParams={normalizedSearchParams} />
         </AppSuspense>
     );
 };

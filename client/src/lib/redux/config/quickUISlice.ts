@@ -14,6 +14,12 @@ export interface QuickUIState {
             hasNextPage: boolean;
             hasPreviousPage: boolean;
         };
+        links?: {
+            current?: string;
+            next?: string;
+            last?: string;
+            previous?: string;
+        };
     };
     editingRecord: any | null;
     viewingRecord: any | null;
@@ -32,11 +38,11 @@ const initialState: QuickUIState = {
     data: {
         list: [],
         meta: {
-            totalItems: 20,
+            totalItems: 0,
             itemCount: 0,
-            itemsPerPage: 10,
-            totalPages: 1,
-            currentPage: 1,
+            itemsPerPage: 0,
+            totalPages: 0,
+            currentPage: 0,
             hasNextPage: false,
             hasPreviousPage: false,
         },
@@ -121,9 +127,6 @@ const quickUISlice = createSlice({
         setData: (state, action: PayloadAction<any[]>) => {
             state.data.list = action.payload;
         },
-        setMeta: (state, action: PayloadAction<QuickUIState["data"]["meta"]>) => {
-            state.data.meta = action.payload;
-        },
         setMetadata: (state, action: PayloadAction<QuickUIState["data"]["meta"]>) => {
             state.data.meta = action.payload;
         },
@@ -164,61 +167,75 @@ const quickUISlice = createSlice({
         setLoading: (state, action: PayloadAction<boolean>) => {
             state.loading = action.payload;
         },
+        setApiData: (state, action: PayloadAction<{ list: any[]; meta: any; links?: any }>) => {
+            const { list, meta, links } = action.payload;
+
+            state.data.list = list;
+            state.data.meta = {
+                totalItems: meta.totalItems || 0,
+                itemCount: meta.itemCount || list.length,
+                itemsPerPage: meta.itemsPerPage || 10,
+                totalPages: meta.totalPages || 1,
+                currentPage: meta.currentPage || 1,
+                hasNextPage: meta.hasNextPage || false,
+                hasPreviousPage: meta.hasPreviousPage || false,
+            };
+            if (links) {
+                state.data.links = links;
+            }
+        },
     },
     extraReducers: builder => {
         builder
-            // Create record
+            // Simplified create record
             .addCase(createRecord.pending, state => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(createRecord.fulfilled, (state, action) => {
                 state.loading = false;
-                state.data.list.push(action.payload);
                 state.isFormVisible = false;
                 state.editingRecord = null;
                 state.currentPage = "list";
+                // Data will be reloaded from server, no need to update local state
             })
             .addCase(createRecord.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || "Failed to create record";
             })
 
-            // Update record
+            // Simplified update record
             .addCase(updateRecord.pending, state => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(updateRecord.fulfilled, (state, action) => {
                 state.loading = false;
-                const index = state.data.list.findIndex(item => item.id === action.payload.id);
-                if (index !== -1) {
-                    state.data.list[index] = action.payload;
-                }
                 state.isFormVisible = false;
                 state.editingRecord = null;
                 state.currentPage = "list";
+                // Data will be reloaded from server, no need to update local state
             })
             .addCase(updateRecord.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || "Failed to update record";
             })
 
-            // Delete record
+            // Simplified delete record
             .addCase(deleteRecord.pending, state => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(deleteRecord.fulfilled, (state, action) => {
                 state.loading = false;
-                state.data.list = state.data.list.filter(item => item.id !== action.payload.id);
+                // Data will be reloaded from server, no need to update local state
             })
             .addCase(deleteRecord.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || "Failed to delete record";
             })
 
-            // Apply filters
+            // Keep applyFilters for compatibility
             .addCase(applyFilters.pending, state => {
                 state.loading = true;
                 state.error = null;
@@ -236,7 +253,6 @@ const quickUISlice = createSlice({
 
 export const {
     setData,
-    setMeta,
     setMetadata,
     setEditingRecord,
     setViewingRecord,
@@ -250,6 +266,7 @@ export const {
     resetState,
     setError,
     setLoading,
+    setApiData,
 } = quickUISlice.actions;
 
 export default quickUISlice.reducer;

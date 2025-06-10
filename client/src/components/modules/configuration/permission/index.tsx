@@ -2,6 +2,7 @@
 import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
 import { getCookie } from "@lib/actions";
+import { useSearchParams } from "next/navigation";
 
 // Define a type for permission records matching your API structure
 interface Permission {
@@ -117,8 +118,45 @@ const permissionFormSchema: FormSchema = {
     },
 };
 
-const PermissionPage = ({ data }: any) => {
+const PermissionPage = ({
+    data,
+    searchParams: initialSearchParams,
+}: {
+    data: any;
+    searchParams?: Record<string, string>;
+}) => {
+    const searchParams = useSearchParams();
     console.log("PermissionPage data:", data);
+    console.log("Initial search params:", initialSearchParams);
+
+    // Extract current search parameters (prioritize client-side for real-time updates)
+    const getCurrentFilters = () => {
+        const filters: Record<string, any> = {};
+
+        // Use client-side searchParams for real-time updates
+        Array.from(searchParams.entries()).forEach(([key, value]) => {
+            if (!["page", "limit", "pageSize"].includes(key) && value) {
+                try {
+                    filters[key] = JSON.parse(decodeURIComponent(value));
+                } catch {
+                    filters[key] = decodeURIComponent(value);
+                }
+            }
+        });
+
+        return filters;
+    };
+
+    const getCurrentPagination = () => {
+        // Use client-side searchParams for real-time updates
+        const page = searchParams.get("page");
+        const limit = searchParams.get("limit") || searchParams.get("pageSize");
+
+        return {
+            page: page ? parseInt(page) : 1,
+            pageSize: limit ? parseInt(limit) : 10,
+        };
+    };
 
     // CRUD Handlers for API integration
     const handleCreate = async (record: Partial<Permission>): Promise<Permission> => {
@@ -136,7 +174,6 @@ const PermissionPage = ({ data }: any) => {
             });
 
             const apiData = await response.json();
-
             return apiData.data;
         } catch (error) {
             console.error("Error creating permission:", error);
@@ -146,49 +183,20 @@ const PermissionPage = ({ data }: any) => {
 
     const handleUpdate = async (record: Permission): Promise<Permission> => {
         try {
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 800));
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions/${record.id}`;
+            const token = await getCookie("token");
 
-            // Transform UI data to API format
-            const apiPayload = {
-                slug: record.slug,
-                name: record.name,
-                status: record.status === "active" ? 1 : 0,
-                updated_by: 1,
-                // Add other required API fields
-            };
+            const response = await fetch(url, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(record),
+            });
 
-            // TODO: Replace with actual API call
-            // const response = await fetch(`/api/permissions/${record.id}`, {
-            //     method: 'PUT',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(apiPayload)
-            // });
-            // const apiData = await response.json();
-
-            // Mock API response
-            const mockApiResponse = {
-                id: parseInt(record.id),
-                slug: record.slug,
-                name: record.name,
-                message_id: record.message_id,
-                status: record.status === "active" ? 1 : 0,
-                created_by: record.created_by,
-                updated_by: 1,
-                deleted_by: record.deleted_by,
-                created_at: record.createdAt,
-                updated_at: new Date().toISOString(),
-                deleted_at: record.deleted_at,
-                deleted: record.deleted,
-            };
-
-            // Transform API response back to UI format
-            const updatedPermission = transformApiToUI(mockApiResponse);
-
-            // Update local state
-            // setPermissions(prev => prev.map(p => (p.id === record.id ? updatedPermission : p)));
-
-            return updatedPermission;
+            const apiData = await response.json();
+            return apiData.data;
         } catch (error) {
             console.error("Error updating permission:", error);
             throw new Error("Failed to update permission. Please try again.");
@@ -197,20 +205,19 @@ const PermissionPage = ({ data }: any) => {
 
     const handleDelete = async (record: Permission): Promise<Permission> => {
         try {
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 500));
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions/${record.id}`;
+            const token = await getCookie("token");
 
-            // TODO: Replace with actual API call
-            // const response = await fetch(`/api/permissions/${record.id}`, {
-            //     method: 'DELETE'
-            // });
-            // if (!response.ok) throw new Error('Delete failed');
+            const response = await fetch(url, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-            // Simulate successful deletion
-            console.log(`Deleting permission with ID: ${record.id}`);
-
-            // Update local state
-            // setPermissions(prev => prev.filter(p => p.id !== record.id));
+            if (!response.ok) {
+                throw new Error("Delete failed");
+            }
 
             return record;
         } catch (error) {
@@ -219,50 +226,69 @@ const PermissionPage = ({ data }: any) => {
         }
     };
 
-    // Optional: Handle filtering with API integration
-    const handleFilter = async (data: Permission[], filters: Record<string, any>): Promise<Permission[]> => {
+    // Enhanced filter handler that uses current URL state
+    const handleFilter = async (data: Permission[], filters: Record<string, any>): Promise<any> => {
         try {
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 300));
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions`;
+            const token = await getCookie("token");
 
-            console.log("Applying filters:", filters);
+            // Build query parameters
+            const queryParams = new URLSearchParams();
 
-            // TODO: Replace with actual API call
-            // const queryParams = new URLSearchParams();
-            // Object.entries(filters).forEach(([key, value]) => {
-            //     if (value && key !== '_pagination') {
-            //         queryParams.append(key, value);
-            //     }
-            // });
-            //
-            // const response = await fetch(`/api/permissions?${queryParams.toString()}`);
-            // const apiData = await response.json();
-            // return apiData.data.map(transformApiToUI);
+            // Add pagination from filters or use current URL state
+            if (filters._pagination) {
+                queryParams.append("page", filters._pagination.page.toString());
+                queryParams.append("limit", filters._pagination.pageSize.toString());
+            } else {
+                // Use current URL state for pagination
+                const currentPagination = getCurrentPagination();
+                queryParams.append("page", currentPagination.page.toString());
+                queryParams.append("limit", currentPagination.pageSize.toString());
+            }
 
-            // Client-side filtering for demonstration
-            let filteredData = [...data];
-
+            // Add other filters (exclude pagination)
             Object.entries(filters).forEach(([key, value]) => {
                 if (value && key !== "_pagination") {
-                    filteredData = filteredData.filter(item => {
-                        const itemValue = item[key as keyof Permission];
-                        if (typeof value === "string" && typeof itemValue === "string") {
-                            return itemValue.toLowerCase().includes(value.toLowerCase());
-                        }
-                        return itemValue === value;
-                    });
+                    queryParams.append(key, value.toString());
                 }
             });
 
-            // Handle pagination if provided
-            if (filters._pagination) {
-                const { page, pageSize } = filters._pagination;
-                const startIndex = (page - 1) * pageSize;
-                const endIndex = startIndex + pageSize;
-                return filteredData.slice(startIndex, endIndex);
-            }
+            // Also include current URL filters that aren't overridden
+            const currentFilters = getCurrentFilters();
+            Object.entries(currentFilters).forEach(([key, value]) => {
+                if (!queryParams.has(key) && value) {
+                    queryParams.append(key, value.toString());
+                }
+            });
 
-            return filteredData;
+            console.log("API Query:", `${url}?${queryParams.toString()}`);
+
+            const response = await fetch(`${url}?${queryParams.toString()}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const apiResponse = await response.json();
+            console.log("API Response:", apiResponse);
+
+            // Return the full API response structure so QuickUI can handle it properly
+            return {
+                data: {
+                    list: apiResponse.data?.list || apiResponse.data || [],
+                    meta: apiResponse.data?.meta ||
+                        apiResponse.meta || {
+                            totalItems: apiResponse.data?.length || apiResponse.meta?.totalItems || 0,
+                            itemCount: apiResponse.data?.length || apiResponse.meta?.itemCount || 0,
+                            itemsPerPage: apiResponse.meta?.itemsPerPage || 5,
+                            totalPages: apiResponse.meta?.totalPages || 1,
+                            currentPage: apiResponse.meta?.currentPage || 1,
+                            hasNextPage: apiResponse.meta?.hasNextPage || false,
+                            hasPreviousPage: apiResponse.meta?.hasPreviousPage || false,
+                        },
+                    links: apiResponse.data?.links || apiResponse.links || {},
+                },
+            };
         } catch (error) {
             console.error("Error filtering permissions:", error);
             throw new Error("Failed to filter permissions. Please try again.");
@@ -279,10 +305,11 @@ const PermissionPage = ({ data }: any) => {
                 validateOnMount={false}
                 preserveFormData={false}
                 currentAction="list"
-                initialData={data?.data}
+                initialData={data.data}
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
                 onRecordDelete={handleDelete}
+                initialPageSize={5}
                 onDataChange={newData => {
                     console.log("Data changed:", newData);
                     // Optional: Sync with parent component or global state
