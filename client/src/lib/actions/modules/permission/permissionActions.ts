@@ -1,49 +1,74 @@
 "use server";
 
 import { getCookie } from "@lib/actions";
+import { revalidateTag } from "next/cache";
 
 interface PermissionFilter {
     page?: number;
     pageSize?: number;
     search?: string;
     status?: string;
+    _revalidate?: boolean;
 }
 
 export async function fetchPermissions(filters: PermissionFilter = {}) {
     try {
         // Build query parameters from filters object
-        const queryParams = new URLSearchParams(filters as Record<string, string>);
+        const { _revalidate, ...filterParams } = filters;
+        const queryParams = new URLSearchParams(filterParams as Record<string, string>);
         const queryString = queryParams.toString();
         const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions?${queryString}`;
 
         // Get the token from cookies
         const token = await getCookie("token");
 
-        // You would replace this with your actual API call
-        // For example:
+        // Revalidate cache if requested
+        if (_revalidate) {
+            revalidateTag("permissions");
+        }
+
         const response = await fetch(url, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
             },
+            next: {
+                tags: ["permissions"],
+                revalidate: _revalidate ? 0 : 60, // Force fresh data if revalidating
+            },
         });
-        const result = await response.json();
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
         return result;
     } catch (error) {
         console.error("Error fetching permissions:", error);
         return {
-            data: [],
-            total: 0,
+            data: {
+                list: [],
+                meta: {
+                    totalItems: 0,
+                    itemCount: 0,
+                    itemsPerPage: 10,
+                    totalPages: 0,
+                    currentPage: 1,
+                    hasNextPage: false,
+                    hasPreviousPage: false,
+                },
+                links: {},
+            },
         };
     }
 }
 
 export async function createPermission(permissionData: any) {
     try {
-        const url = `${process.env.API_URL}/permissions`;
-        const token = getCookie("token");
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions`;
+        const token = await getCookie("token");
 
         const response = await fetch(url, {
             method: "POST",
@@ -58,7 +83,12 @@ export async function createPermission(permissionData: any) {
             throw new Error("Failed to create permission");
         }
 
-        return await response.json();
+        const result = await response.json();
+
+        // Revalidate permissions cache
+        revalidateTag("permissions");
+
+        return result;
     } catch (error) {
         console.error("Error creating permission:", error);
         throw error;
@@ -68,7 +98,7 @@ export async function createPermission(permissionData: any) {
 export async function updatePermission(permissionId: number, permissionData: any) {
     try {
         const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions/${permissionId}`;
-        const token = getCookie("token");
+        const token = await getCookie("token");
 
         const response = await fetch(url, {
             method: "PUT",
@@ -83,7 +113,12 @@ export async function updatePermission(permissionId: number, permissionData: any
             throw new Error("Failed to update permission");
         }
 
-        return await response.json();
+        const result = await response.json();
+
+        // Revalidate permissions cache
+        revalidateTag("permissions");
+
+        return result;
     } catch (error) {
         console.error("Error updating permission:", error);
         throw error;
@@ -93,7 +128,7 @@ export async function updatePermission(permissionId: number, permissionData: any
 export async function deletePermission(permissionId: number) {
     try {
         const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions/${permissionId}`;
-        const token = getCookie("token");
+        const token = await getCookie("token");
 
         const response = await fetch(url, {
             method: "DELETE",
@@ -107,7 +142,12 @@ export async function deletePermission(permissionId: number) {
             throw new Error("Failed to delete permission");
         }
 
-        return await response.json();
+        const result = await response.json();
+
+        // Revalidate permissions cache
+        revalidateTag("permissions");
+
+        return result;
     } catch (error) {
         console.error("Error deleting permission:", error);
         throw error;

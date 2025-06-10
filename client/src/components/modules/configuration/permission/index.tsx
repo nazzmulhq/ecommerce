@@ -2,7 +2,7 @@
 import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
 import { getCookie } from "@lib/actions";
-import { useSearchParams } from "next/navigation";
+import { createPermission, fetchPermissions } from "@lib/actions/modules/permission/permissionActions";
 
 // Define a type for permission records matching your API structure
 interface Permission {
@@ -125,55 +125,13 @@ const PermissionPage = ({
     data: any;
     searchParams?: Record<string, string>;
 }) => {
-    const searchParams = useSearchParams();
     console.log("PermissionPage data:", data);
     console.log("Initial search params:", initialSearchParams);
-
-    // Extract current search parameters (prioritize client-side for real-time updates)
-    const getCurrentFilters = () => {
-        const filters: Record<string, any> = {};
-
-        // Use client-side searchParams for real-time updates
-        Array.from(searchParams.entries()).forEach(([key, value]) => {
-            if (!["page", "limit", "pageSize"].includes(key) && value) {
-                try {
-                    filters[key] = JSON.parse(decodeURIComponent(value));
-                } catch {
-                    filters[key] = decodeURIComponent(value);
-                }
-            }
-        });
-
-        return filters;
-    };
-
-    const getCurrentPagination = () => {
-        // Use client-side searchParams for real-time updates
-        const page = searchParams.get("page");
-        const limit = searchParams.get("limit") || searchParams.get("pageSize");
-
-        return {
-            page: page ? parseInt(page) : 1,
-            pageSize: limit ? parseInt(limit) : 10,
-        };
-    };
 
     // CRUD Handlers for API integration
     const handleCreate = async (record: Partial<Permission>): Promise<Permission> => {
         try {
-            const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions`;
-            const token = await getCookie("token");
-
-            const response = await fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(record),
-            });
-
-            const apiData = await response.json();
+            const apiData = await createPermission(record);
             return apiData.data;
         } catch (error) {
             console.error("Error creating permission:", error);
@@ -226,69 +184,36 @@ const PermissionPage = ({
         }
     };
 
-    // Enhanced filter handler that uses current URL state
-    const handleFilter = async (data: Permission[], filters: Record<string, any>): Promise<any> => {
+    const onFilter = async (data: any[], filter: Record<string, any>) => {
         try {
-            const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions`;
-            const token = await getCookie("token");
+            console.log("Filtering with params:", filter);
 
-            // Build query parameters
-            const queryParams = new URLSearchParams();
+            // Extract pagination info
+            const { _pagination, _revalidate, ...filterParams } = filter;
 
-            // Add pagination from filters or use current URL state
-            if (filters._pagination) {
-                queryParams.append("page", filters._pagination.page.toString());
-                queryParams.append("limit", filters._pagination.pageSize.toString());
-            } else {
-                // Use current URL state for pagination
-                const currentPagination = getCurrentPagination();
-                queryParams.append("page", currentPagination.page.toString());
-                queryParams.append("limit", currentPagination.pageSize.toString());
+            // Prepare filter parameters for the API
+            const apiFilters: any = {
+                ...filterParams,
+            };
+
+            // Add pagination parameters
+            if (_pagination) {
+                apiFilters.page = _pagination.page;
+                apiFilters.pageSize = _pagination.pageSize;
             }
 
-            // Add other filters (exclude pagination)
-            Object.entries(filters).forEach(([key, value]) => {
-                if (value && key !== "_pagination") {
-                    queryParams.append(key, value.toString());
-                }
-            });
+            // Add revalidation flag if needed
+            if (_revalidate) {
+                apiFilters._revalidate = true;
+            }
 
-            // Also include current URL filters that aren't overridden
-            const currentFilters = getCurrentFilters();
-            Object.entries(currentFilters).forEach(([key, value]) => {
-                if (!queryParams.has(key) && value) {
-                    queryParams.append(key, value.toString());
-                }
-            });
+            // Call the server action to fetch filtered data
+            const result = await fetchPermissions(apiFilters);
 
-            console.log("API Query:", `${url}?${queryParams.toString()}`);
+            console.log("Filter result:", result);
 
-            const response = await fetch(`${url}?${queryParams.toString()}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            const apiResponse = await response.json();
-            console.log("API Response:", apiResponse);
-
-            // Return the full API response structure so QuickUI can handle it properly
-            return {
-                data: {
-                    list: apiResponse.data?.list || apiResponse.data || [],
-                    meta: apiResponse.data?.meta ||
-                        apiResponse.meta || {
-                            totalItems: apiResponse.data?.length || apiResponse.meta?.totalItems || 0,
-                            itemCount: apiResponse.data?.length || apiResponse.meta?.itemCount || 0,
-                            itemsPerPage: apiResponse.meta?.itemsPerPage || 5,
-                            totalPages: apiResponse.meta?.totalPages || 1,
-                            currentPage: apiResponse.meta?.currentPage || 1,
-                            hasNextPage: apiResponse.meta?.hasNextPage || false,
-                            hasPreviousPage: apiResponse.meta?.hasPreviousPage || false,
-                        },
-                    links: apiResponse.data?.links || apiResponse.links || {},
-                },
-            };
+            // Return the result in the expected format
+            return result;
         } catch (error) {
             console.error("Error filtering permissions:", error);
             throw new Error("Failed to filter permissions. Please try again.");
@@ -306,6 +231,8 @@ const PermissionPage = ({
                 preserveFormData={false}
                 currentAction="list"
                 initialData={data.data}
+                filterMode="server"
+                onRecordFilter={onFilter}
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
                 onRecordDelete={handleDelete}

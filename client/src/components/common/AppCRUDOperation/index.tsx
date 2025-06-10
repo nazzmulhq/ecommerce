@@ -126,7 +126,7 @@ export interface QuickUIProps {
     onRecordCreate?: (record: any) => Promise<any> | void;
     onRecordUpdate?: (record: any) => Promise<any> | void;
     onRecordDelete?: (record: any) => Promise<any> | void;
-    onFilter?: (data: any[], filter: Record<string, any>) => Promise<any[]> | void;
+    onRecordFilter?: (data: any[], filter: Record<string, any>) => Promise<any[]> | void;
 
     // UI customization
     tableColumns?: any[];
@@ -209,7 +209,7 @@ const QuickUI = ({
     initialPageSize = 5, // Default initial page size
     filterMode = "server", // Default to server-side filtering
     icon,
-    onFilter,
+    onRecordFilter,
     showFilter = true,
     onDataChange,
     onRecordView,
@@ -416,12 +416,12 @@ const QuickUI = ({
     // Simplified data loading with proper logic for all 3 scenarios
     const loadData = useCallback(
         async (currentFilters: any = filters, currentMetadata = metadata, updateUrl = true) => {
-            // Scenario 1: Server-side with onFilter function
-            if (filterMode === "server" && onFilter) {
+            // Scenario 1: Server-side with onRecordFilter function
+            if (filterMode === "server" && onRecordFilter) {
                 try {
                     dispatch(setLoading(true));
 
-                    const result = await onFilter([], {
+                    const result = await onRecordFilter([], {
                         ...currentFilters,
                         _pagination: {
                             page: currentMetadata.currentPage,
@@ -441,8 +441,8 @@ const QuickUI = ({
                     dispatch(setLoading(false));
                 }
             }
-            // Scenario 2: Server-side without onFilter (use initial data only)
-            else if (filterMode === "server" && !onFilter) {
+            // Scenario 2: Server-side without onRecordFilter (use initial data only)
+            else if (filterMode === "server" && !onRecordFilter) {
                 // Use the initial data directly - server already handled filtering/pagination
                 dispatch(setApiData(normalizedInitialData));
 
@@ -450,7 +450,7 @@ const QuickUI = ({
                     updateURL(currentFilters, currentMetadata);
                 }
             }
-            // Scenario 3: Client-side filtering (no onFilter, filter locally)
+            // Scenario 3: Client-side filtering (no onRecordFilter, filter locally)
             else if (filterMode === "client") {
                 if (normalizedInitialData.list.length > 0) {
                     // Apply client-side filtering
@@ -499,7 +499,7 @@ const QuickUI = ({
         },
         [
             filterMode,
-            onFilter,
+            onRecordFilter,
             dispatch,
             handleFilterResult,
             applyClientSideFilters,
@@ -565,10 +565,10 @@ const QuickUI = ({
                     }),
                 );
 
-                // For server-side with onFilter, load fresh data
-                if (filterMode === "server" && onFilter) {
+                // For server-side with onRecordFilter, load fresh data
+                if (filterMode === "server" && onRecordFilter) {
                     try {
-                        const result = await onFilter([], {
+                        const result = await onRecordFilter([], {
                             ...filters,
                             _pagination: {
                                 page: metadata.currentPage,
@@ -594,7 +594,7 @@ const QuickUI = ({
         return () => {
             isMounted = false;
         };
-    }, [normalizedInitialData.list.length, filterMode, onFilter]); // Simplified dependencies
+    }, [normalizedInitialData.list.length, filterMode, onRecordFilter]); // Simplified dependencies
 
     // Load data when URL changes - simplified to prevent infinite loops
     useEffect(() => {
@@ -622,7 +622,7 @@ const QuickUI = ({
             };
 
             // Only load data if there's a meaningful change
-            if (isMounted && onFilter) {
+            if (isMounted && onRecordFilter) {
                 await loadData(urlFilters, urlMetadata, false);
             }
         };
@@ -674,7 +674,7 @@ const QuickUI = ({
             };
 
             // Only load data if there's a meaningful change
-            if (isMounted && onFilter) {
+            if (isMounted && onRecordFilter) {
                 await loadData(urlFilters, urlMetadata, false);
             }
         };
