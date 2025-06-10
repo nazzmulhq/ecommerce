@@ -233,38 +233,16 @@ const QuickUI = ({
     const [form] = Form.useForm();
     const filterFormRef = useRef(form);
 
-    // Initialize default metadata
-    const defaultMetadata = useMemo(
-        () => ({
-            totalItems: 0,
-            itemCount: 0,
-            itemsPerPage: initialPageSize,
-            totalPages: 0,
-            currentPage: 1,
-            hasNextPage: false,
-            hasPreviousPage: false,
-        }),
-        [initialPageSize],
-    );
-
-    // Helper function to apply client-side filtering
-    const applyClientSideFilters = useCallback((data: any[], filters: Record<string, any>) => {
-        let filteredData = [...data];
-
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-                filteredData = filteredData.filter(record => {
-                    const recordValue = record[key];
-                    if (typeof value === "string" && typeof recordValue === "string") {
-                        return recordValue.toLowerCase().includes(value.toLowerCase());
-                    }
-                    return recordValue === value;
-                });
-            }
-        });
-
-        return filteredData;
-    }, []);
+    // Initialize default metadata as a constant instead of useMemo
+    const defaultMetadata = {
+        totalItems: 0,
+        itemCount: 0,
+        itemsPerPage: initialPageSize,
+        totalPages: 0,
+        currentPage: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+    };
 
     // Simplified function to handle API results
     const handleFilterResult = useCallback(
@@ -360,76 +338,17 @@ const QuickUI = ({
         [onRecordFilter, dispatch, handleFilterResult, updateURL, filters, metadata],
     );
 
-    // Add revalidation helper for CRUD operations
-    const revalidateData = useCallback(async () => {
-        try {
-            dispatch(setLoading(true));
-            const result = await onRecordFilter([], {
-                ...filters,
-                _pagination: {
-                    page: metadata.currentPage,
-                    pageSize: metadata.itemsPerPage,
-                },
-                _revalidate: true, // Flag to indicate revalidation
-            });
-            handleFilterResult(result);
-        } catch (error) {
-            console.error("Error revalidating data:", error);
-            dispatch(setError("Failed to reload data"));
-        } finally {
-            dispatch(setLoading(false));
-        }
-    }, [onRecordFilter, filters, metadata, dispatch, handleFilterResult]);
-
-    // Initialize from URL parameters on mount
-    useEffect(() => {
-        const urlFilters: Record<string, any> = {};
-        const pageParam = searchParams.get("page");
-        const pageSizeParam = searchParams.get("pageSize") || searchParams.get("limit");
-
-        // Extract filter parameters from URL
-        Array.from(searchParams.entries()).forEach(([key, value]) => {
-            if (!["page", "pageSize", "limit"].includes(key) && value) {
-                try {
-                    urlFilters[key] = JSON.parse(decodeURIComponent(value));
-                } catch {
-                    urlFilters[key] = decodeURIComponent(value);
-                }
-            }
-        });
-
-        // Set filters and metadata from URL
-        dispatch(setFilters(urlFilters));
-
-        const urlMetadata = {
-            ...defaultMetadata,
-            currentPage: pageParam ? parseInt(pageParam) : 1,
-            itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : defaultMetadata.itemsPerPage,
-        };
-        dispatch(setMetadata(urlMetadata));
-
-        // Set filter form values
-        if (filterFormRef.current && Object.keys(urlFilters).length > 0) {
-            filterFormRef.current.setFieldsValue(urlFilters);
-        }
-
-        // Set default pagination in URL if missing
-        if (!pageParam && !pageSizeParam && Object.keys(urlFilters).length === 0) {
-            updateURL({}, urlMetadata);
-        }
-    }, [searchParams.toString(), dispatch, defaultMetadata]);
-
-    // Combined initial data loading and URL change handling
+    // Combined initialization and data loading - single useEffect
     useEffect(() => {
         let isMounted = true;
 
-        const loadDataFromParams = async () => {
-            if (!isMounted) return;
-
+        // First-time initialization
+        const initialize = async () => {
             const urlFilters: Record<string, any> = {};
             const pageParam = searchParams.get("page");
             const pageSizeParam = searchParams.get("pageSize") || searchParams.get("limit");
 
+            // Extract filter parameters from URL
             Array.from(searchParams.entries()).forEach(([key, value]) => {
                 if (!["page", "pageSize", "limit"].includes(key) && value) {
                     try {
@@ -440,12 +359,27 @@ const QuickUI = ({
                 }
             });
 
+            // Set filters and metadata from URL
+            dispatch(setFilters(urlFilters));
+
             const urlMetadata = {
                 ...defaultMetadata,
                 currentPage: pageParam ? parseInt(pageParam) : 1,
                 itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : defaultMetadata.itemsPerPage,
             };
+            dispatch(setMetadata(urlMetadata));
 
+            // Set filter form values
+            if (filterFormRef.current && Object.keys(urlFilters).length > 0) {
+                filterFormRef.current.setFieldsValue(urlFilters);
+            }
+
+            // Set default pagination in URL if missing
+            if (!pageParam && !pageSizeParam && Object.keys(urlFilters).length === 0) {
+                updateURL({}, urlMetadata);
+            }
+
+            // Load initial data
             try {
                 dispatch(setLoading(true));
                 const result = await onRecordFilter([], {
@@ -471,40 +405,30 @@ const QuickUI = ({
             }
         };
 
-        loadDataFromParams();
+        initialize();
 
-        return () => {
-            isMounted = false;
-        };
-    }, [searchParams.toString(), onRecordFilter, defaultMetadata, dispatch, handleFilterResult]);
-
-    // Separate effect for CRUD type initialization - prevent infinite loops
-    useEffect(() => {
+        // Setup CRUD type (moved from separate useEffect)
         if (crudType !== activeCrudType) {
             dispatch(setActiveCrudType(crudType));
         }
-    }, [crudType, activeCrudType, dispatch]);
 
-    // Cleanup effect - separate from initialization
-    useEffect(() => {
+        // Cleanup
         return () => {
+            isMounted = false;
             dispatch(resetState());
         };
-    }, []); // Empty dependency array for cleanup only
+    }, [searchParams.toString(), onRecordFilter, dispatch, crudType, activeCrudType]);
 
-    // Handle data changes callback - add guard to prevent infinite loops
+    // Only keep these two essential useEffects
     useEffect(() => {
         if (onDataChange && dataList && dataList.length >= 0) {
-            // Add condition to prevent unnecessary calls
             onDataChange(dataList);
         }
-    }, [dataList?.length, onDataChange]); // Depend on length instead of entire array
+    }, [dataList?.length, onDataChange]);
 
-    // Handle errors - add guard
     useEffect(() => {
         if (error) {
             message.error(error);
-            // Clear error after showing to prevent repeated messages
             dispatch(setError(null));
         }
     }, [error, dispatch]);
@@ -786,8 +710,8 @@ const QuickUI = ({
                 await onRecordDelete(record);
             }
 
-            // Revalidate and reload data to get latest values from server
-            await revalidateData();
+            // Use loadData directly instead of revalidateData
+            await loadData(filters, metadata);
 
             message.success(successMessages.delete);
         } catch (error) {
@@ -813,8 +737,8 @@ const QuickUI = ({
                         result = await onRecordUpdate(updatedRecord);
                     }
 
-                    // Revalidate and reload data to get latest values from server
-                    await revalidateData();
+                    // Use loadData directly instead of revalidateData
+                    await loadData(filters, metadata);
 
                     afterFormSubmit?.(processedValues, result);
                     message.success(successMessages.update);
@@ -830,8 +754,8 @@ const QuickUI = ({
                         result = await onRecordCreate(newRecord);
                     }
 
-                    // Revalidate and reload data to get latest values from server
-                    await revalidateData();
+                    // Use loadData directly instead of revalidateData
+                    await loadData(filters, metadata);
 
                     afterFormSubmit?.(processedValues, result);
                     message.success(successMessages.create);
@@ -852,7 +776,9 @@ const QuickUI = ({
             successMessages.update,
             successMessages.create,
             dispatch,
-            revalidateData,
+            loadData,
+            filters,
+            metadata,
         ],
     );
 
