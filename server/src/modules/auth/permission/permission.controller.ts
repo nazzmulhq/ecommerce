@@ -41,14 +41,11 @@ export class PermissionController {
         @Body() createPermissionDto: CreatePermissionDto,
     ) {
         try {
-            await this.permissionService.create(
+            const data = await this.permissionService.create(
                 createPermissionDto,
                 req.user.id,
             );
-            return {
-                success: true,
-                message: 'Permission Created Successfully',
-            };
+            return data;
         } catch (error) {
             return {
                 success: false,

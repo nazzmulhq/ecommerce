@@ -1,9 +1,7 @@
 "use client";
 import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
-import { createPermission } from "@lib/actions/modules/permission/permissionActions";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { getCookie } from "@lib/actions";
 
 // Define a type for permission records matching your API structure
 interface Permission {
@@ -90,6 +88,7 @@ const permissionFormSchema: FormSchema = {
                 xs: 12,
             },
             filterable: true,
+            hideInForm: true,
             rules: [
                 { required: true, message: "Please enter a unique slug" },
                 {
@@ -120,15 +119,25 @@ const permissionFormSchema: FormSchema = {
 
 const PermissionPage = ({ data }: any) => {
     console.log("PermissionPage data:", data);
-    const [permissions, setPermissions] = useState<Permission[]>(data?.data?.list);
-    const pathname = usePathname();
 
     // CRUD Handlers for API integration
     const handleCreate = async (record: Partial<Permission>): Promise<Permission> => {
         try {
-            const data = await createPermission(record);
+            const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions`;
+            const token = await getCookie("token");
 
-            return data;
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(record),
+            });
+
+            const apiData = await response.json();
+
+            return apiData.data;
         } catch (error) {
             console.error("Error creating permission:", error);
             throw new Error("Failed to create permission. Please try again.");
@@ -177,7 +186,7 @@ const PermissionPage = ({ data }: any) => {
             const updatedPermission = transformApiToUI(mockApiResponse);
 
             // Update local state
-            setPermissions(prev => prev.map(p => (p.id === record.id ? updatedPermission : p)));
+            // setPermissions(prev => prev.map(p => (p.id === record.id ? updatedPermission : p)));
 
             return updatedPermission;
         } catch (error) {
@@ -201,7 +210,7 @@ const PermissionPage = ({ data }: any) => {
             console.log(`Deleting permission with ID: ${record.id}`);
 
             // Update local state
-            setPermissions(prev => prev.filter(p => p.id !== record.id));
+            // setPermissions(prev => prev.filter(p => p.id !== record.id));
 
             return record;
         } catch (error) {
@@ -270,7 +279,7 @@ const PermissionPage = ({ data }: any) => {
                 validateOnMount={false}
                 preserveFormData={false}
                 currentAction="list"
-                initialData={permissions}
+                initialData={data?.data}
                 onRecordCreate={handleCreate}
                 onRecordUpdate={handleUpdate}
                 onRecordDelete={handleDelete}

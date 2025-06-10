@@ -94,7 +94,20 @@ export interface QuickUIProps {
     title: string;
     formSchema: FormSchema;
     crudType?: CrudType;
-    initialData?: any[];
+    initialData?:
+        | {
+              list: any[];
+              meta?: {
+                  totalItems?: number;
+                  itemCount?: number;
+                  itemsPerPage?: number;
+                  totalPages?: number;
+                  currentPage?: number;
+                  hasNextPage?: boolean;
+                  hasPreviousPage?: boolean;
+              };
+          }
+        | any[]; // Support both new and legacy format
     icon?: TIconName;
 
     // Action handlers
@@ -164,7 +177,18 @@ const QuickUI = ({
     title,
     formSchema,
     crudType = "modal",
-    initialData = [],
+    initialData = {
+        list: [],
+        meta: {
+            totalItems: 0,
+            itemCount: 0,
+            itemsPerPage: 10,
+            totalPages: 0,
+            currentPage: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+        },
+    },
     icon,
     onFilter,
     showFilter = true,
@@ -235,6 +259,146 @@ const QuickUI = ({
     const [form] = Form.useForm();
     const filterFormRef = useRef(form);
 
+    // Normalize initialData to ensure consistent structure
+    const normalizedInitialData = useMemo(() => {
+        if (!initialData) {
+            return {
+                list: [],
+                meta: {
+                    totalItems: 0,
+                    itemCount: 0,
+                    itemsPerPage: 10,
+                    totalPages: 0,
+                    currentPage: 1,
+                    hasNextPage: false,
+                    hasPreviousPage: false,
+                },
+            };
+        }
+
+        // Handle legacy array format
+        if (Array.isArray(initialData)) {
+            return {
+                list: initialData,
+                meta: {
+                    totalItems: initialData.length,
+                    itemCount: initialData.length,
+                    itemsPerPage: 10,
+                    totalPages: Math.ceil(initialData.length / 10),
+                    currentPage: 1,
+                    hasNextPage: initialData.length > 10,
+                    hasPreviousPage: false,
+                },
+            };
+        }
+
+        // Handle new object format
+        return {
+            list: initialData.list || [],
+            meta: {
+                totalItems: initialData.meta?.totalItems || initialData.list?.length || 0,
+                itemCount: initialData.meta?.itemCount || initialData.list?.length || 0,
+                itemsPerPage: initialData.meta?.itemsPerPage || 10,
+                totalPages:
+                    initialData.meta?.totalPages ||
+                    Math.ceil((initialData.list?.length || 0) / (initialData.meta?.itemsPerPage || 10)),
+                currentPage: initialData.meta?.currentPage || 1,
+                hasNextPage: initialData.meta?.hasNextPage || false,
+                hasPreviousPage: initialData.meta?.hasPreviousPage || false,
+            },
+        };
+    }, [initialData]);
+
+    // Helper function to calculate pagination metadata
+    const calculatePaginationMetadata = useCallback((totalItems: number, currentPage: number, itemsPerPage: number) => {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+
+        return {
+            totalItems,
+            itemCount: Math.min(totalItems - startIndex, itemsPerPage),
+            itemsPerPage,
+            totalPages,
+            currentPage,
+            hasNextPage: currentPage < totalPages,
+            hasPreviousPage: currentPage > 1,
+            startIndex,
+            endIndex,
+        };
+    }, []);
+
+    // Helper function to apply client-side filtering
+    const applyClientSideFilters = useCallback((data: any[], filters: Record<string, any>) => {
+        let filteredData = [...data];
+
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+                filteredData = filteredData.filter(record => {
+                    const recordValue = record[key];
+                    if (typeof value === "string" && typeof recordValue === "string") {
+                        return recordValue.toLowerCase().includes(value.toLowerCase());
+                    }
+                    return recordValue === value;
+                });
+            }
+        });
+
+        return filteredData;
+    }, []);
+
+    // Helper function to handle pagination and set data
+    const setPaginatedData = useCallback(
+        (data: any[], currentPage: number, itemsPerPage: number) => {
+            const paginationMeta = calculatePaginationMetadata(data.length, currentPage, itemsPerPage);
+            const paginatedData = data.slice(paginationMeta.startIndex, paginationMeta.endIndex);
+
+            dispatch(setData(paginatedData));
+            dispatch(
+                setMetadata({
+                    totalItems: paginationMeta.totalItems,
+                    itemCount: paginationMeta.itemCount,
+                    itemsPerPage: paginationMeta.itemsPerPage,
+                    totalPages: paginationMeta.totalPages,
+                    currentPage: paginationMeta.currentPage,
+                    hasNextPage: paginationMeta.hasNextPage,
+                    hasPreviousPage: paginationMeta.hasPreviousPage,
+                }),
+            );
+        },
+        [calculatePaginationMetadata, dispatch],
+    );
+
+    // Helper function to handle onFilter results
+    const handleFilterResult = useCallback(
+        (result: any, currentMetadata: any) => {
+            if (result && typeof result === "object") {
+                if ("data" in result && result.data) {
+                    // API response format: { data: { list: [], meta: {} } }
+                    const { list, meta } = result.data as any;
+                    dispatch(setData(list || []));
+                    if (meta) {
+                        dispatch(
+                            setMetadata({
+                                totalItems: meta.totalItems || 0,
+                                itemCount: meta.itemCount || 0,
+                                itemsPerPage: meta.itemsPerPage || currentMetadata.itemsPerPage,
+                                totalPages: meta.totalPages || 1,
+                                currentPage: meta.currentPage || currentMetadata.currentPage,
+                                hasNextPage: meta.hasNextPage || false,
+                                hasPreviousPage: meta.hasPreviousPage || false,
+                            }),
+                        );
+                    }
+                } else if (Array.isArray(result)) {
+                    // Array response - apply pagination
+                    setPaginatedData(result, currentMetadata.currentPage, currentMetadata.itemsPerPage);
+                }
+            }
+        },
+        [dispatch, setPaginatedData],
+    );
+
     // Initialize from URL parameters on mount
     useEffect(() => {
         const urlFilters: Record<string, any> = {};
@@ -257,11 +421,11 @@ const QuickUI = ({
         // Set filters (without pagination)
         dispatch(setFilters(urlFilters));
 
-        // Set metadata with URL pagination or defaults
+        // Set metadata with URL pagination or defaults from normalizedInitialData
         const initialMetadata = {
-            ...metadata,
-            currentPage: pageParam ? parseInt(pageParam) : 1,
-            itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : 10,
+            ...normalizedInitialData.meta,
+            currentPage: pageParam ? parseInt(pageParam) : normalizedInitialData.meta.currentPage,
+            itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : normalizedInitialData.meta.itemsPerPage,
         };
         dispatch(setMetadata(initialMetadata));
 
@@ -269,7 +433,143 @@ const QuickUI = ({
         if (filterFormRef.current && Object.keys(urlFilters).length > 0) {
             filterFormRef.current.setFieldsValue(urlFilters);
         }
-    }, [searchParams, dispatch]);
+    }, [searchParams.toString(), dispatch]); // Only depend on searchParams string to prevent loops
+
+    // Optimized data initialization - separate from URL initialization
+    const initializeData = useCallback(async () => {
+        const currentFilters = filters;
+        const currentMetadata = metadata;
+
+        if (onFilter) {
+            try {
+                const filterResult = onFilter(normalizedInitialData.list, {
+                    ...currentFilters,
+                    _pagination: {
+                        page: currentMetadata.currentPage,
+                        pageSize: currentMetadata.itemsPerPage,
+                    },
+                });
+
+                // Handle both Promise and non-Promise returns
+                if (filterResult && typeof filterResult.then === "function") {
+                    try {
+                        const result = await filterResult;
+                        handleFilterResult(result, currentMetadata);
+                    } catch (error) {
+                        console.error("Error loading initial data:", error);
+                        dispatch(setError("Failed to load data"));
+                    }
+                } else {
+                    // Handle synchronous return or void
+                    const result = filterResult as any[] | undefined;
+                    if (result && Array.isArray(result)) {
+                        setPaginatedData(result, currentMetadata.currentPage, currentMetadata.itemsPerPage);
+                    } else {
+                        // If onFilter returns void, use normalizedInitialData
+                        setPaginatedData(
+                            normalizedInitialData.list,
+                            currentMetadata.currentPage,
+                            currentMetadata.itemsPerPage,
+                        );
+                    }
+                }
+            } catch (error) {
+                console.error("Error in onFilter:", error);
+                dispatch(setError("Failed to load data"));
+            }
+        } else {
+            // Client-side data handling
+            const filteredData = applyClientSideFilters(normalizedInitialData.list, currentFilters);
+            setPaginatedData(filteredData, currentMetadata.currentPage, currentMetadata.itemsPerPage);
+        }
+    }, [onFilter, normalizedInitialData.list, handleFilterResult, setPaginatedData, applyClientSideFilters, dispatch]); // Remove filters and metadata from dependencies to prevent loops
+
+    // Separate effect for initial data loading - only run once or when initialData changes
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadInitialData = async () => {
+            if (normalizedInitialData.list.length > 0) {
+                // Use current state values instead of dependencies
+                const currentFilters = filters;
+                const currentMetadata = metadata;
+
+                if (onFilter) {
+                    try {
+                        const filterResult = onFilter(normalizedInitialData.list, {
+                            ...currentFilters,
+                            _pagination: {
+                                page: currentMetadata.currentPage,
+                                pageSize: currentMetadata.itemsPerPage,
+                            },
+                        });
+
+                        if (filterResult && typeof filterResult.then === "function") {
+                            try {
+                                const result = await filterResult;
+                                if (isMounted) {
+                                    handleFilterResult(result, currentMetadata);
+                                }
+                            } catch (error) {
+                                if (isMounted) {
+                                    console.error("Error loading initial data:", error);
+                                    dispatch(setError("Failed to load data"));
+                                }
+                            }
+                        } else {
+                            const result = filterResult as any[] | undefined;
+                            if (isMounted) {
+                                if (result && Array.isArray(result)) {
+                                    setPaginatedData(result, currentMetadata.currentPage, currentMetadata.itemsPerPage);
+                                } else {
+                                    setPaginatedData(
+                                        normalizedInitialData.list,
+                                        currentMetadata.currentPage,
+                                        currentMetadata.itemsPerPage,
+                                    );
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        if (isMounted) {
+                            console.error("Error in onFilter:", error);
+                            dispatch(setError("Failed to load data"));
+                        }
+                    }
+                } else {
+                    // Client-side data handling
+                    const filteredData = applyClientSideFilters(normalizedInitialData.list, currentFilters);
+                    if (isMounted) {
+                        setPaginatedData(filteredData, currentMetadata.currentPage, currentMetadata.itemsPerPage);
+                    }
+                }
+            } else {
+                // Set initial empty state with proper metadata
+                if (isMounted) {
+                    dispatch(setData([]));
+                    dispatch(setMetadata(normalizedInitialData.meta));
+                }
+            }
+        };
+
+        loadInitialData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [JSON.stringify(normalizedInitialData)]); // Only depend on serialized initialData to prevent loops
+
+    // Separate effect for CRUD type initialization
+    useEffect(() => {
+        if (crudType !== activeCrudType) {
+            dispatch(setActiveCrudType(crudType));
+        }
+
+        // Cleanup on unmount
+        return () => {
+            dispatch(resetState());
+        };
+    }, [crudType, activeCrudType, dispatch]);
 
     // Update URL when filters change - always update for persistence
     const updateURL = useCallback(
@@ -306,153 +606,7 @@ const QuickUI = ({
         [filters, metadata, pathname, router, searchParams],
     );
 
-    // Initialize data when component mounts or initialData changes
-    useEffect(() => {
-        if (initialData.length > 0) {
-            // Only load data once on mount or when initialData changes
-            const currentFilters = filters;
-            const currentMetadata = metadata;
-
-            // Load data without triggering URL updates on initial load
-            if (onFilter) {
-                const filterResult = onFilter(initialData, {
-                    ...currentFilters,
-                    _pagination: {
-                        page: currentMetadata.currentPage,
-                        pageSize: currentMetadata.itemsPerPage,
-                    },
-                });
-
-                // Handle both Promise and non-Promise returns
-                if (filterResult && typeof filterResult.then === "function") {
-                    filterResult
-                        .then(result => {
-                            if (result && typeof result === "object") {
-                                if ("data" in result && result.data) {
-                                    const { list, meta } = result.data as any;
-                                    dispatch(setData(list || []));
-                                    if (meta) {
-                                        dispatch(
-                                            setMetadata({
-                                                totalItems: meta.totalItems || 0,
-                                                itemCount: meta.itemCount || 0,
-                                                itemsPerPage: meta.itemsPerPage || currentMetadata.itemsPerPage,
-                                                totalPages: meta.totalPages || 1,
-                                                currentPage: meta.currentPage || currentMetadata.currentPage,
-                                                hasNextPage: meta.hasNextPage || false,
-                                                hasPreviousPage: meta.hasPreviousPage || false,
-                                            }),
-                                        );
-                                    }
-                                } else if (Array.isArray(result)) {
-                                    const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                                    const endIndex = startIndex + currentMetadata.itemsPerPage;
-                                    const paginatedData = result.slice(startIndex, endIndex);
-
-                                    dispatch(setData(paginatedData));
-                                    dispatch(
-                                        setMetadata({
-                                            ...currentMetadata,
-                                            totalItems: result.length,
-                                            itemCount: paginatedData.length,
-                                            totalPages: Math.ceil(result.length / currentMetadata.itemsPerPage),
-                                            hasNextPage: endIndex < result.length,
-                                            hasPreviousPage: currentMetadata.currentPage > 1,
-                                        }),
-                                    );
-                                }
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Error loading initial data:", error);
-                            dispatch(setError("Failed to load data"));
-                        });
-                } else {
-                    // Handle synchronous return or void
-                    const result = filterResult as any[] | undefined;
-                    if (result && Array.isArray(result)) {
-                        const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                        const endIndex = startIndex + currentMetadata.itemsPerPage;
-                        const paginatedData = result.slice(startIndex, endIndex);
-
-                        dispatch(setData(paginatedData));
-                        dispatch(
-                            setMetadata({
-                                ...currentMetadata,
-                                totalItems: result.length,
-                                itemCount: paginatedData.length,
-                                totalPages: Math.ceil(result.length / currentMetadata.itemsPerPage),
-                                hasNextPage: endIndex < result.length,
-                                hasPreviousPage: currentMetadata.currentPage > 1,
-                            }),
-                        );
-                    } else {
-                        // If onFilter returns void, use initialData
-                        const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                        const endIndex = startIndex + currentMetadata.itemsPerPage;
-                        const paginatedData = initialData.slice(startIndex, endIndex);
-
-                        dispatch(setData(paginatedData));
-                        dispatch(
-                            setMetadata({
-                                ...currentMetadata,
-                                totalItems: initialData.length,
-                                itemCount: paginatedData.length,
-                                totalPages: Math.ceil(initialData.length / currentMetadata.itemsPerPage),
-                                hasNextPage: endIndex < initialData.length,
-                                hasPreviousPage: currentMetadata.currentPage > 1,
-                            }),
-                        );
-                    }
-                }
-            } else {
-                // Client-side data handling
-                let filteredData = [...initialData];
-
-                // Apply filters
-                Object.entries(currentFilters).forEach(([key, value]) => {
-                    if (value !== undefined && value !== null && value !== "") {
-                        filteredData = filteredData.filter(record => {
-                            const recordValue = record[key];
-                            if (typeof value === "string" && typeof recordValue === "string") {
-                                return recordValue.toLowerCase().includes(value.toLowerCase());
-                            }
-                            return recordValue === value;
-                        });
-                    }
-                });
-
-                // Apply pagination
-                const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                const endIndex = startIndex + currentMetadata.itemsPerPage;
-                const paginatedData = filteredData.slice(startIndex, endIndex);
-
-                dispatch(setData(paginatedData));
-                dispatch(
-                    setMetadata({
-                        ...currentMetadata,
-                        totalItems: filteredData.length,
-                        itemCount: paginatedData.length,
-                        totalPages: Math.ceil(filteredData.length / currentMetadata.itemsPerPage),
-                        hasNextPage: endIndex < filteredData.length,
-                        hasPreviousPage: currentMetadata.currentPage > 1,
-                    }),
-                );
-            }
-        }
-
-        // Set initial crud type
-        if (crudType !== activeCrudType) {
-            dispatch(setActiveCrudType(crudType));
-        }
-
-        // Cleanup on unmount
-        return () => {
-            dispatch(resetState());
-        };
-    }, [initialData.length]); // Only depend on initialData.length to prevent infinite loops
-
-    // Enhanced data loading with pagination support
+    // Enhanced data loading with pagination support (optimized)
     const loadData = useCallback(
         async (currentFilters: any = filters, currentMetadata = metadata) => {
             if (onFilter) {
@@ -460,7 +614,7 @@ const QuickUI = ({
                     dispatch(setLoading(true));
 
                     // Call onFilter with pagination info
-                    const result = await onFilter(initialData, {
+                    const result = await onFilter(normalizedInitialData.list, {
                         ...currentFilters,
                         _pagination: {
                             page: currentMetadata.currentPage,
@@ -468,45 +622,8 @@ const QuickUI = ({
                         },
                     });
 
-                    // Handle API response structure
-                    if (result && typeof result === "object") {
-                        if ("data" in result && result.data) {
-                            // API response format: { data: { list: [], meta: {} } }
-                            const { list, meta } = result.data as any;
-                            dispatch(setData(list || []));
-
-                            if (meta) {
-                                const newMetadata = {
-                                    totalItems: meta.totalItems || 0,
-                                    itemCount: meta.itemCount || 0,
-                                    itemsPerPage: meta.itemsPerPage || currentMetadata.itemsPerPage,
-                                    totalPages: meta.totalPages || 1,
-                                    currentPage: meta.currentPage || currentMetadata.currentPage,
-                                    hasNextPage: meta.hasNextPage || false,
-                                    hasPreviousPage: meta.hasPreviousPage || false,
-                                };
-                                dispatch(setMetadata(newMetadata));
-                                updateURL(currentFilters, newMetadata);
-                            }
-                        } else if (Array.isArray(result)) {
-                            // Array response - client-side pagination
-                            const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                            const endIndex = startIndex + currentMetadata.itemsPerPage;
-                            const paginatedData = result.slice(startIndex, endIndex);
-
-                            dispatch(setData(paginatedData));
-                            const updatedMetadata = {
-                                ...currentMetadata,
-                                totalItems: result.length,
-                                itemCount: paginatedData.length,
-                                totalPages: Math.ceil(result.length / currentMetadata.itemsPerPage),
-                                hasNextPage: endIndex < result.length,
-                                hasPreviousPage: currentMetadata.currentPage > 1,
-                            };
-                            dispatch(setMetadata(updatedMetadata));
-                            updateURL(currentFilters, updatedMetadata);
-                        }
-                    }
+                    // Handle API response structure using the helper
+                    handleFilterResult(result, currentMetadata);
                 } catch (error) {
                     console.error("Error loading data:", error);
                     dispatch(setError("Failed to load data"));
@@ -515,187 +632,45 @@ const QuickUI = ({
                 }
             } else {
                 // Client-side filtering and pagination
-                let filteredData = [...initialData];
+                const filteredData = applyClientSideFilters(normalizedInitialData.list, currentFilters);
+                setPaginatedData(filteredData, currentMetadata.currentPage, currentMetadata.itemsPerPage);
 
-                // Apply filters
-                Object.entries(currentFilters).forEach(([key, value]) => {
-                    if (value !== undefined && value !== null && value !== "") {
-                        filteredData = filteredData.filter(record => {
-                            const recordValue = record[key];
-                            if (typeof value === "string" && typeof recordValue === "string") {
-                                return recordValue.toLowerCase().includes(value.toLowerCase());
-                            }
-                            return recordValue === value;
-                        });
-                    }
-                });
-
-                // Apply pagination
-                const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                const endIndex = startIndex + currentMetadata.itemsPerPage;
-                const paginatedData = filteredData.slice(startIndex, endIndex);
-
-                dispatch(setData(paginatedData));
+                // Only update URL if not in initial load
                 const updatedMetadata = {
                     ...currentMetadata,
                     totalItems: filteredData.length,
-                    itemCount: paginatedData.length,
+                    itemCount: Math.min(
+                        filteredData.length - (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage,
+                        currentMetadata.itemsPerPage,
+                    ),
                     totalPages: Math.ceil(filteredData.length / currentMetadata.itemsPerPage),
-                    hasNextPage: endIndex < filteredData.length,
+                    hasNextPage:
+                        currentMetadata.currentPage < Math.ceil(filteredData.length / currentMetadata.itemsPerPage),
                     hasPreviousPage: currentMetadata.currentPage > 1,
                 };
-                dispatch(setMetadata(updatedMetadata));
-                updateURL(currentFilters, updatedMetadata);
+
+                // Prevent URL update loops by checking if we're actually changing filters
+                if (
+                    JSON.stringify(currentFilters) !== JSON.stringify(filters) ||
+                    currentMetadata.currentPage !== metadata.currentPage ||
+                    currentMetadata.itemsPerPage !== metadata.itemsPerPage
+                ) {
+                    updateURL(currentFilters, updatedMetadata);
+                }
             }
         },
-        [initialData, onFilter, dispatch, updateURL],
+        [
+            normalizedInitialData.list,
+            onFilter,
+            dispatch,
+            handleFilterResult,
+            applyClientSideFilters,
+            setPaginatedData,
+            updateURL,
+            filters,
+            metadata,
+        ],
     );
-
-    // Initialize data when component mounts or initialData changes
-    useEffect(() => {
-        if (initialData.length > 0) {
-            // Only load data once on mount or when initialData changes
-            const currentFilters = filters;
-            const currentMetadata = metadata;
-
-            // Load data without triggering URL updates on initial load
-            if (onFilter) {
-                const filterResult = onFilter(initialData, {
-                    ...currentFilters,
-                    _pagination: {
-                        page: currentMetadata.currentPage,
-                        pageSize: currentMetadata.itemsPerPage,
-                    },
-                });
-
-                // Handle both Promise and non-Promise returns
-                if (filterResult && typeof filterResult.then === "function") {
-                    filterResult
-                        .then(result => {
-                            if (result && typeof result === "object") {
-                                if ("data" in result && result.data) {
-                                    const { list, meta } = result.data as any;
-                                    dispatch(setData(list || []));
-                                    if (meta) {
-                                        dispatch(
-                                            setMetadata({
-                                                totalItems: meta.totalItems || 0,
-                                                itemCount: meta.itemCount || 0,
-                                                itemsPerPage: meta.itemsPerPage || currentMetadata.itemsPerPage,
-                                                totalPages: meta.totalPages || 1,
-                                                currentPage: meta.currentPage || currentMetadata.currentPage,
-                                                hasNextPage: meta.hasNextPage || false,
-                                                hasPreviousPage: meta.hasPreviousPage || false,
-                                            }),
-                                        );
-                                    }
-                                } else if (Array.isArray(result)) {
-                                    const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                                    const endIndex = startIndex + currentMetadata.itemsPerPage;
-                                    const paginatedData = result.slice(startIndex, endIndex);
-
-                                    dispatch(setData(paginatedData));
-                                    dispatch(
-                                        setMetadata({
-                                            ...currentMetadata,
-                                            totalItems: result.length,
-                                            itemCount: paginatedData.length,
-                                            totalPages: Math.ceil(result.length / currentMetadata.itemsPerPage),
-                                            hasNextPage: endIndex < result.length,
-                                            hasPreviousPage: currentMetadata.currentPage > 1,
-                                        }),
-                                    );
-                                }
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Error loading initial data:", error);
-                            dispatch(setError("Failed to load data"));
-                        });
-                } else {
-                    // Handle synchronous return or void
-                    const result = filterResult as any[] | undefined;
-                    if (result && Array.isArray(result)) {
-                        const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                        const endIndex = startIndex + currentMetadata.itemsPerPage;
-                        const paginatedData = result.slice(startIndex, endIndex);
-
-                        dispatch(setData(paginatedData));
-                        dispatch(
-                            setMetadata({
-                                ...currentMetadata,
-                                totalItems: result.length,
-                                itemCount: paginatedData.length,
-                                totalPages: Math.ceil(result.length / currentMetadata.itemsPerPage),
-                                hasNextPage: endIndex < result.length,
-                                hasPreviousPage: currentMetadata.currentPage > 1,
-                            }),
-                        );
-                    } else {
-                        // If onFilter returns void, use initialData
-                        const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                        const endIndex = startIndex + currentMetadata.itemsPerPage;
-                        const paginatedData = initialData.slice(startIndex, endIndex);
-
-                        dispatch(setData(paginatedData));
-                        dispatch(
-                            setMetadata({
-                                ...currentMetadata,
-                                totalItems: initialData.length,
-                                itemCount: paginatedData.length,
-                                totalPages: Math.ceil(initialData.length / currentMetadata.itemsPerPage),
-                                hasNextPage: endIndex < initialData.length,
-                                hasPreviousPage: currentMetadata.currentPage > 1,
-                            }),
-                        );
-                    }
-                }
-            } else {
-                // Client-side data handling
-                let filteredData = [...initialData];
-
-                // Apply filters
-                Object.entries(currentFilters).forEach(([key, value]) => {
-                    if (value !== undefined && value !== null && value !== "") {
-                        filteredData = filteredData.filter(record => {
-                            const recordValue = record[key];
-                            if (typeof value === "string" && typeof recordValue === "string") {
-                                return recordValue.toLowerCase().includes(value.toLowerCase());
-                            }
-                            return recordValue === value;
-                        });
-                    }
-                });
-
-                // Apply pagination
-                const startIndex = (currentMetadata.currentPage - 1) * currentMetadata.itemsPerPage;
-                const endIndex = startIndex + currentMetadata.itemsPerPage;
-                const paginatedData = filteredData.slice(startIndex, endIndex);
-
-                dispatch(setData(paginatedData));
-                dispatch(
-                    setMetadata({
-                        ...currentMetadata,
-                        totalItems: filteredData.length,
-                        itemCount: paginatedData.length,
-                        totalPages: Math.ceil(filteredData.length / currentMetadata.itemsPerPage),
-                        hasNextPage: endIndex < filteredData.length,
-                        hasPreviousPage: currentMetadata.currentPage > 1,
-                    }),
-                );
-            }
-        }
-
-        // Set initial crud type
-        if (crudType !== activeCrudType) {
-            dispatch(setActiveCrudType(crudType));
-        }
-
-        // Cleanup on unmount
-        return () => {
-            dispatch(resetState());
-        };
-    }, [initialData.length]); // Only depend on initialData.length to prevent infinite loops
 
     // Handle data changes callback
     useEffect(() => {
@@ -935,7 +910,7 @@ const QuickUI = ({
             ...(formSchema.steps?.flatMap(s => s.fields) || []),
         ];
 
-        allFields.forEach(field => {
+        allFields.forEach((field: any) => {
             if (field.defaultValue !== undefined) {
                 defaultValues[field.name] = field.defaultValue;
             }
@@ -995,6 +970,29 @@ const QuickUI = ({
         }
         try {
             await dispatch(deleteRecord({ record, onRecordDelete })).unwrap();
+
+            // Update metadata after successful delete
+            const updatedMetadata = {
+                ...metadata,
+                totalItems: Math.max(0, metadata.totalItems - 1),
+                itemCount: Math.max(0, metadata.itemCount - 1),
+                totalPages: Math.ceil(Math.max(0, metadata.totalItems - 1) / metadata.itemsPerPage),
+                hasNextPage:
+                    metadata.currentPage < Math.ceil(Math.max(0, metadata.totalItems - 1) / metadata.itemsPerPage),
+                hasPreviousPage: metadata.currentPage > 1,
+            };
+
+            // If current page has no items after delete and it's not the first page, go to previous page
+            if (updatedMetadata.itemCount === 0 && metadata.currentPage > 1) {
+                updatedMetadata.currentPage = metadata.currentPage - 1;
+                updatedMetadata.hasPreviousPage = updatedMetadata.currentPage > 1;
+            }
+
+            dispatch(setMetadata(updatedMetadata));
+
+            // Reload data to reflect the changes
+            await loadData(filters, updatedMetadata);
+
             message.success(successMessages.delete);
         } catch (error) {
             console.error("Delete error:", error);
@@ -1131,8 +1129,8 @@ const QuickUI = ({
         ];
 
         const columns: any = fieldsFromSchema
-            .filter(field => !field.hideInTable)
-            .map(field => ({
+            .filter((field: any) => !field.hideInTable)
+            .map((field: any) => ({
                 title: field.label,
                 dataIndex: field.name,
                 key: field.name,
@@ -1275,9 +1273,9 @@ const QuickUI = ({
 
         const fieldsFromSchema: any[] = [
             ...(formSchema.fields || []),
-            ...(formSchema.sections?.flatMap(s => s.fields) || []),
-            ...(formSchema.tabs?.flatMap(t => t.fields) || []),
-            ...(formSchema.steps?.flatMap(s => s.fields) || []),
+            ...(formSchema.sections?.flatMap((s: any) => s.fields) || []),
+            ...(formSchema.tabs?.flatMap((t: any) => t.fields) || []),
+            ...(formSchema.steps?.flatMap((s: any) => s.fields) || []),
         ];
 
         // Check if we have fields to display
@@ -1296,7 +1294,7 @@ const QuickUI = ({
                 <Row gutter={[16, 16]}>
                     {fieldsFromSchema
                         .filter(field => !field.hidden) // Filter out hidden fields from detail view
-                        .map(field => (
+                        .map((field: any) => (
                             <Col key={field.name} xs={24} sm={12}>
                                 <Card size="small" title={field.label}>
                                     {field.render ? (
@@ -1389,7 +1387,7 @@ const QuickUI = ({
         if (crudType === "route") {
             if (currentAction === "create" || currentAction === "edit") {
                 const recordToEdit =
-                    currentAction === "edit" ? dataList.find(item => item.id === currentRecordId) : null;
+                    currentAction === "edit" ? dataList.find((item: any) => item.id === currentRecordId) : null;
 
                 return (
                     <div>
@@ -1432,7 +1430,7 @@ const QuickUI = ({
             }
 
             if (currentAction === "view") {
-                const recordToView = dataList.find(item => item.id === currentRecordId);
+                const recordToView = dataList.find((item: any) => item.id === currentRecordId);
                 return (
                     <div>
                         <Space style={{ marginBottom: 16 }}>
