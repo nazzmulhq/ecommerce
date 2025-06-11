@@ -1,5 +1,5 @@
 // store/quickUISlice.ts
-import { CrudType } from "@components/common/AppCRUDOperation";
+import { CrudType } from "@components/common/AppCRUDOperation/types";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface QuickUIState {
