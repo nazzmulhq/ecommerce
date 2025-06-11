@@ -111,7 +111,7 @@ const Role = () => {
         <QuickUI
             title="Roles"
             formSchema={permissionFormSchema}
-            crudType="modal"
+            crudType="drawer"
             icon="AiOutlineTeam"
             onRecordCreate={handleCreate}
             onRecordUpdate={handleUpdate}
