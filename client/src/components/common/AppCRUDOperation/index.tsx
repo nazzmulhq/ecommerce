@@ -715,7 +715,7 @@ const QuickUI = ({
             }
 
             // Use loadData without parameters
-            await loadData();
+            // await loadData();
 
             message.success(successMessages.delete);
         } catch (error) {
@@ -742,7 +742,7 @@ const QuickUI = ({
                     }
 
                     // Use loadData without parameters
-                    await loadData();
+                    // await loadData();
 
                     afterFormSubmit?.(processedValues, result);
                     message.success(successMessages.update);
@@ -759,7 +759,7 @@ const QuickUI = ({
                     }
 
                     // Use loadData without parameters
-                    await loadData();
+                    // await loadData();
 
                     afterFormSubmit?.(processedValues, result);
                     message.success(successMessages.create);
