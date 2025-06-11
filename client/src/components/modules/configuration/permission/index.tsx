@@ -1,15 +1,15 @@
 "use client";
 import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
-import { getCookie } from "@lib/actions";
 import {
     createPermission,
     deletePermission,
     fetchPermissions,
+    updatePermission,
 } from "@lib/actions/modules/permission/permissionActions";
 
 // Define a type for permission records matching your API structure
-interface Permission {
+export interface Permission {
     id: string;
     slug: string;
     name: string;
@@ -109,7 +109,7 @@ const permissionFormSchema: FormSchema = {
             type: "input",
             filterable: true,
             grid: {
-                xs: 12,
+                xs: 24,
             },
             rules: [{ required: true, message: "Please enter the permission name" }],
             placeholder: "Enter permission name",
@@ -136,19 +136,7 @@ const PermissionPage = () => {
 
     const handleUpdate = async (record: Permission): Promise<Permission> => {
         try {
-            const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions/${record.id}`;
-            const token = await getCookie("token");
-
-            const response = await fetch(url, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(record),
-            });
-
-            const apiData = await response.json();
+            const apiData = await updatePermission(record);
             return apiData.data;
         } catch (error) {
             console.error("Error updating permission:", error);
@@ -253,7 +241,7 @@ const PermissionPage = () => {
                     console.log("Form values before submit:", values);
                     return {
                         ...values,
-                        slug: values.slug?.toLowerCase().replace(/\s+/g, "_"),
+                        slug: values.name?.toLowerCase().replace(/\s+/g, "-"),
                     };
                 }}
                 afterFormSubmit={(values, result) => {

@@ -1,5 +1,6 @@
 "use server";
 
+import { Permission } from "@components/modules/configuration/permission";
 import { getCookie } from "@lib/actions";
 import { revalidateTag } from "next/cache";
 
@@ -95,9 +96,9 @@ export async function createPermission(permissionData: any) {
     }
 }
 
-export async function updatePermission(permissionId: number, permissionData: any) {
+export async function updatePermission(permissionData: Permission) {
     try {
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions/${permissionId}`;
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions/${permissionData.id}`;
         const token = await getCookie("token");
 
         const response = await fetch(url, {
