@@ -238,7 +238,7 @@ const PermissionPage = () => {
                     layout: "vertical",
                     size: "large",
                 }}
-                emptyText="No permissions found. Create your first permission to get started."
+                // emptyText="No permissions found. Create your first permission to get started."
                 showToggleCrudType={false}
                 showFilter={true}
                 actions={{

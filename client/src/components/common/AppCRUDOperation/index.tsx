@@ -40,6 +40,8 @@ import {
     Row,
     Space,
     Table,
+    TableColumnType,
+    TableProps,
     Tag,
     Tooltip,
     Typography,
@@ -93,7 +95,6 @@ export interface QuickUIProps {
     formSchema: FormSchema;
     crudType?: CrudType;
     icon?: TIconName;
-    initialPageSize?: number; // Optional initial page size for pagination
 
     // Action handlers - onRecordFilter is now required
     onDataChange?: (data: any[]) => void;
@@ -104,8 +105,8 @@ export interface QuickUIProps {
     onRecordFilter: (data: any[], filter: Record<string, any>) => Promise<any>; // Required prop
 
     // UI customization
-    tableColumns?: any[];
-    tableProps?: any;
+    tableColumns?: TableColumnType<any>[];
+    tableProps?: TableProps<any>;
     formProps?: any;
     actions?: {
         view?: boolean;
@@ -135,7 +136,6 @@ export interface QuickUIProps {
     statistics?: StatItem[] | ((data: any[]) => StatItem[]);
     rowSelection?: boolean;
     batchActions?: (selectedRowKeys: any[], selectedRows: any[], permissions?: { [key: string]: boolean }) => ReactNode;
-    emptyText?: string;
     showToggleCrudType?: boolean;
 
     // Advanced form configuration
@@ -189,7 +189,6 @@ const QuickUI = ({
     statistics,
     rowSelection = false,
     batchActions,
-    emptyText = "No data found",
     showToggleCrudType = false,
     validateOnMount = false,
     preserveFormData = false,
@@ -1092,7 +1091,6 @@ const QuickUI = ({
                           }
                         : undefined
                 }
-                locale={{ emptyText }}
                 loading={loading}
                 pagination={{
                     current: currentPage,
@@ -1102,7 +1100,7 @@ const QuickUI = ({
                     showQuickJumper: true,
                     pageSizeOptions: ["5", "10", "20", "50", "100"],
                     hideOnSinglePage: metadata.totalItems <= pageSize,
-                    totalBoundaryShowSizeChanger: true,
+                    totalBoundaryShowSizeChanger: 5,
                     showLessItems: true,
                     showTitle: true,
                     showPrevNextJumpers: true,
