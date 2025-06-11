@@ -61,4 +61,7 @@ export interface PaginationInterceptorMetadata<T = any> {
     totalItemsKey?: string;
     transform?: (item: T) => any;
     options?: PaginationResponseOptions<T>;
+    preserveQueryParams?: boolean;
+    includeLinks?: boolean;
+    dynamicRoute?: boolean;
 }

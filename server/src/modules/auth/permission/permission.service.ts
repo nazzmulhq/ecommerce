@@ -41,13 +41,29 @@ export class PermissionService {
             sortOrder = 'DESC',
             name,
             slug,
+            filters,
         } = params;
+
         const queryBuilder =
             this.permissionRepository.createQueryBuilder('permission');
 
         queryBuilder.where('permission.deleted = 0');
 
-        // Apply filters
+        // Apply filters from params.filters
+        if (filters) {
+            if (filters.name) {
+                queryBuilder.andWhere('permission.name LIKE :name', {
+                    name: `%${filters.name}%`,
+                });
+            }
+            if (filters.slug) {
+                queryBuilder.andWhere('permission.slug LIKE :slug', {
+                    slug: `%${filters.slug}%`,
+                });
+            }
+        }
+
+        // Apply direct filter parameters (backward compatibility)
         if (name) {
             queryBuilder.andWhere('permission.name LIKE :name', {
                 name: `%${name}%`,
@@ -59,7 +75,8 @@ export class PermissionService {
             });
         }
 
-        queryBuilder.skip(skip).take(limit);
+        // Get total count BEFORE applying pagination
+        const totalCount = await queryBuilder.getCount();
 
         // Apply sorting based on provided parameters
         if (sortBy && typeof sortBy !== 'symbol' && sortOrder) {
@@ -69,8 +86,11 @@ export class PermissionService {
             queryBuilder.orderBy('permission.created_at', 'DESC');
         }
 
-        const [permission, total] = await queryBuilder.getManyAndCount();
-        return [permission, total];
+        // Apply pagination
+        queryBuilder.skip(skip).take(limit);
+
+        const permissions = await queryBuilder.getMany();
+        return [permissions, totalCount];
     }
 
     async findOne(id: number): Promise<Permission> {

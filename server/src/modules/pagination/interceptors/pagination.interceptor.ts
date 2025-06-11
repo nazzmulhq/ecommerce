@@ -59,14 +59,21 @@ export class PaginationInterceptor implements NestInterceptor {
                             skip: 0,
                         };
 
+                    // Build dynamic route from request
+                    const baseRoute =
+                        metadata.route ||
+                        `${request.protocol}://${request.get('host')}${request.path}`;
+
                     return createPaginationResponse(
                         data.items,
                         data.total, // Use the actual total from database
                         paginationParams,
                         {
-                            route: metadata.route,
+                            route: baseRoute,
                             transform: metadata.transform,
-                            preserveQueryParams: true,
+                            preserveQueryParams:
+                                metadata.preserveQueryParams ?? true,
+                            includeLinks: metadata.includeLinks ?? true,
                             ...(metadata.options || {}),
                         },
                     );
@@ -82,15 +89,20 @@ export class PaginationInterceptor implements NestInterceptor {
                         };
 
                     const totalItems = data.length;
+                    const baseRoute =
+                        metadata.route ||
+                        `${request.protocol}://${request.get('host')}${request.path}`;
 
                     return createPaginationResponse(
                         data,
                         totalItems,
                         paginationParams,
                         {
-                            route: metadata.route,
+                            route: baseRoute,
                             transform: metadata.transform,
-                            preserveQueryParams: true,
+                            preserveQueryParams:
+                                metadata.preserveQueryParams ?? true,
+                            includeLinks: metadata.includeLinks ?? true,
                             ...(metadata.options || {}),
                         },
                     );
@@ -116,14 +128,20 @@ export class PaginationInterceptor implements NestInterceptor {
                                 skip: 0,
                             };
 
+                        const baseRoute =
+                            metadata.route ||
+                            `${request.protocol}://${request.get('host')}${request.path}`;
+
                         return createPaginationResponse(
                             items,
                             totalItems || items.length,
                             paginationParams,
                             {
-                                route: metadata.route,
+                                route: baseRoute,
                                 transform: metadata.transform,
-                                preserveQueryParams: true,
+                                preserveQueryParams:
+                                    metadata.preserveQueryParams ?? true,
+                                includeLinks: metadata.includeLinks ?? true,
                                 ...(metadata.options || {}),
                             },
                         );

@@ -1099,8 +1099,8 @@ const QuickUI = ({
                     showSizeChanger: true,
                     showQuickJumper: true,
                     pageSizeOptions: ["5", "10", "20", "50", "100"],
-                    hideOnSinglePage: metadata.totalItems <= pageSize,
-                    totalBoundaryShowSizeChanger: 5,
+                    hideOnSinglePage: false, // Always show pagination
+                    totalBoundaryShowSizeChanger: 2,
                     showLessItems: true,
                     showTitle: true,
                     showPrevNextJumpers: true,

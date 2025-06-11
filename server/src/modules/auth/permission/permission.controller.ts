@@ -56,9 +56,19 @@ export class PermissionController {
 
     @Get()
     @AutoPaginate({
-        resource: 'permission',
-        route: 'permissions',
+        resource: 'permissions',
+        route: '/permissions',
         totalItemsKey: 'total',
+        dynamicRoute: true,
+        preserveQueryParams: true,
+        includeLinks: true,
+        options: {
+            customLinks: {
+                self: (params) =>
+                    `/permissions?page=${params.page}&pageSize=${params.limit}`,
+                export: '/permissions/export',
+            },
+        },
     })
     @ApiBearerAuth()
     @AccessRoles({
@@ -66,7 +76,14 @@ export class PermissionController {
         permission: [],
     })
     @UseGuards(JwtAuthGuard, RoleGuard)
-    async findAll(@Pagination() params: PaginationParams) {
+    async findAll(
+        @Pagination({
+            defaultLimit: 10,
+            maxLimit: 100,
+            enableFilters: true,
+        })
+        params: PaginationParams,
+    ) {
         try {
             const [permissions, total] =
                 await this.permissionService.findAll(params);

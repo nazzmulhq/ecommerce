@@ -4,6 +4,9 @@ export interface PaginationParams<T = any> {
     skip: number;
     sortBy?: keyof T | string;
     sortOrder?: 'ASC' | 'DESC';
-    filters?: Partial<T>;
+    filters?: Partial<T> & Record<string, any>;
+    rangeFilters?: Record<string, any>;
+    search?: string;
+    searchFields?: string[];
     [key: string]: any; // For additional dynamic parameters
 }

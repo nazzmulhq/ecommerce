@@ -146,12 +146,18 @@ function buildUrl(
     // Start building query string
     const queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
-    queryParams.append('limit', limit.toString());
+    queryParams.append('pageSize', limit.toString()); // Use 'pageSize' instead of 'limit'
 
     // Add additional query params if preserveQueryParams is true
     if (options.preserveQueryParams !== false && additionalParams) {
         Object.entries(additionalParams).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
+            if (
+                value !== undefined &&
+                value !== null &&
+                key !== 'page' &&
+                key !== 'pageSize' &&
+                key !== 'limit'
+            ) {
                 // Handle nested objects (like filters)
                 if (typeof value === 'object' && !Array.isArray(value)) {
                     Object.entries(value).forEach(([subKey, subValue]) => {

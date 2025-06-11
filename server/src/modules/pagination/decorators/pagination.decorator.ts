@@ -55,8 +55,11 @@ export const Pagination = createParamDecorator(
                 pageValue = request.query[pageParam];
             }
 
+            // Handle both 'pageSize' and 'limit' parameters
             if (request.query[limitParam] !== undefined) {
                 limitValue = request.query[limitParam];
+            } else if (request.query.limit !== undefined) {
+                limitValue = request.query.limit;
             }
 
             if (request.query.sortBy !== undefined) {

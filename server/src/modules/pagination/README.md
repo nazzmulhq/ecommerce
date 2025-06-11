@@ -1,25 +1,119 @@
-# NestJS Advanced Pagination Module - Complete Guide
+# NestJS Advanced Pagination Module - Complete Implementation Guide
 
-This comprehensive guide covers all pagination patterns, configurations, and examples for the NestJS pagination module.
+This guide provides step-by-step instructions for implementing the pagination module with real-world examples and best practices.
 
 ## Table of Contents
 
-1. [Installation & Setup](#installation--setup)
-2. [Module Configuration](#module-configuration)
-3. [Basic Pagination](#basic-pagination)
+1. [Quick Start](#quick-start)
+2. [Installation & Setup](#installation--setup)
+3. [Basic Implementation](#basic-implementation)
 4. [Auto Pagination](#auto-pagination)
-5. [Filtering & Searching](#filtering--searching)
-6. [Sorting](#sorting)
-7. [Advanced Features](#advanced-features)
-8. [TypeORM Integration](#typeorm-integration)
-9. [Validation & Security](#validation--security)
-10. [Performance Optimization](#performance-optimization)
-11. [Real-World Examples](#real-world-examples)
-12. [API Responses](#api-responses)
+5. [Advanced Filtering](#advanced-filtering)
+6. [Frontend Integration](#frontend-integration)
+7. [Complete CRUD Example](#complete-crud-example)
+8. [Best Practices](#best-practices)
+9. [Troubleshooting](#troubleshooting)
+
+## Quick Start
+
+### 1. Basic Controller Setup
+
+```typescript
+// product.controller.ts
+import { Controller, Get } from '@nestjs/common';
+import { AutoPaginate, Pagination, PaginationParams } from '../pagination';
+
+@Controller('products')
+export class ProductController {
+  constructor(private readonly productService: ProductService) {}
+
+  @Get()
+  @AutoPaginate({
+    resource: 'products',
+    route: '/products',
+    totalItemsKey: 'total',
+  })
+  async findAll(@Pagination() params: PaginationParams) {
+    const [products, total] = await this.productService.findAll(params);
+
+    return {
+      items: products,
+      total: total,
+    };
+  }
+}
+```
+
+### 2. Basic Service Implementation
+
+```typescript
+// product.service.ts
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PaginationParams } from '../pagination';
+
+@Injectable()
+export class ProductService {
+  constructor(
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
+  ) {}
+
+  async findAll(params: PaginationParams): Promise<[Product[], number]> {
+    const { skip, limit, sortBy = 'created_at', sortOrder = 'DESC' } = params;
+
+    const queryBuilder = this.productRepository
+      .createQueryBuilder('product')
+      .where('product.deleted = 0');
+
+    // Apply sorting
+    queryBuilder.orderBy(`product.${sortBy}`, sortOrder);
+
+    // Get total count BEFORE pagination
+    const totalCount = await queryBuilder.getCount();
+
+    // Apply pagination
+    const products = await queryBuilder.skip(skip).take(limit).getMany();
+
+    return [products, totalCount];
+  }
+}
+```
+
+### 3. Module Registration
+
+```typescript
+// app.module.ts
+import { Module } from '@nestjs/common';
+import { PaginationModule } from './modules/pagination/pagination.module';
+
+@Module({
+  imports: [
+    PaginationModule.register({
+      global: true,
+      defaultLimit: 10,
+      maxLimit: 100,
+      enableInterceptor: true,
+      defaultSortOrder: 'ASC',
+      enableFilters: true,
+      defaultLimitParam: 'pageSize', // Use 'pageSize' instead of 'limit'
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+That's it! Your API will now respond to URLs like:
+
+- `GET /products?page=1&pageSize=10`
+- `GET /products?page=2&pageSize=20&sortBy=name&sortOrder=ASC`
 
 ## Installation & Setup
 
-### 1. Project Structure
+### Project Structure
+
+Create the following directory structure in your NestJS project:
 
 ```
 src/
@@ -40,242 +134,375 @@ src/
 │       │   └── pagination-filter.pipe.ts
 │       ├── utils/
 │       │   └── pagination.util.ts
-│       └── pagination.module.ts
+│       ├── pagination.module.ts
+│       └── README.md
 ```
 
-### 2. Module Registration
+### Constants File
 
 ```typescript
-// app.module.ts
-import { Module } from '@nestjs/common';
-import { PaginationModule } from './modules/pagination/pagination.module';
+// filepath: /home/nazmul/Documents/me/ecommerce/server/src/modules/pagination/constants/defaults.ts
+export const DEFAULT_PAGINATION_OPTIONS = {
+  defaultPage: 1,
+  defaultLimit: 10,
+  maxLimit: 100,
+  pageParam: 'page',
+  limitParam: 'pageSize', // Changed to 'pageSize'
+  extractFromBody: false,
+  extractFromRoute: false,
+  enableFilters: true,
+  filterPrefix: 'filter.',
+  enableRangeFilters: true,
+  rangeFilterSeparator: ':',
+  reservedParams: ['page', 'pageSize', 'limit', 'sortBy', 'sortOrder'],
+};
 
-@Module({
-  imports: [
-    PaginationModule.register({
-      global: true,
-      defaultLimit: 10,
-      maxLimit: 100,
-      enableInterceptor: true,
-      defaultSortOrder: 'ASC',
-      enableFilters: true,
-      filterPrefix: 'filter.',
-    }),
-  ],
-})
-export class AppModule {}
+export const PAGINATION_METADATA_KEY = 'pagination:metadata';
+export const PAGINATION_OPTIONS_TOKEN = 'PAGINATION_OPTIONS';
 ```
 
-## Module Configuration
+## Basic Implementation
 
-### Complete Configuration Options
-
-```typescript
-// pagination.module.ts
-PaginationModule.register({
-  global: true, // Make module globally available
-  defaultLimit: 10, // Default items per page
-  maxLimit: 100, // Maximum allowed items per page
-  enableInterceptor: true, // Enable automatic pagination interceptor
-  defaultPageParam: 'page', // Parameter name for page number
-  defaultLimitParam: 'limit', // Parameter name for page size
-  defaultSortOrder: 'ASC', // Default sort order
-  extractFromBody: false, // Extract params from request body
-  enableFilters: true, // Enable dynamic filtering
-  filterPrefix: 'filter.', // Prefix for filter parameters
-  customFilterHandlers: {
-    // Custom filter processing
-    dateRange: (value) => parseDate(value),
-    status: (value) => value.toUpperCase(),
-  },
-});
-```
-
-## Basic Pagination
-
-### 1. Controller Implementation
+### Step 1: Create Entity
 
 ```typescript
-// articles.controller.ts
-import { Controller, Get } from '@nestjs/common';
+// product.entity.ts
 import {
-  Pagination,
-  PaginationParams,
-  createPaginationResponse,
-} from '../pagination';
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-@Controller('articles')
-export class ArticlesController {
-  constructor(private readonly articleService: ArticleService) {}
+@Entity('products')
+export class Product {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Get()
-  async findAll(@Pagination() params: PaginationParams) {
-    const [articles, totalCount] = await this.articleService.findAll(params);
+  @Column()
+  name: string;
 
-    return createPaginationResponse(articles, totalCount, params, {
-      route: '/articles',
-      transform: (article) => ({
-        id: article.id,
-        title: article.title,
-        excerpt: article.content?.substring(0, 200),
-        publishedAt: article.publishedAt,
-      }),
-    });
-  }
+  @Column('decimal', { precision: 10, scale: 2 })
+  price: number;
+
+  @Column()
+  category: string;
+
+  @Column({ default: 0 })
+  stock: number;
+
+  @Column({ default: 0 })
+  deleted: number;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }
 ```
 
-### 2. Service Implementation
+### Step 2: Enhanced Service with Filtering
 
 ```typescript
-// article.service.ts
+// product.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaginationParams } from '../pagination';
+import { Product } from './entities/product.entity';
 
 @Injectable()
-export class ArticleService {
+export class ProductService {
   constructor(
-    @InjectRepository(Article)
-    private articleRepository: Repository<Article>,
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
   ) {}
 
-  async findAll(params: PaginationParams): Promise<[Article[], number]> {
-    const { skip, limit, sortBy, sortOrder, search, filters } = params;
+  async findAll(params: PaginationParams): Promise<[Product[], number]> {
+    const {
+      skip,
+      limit,
+      sortBy = 'created_at',
+      sortOrder = 'DESC',
+      search,
+      filters,
+      name,
+      category,
+    } = params;
 
-    const queryBuilder = this.articleRepository.createQueryBuilder('article');
+    const queryBuilder = this.productRepository
+      .createQueryBuilder('product')
+      .where('product.deleted = 0');
 
     // Apply search
     if (search) {
       queryBuilder.andWhere(
-        '(article.title ILIKE :search OR article.content ILIKE :search)',
+        '(product.name ILIKE :search OR product.category ILIKE :search)',
         { search: `%${search}%` },
       );
     }
 
-    // Apply filters
-    if (filters) {
+    // Apply direct filters (for backward compatibility)
+    if (name) {
+      queryBuilder.andWhere('product.name ILIKE :name', { name: `%${name}%` });
+    }
+
+    if (category) {
+      queryBuilder.andWhere('product.category = :category', { category });
+    }
+
+    // Apply filters from filters object
+    if (filters && typeof filters === 'object') {
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          queryBuilder.andWhere(`article.${key} = :${key}`, { [key]: value });
+        if (value !== undefined && value !== null && value !== '') {
+          if (key === 'minPrice') {
+            queryBuilder.andWhere('product.price >= :minPrice', {
+              minPrice: value,
+            });
+          } else if (key === 'maxPrice') {
+            queryBuilder.andWhere('product.price <= :maxPrice', {
+              maxPrice: value,
+            });
+          } else if (key === 'inStock') {
+            queryBuilder.andWhere('product.stock > 0');
+          } else {
+            queryBuilder.andWhere(`product.${key} = :${key}`, { [key]: value });
+          }
         }
       });
     }
 
     // Apply sorting
-    if (sortBy) {
-      queryBuilder.orderBy(`article.${sortBy}`, sortOrder || 'ASC');
+    if (sortBy && typeof sortBy !== 'symbol' && sortOrder) {
+      queryBuilder.orderBy(`product.${sortBy}`, sortOrder);
     } else {
-      queryBuilder.orderBy('article.createdAt', 'DESC');
+      queryBuilder.orderBy('product.created_at', 'DESC');
     }
 
-    // Get total count before pagination
+    // Get total count BEFORE applying pagination
     const totalCount = await queryBuilder.getCount();
 
     // Apply pagination
-    const results = await queryBuilder.skip(skip).take(limit).getMany();
+    const products = await queryBuilder.skip(skip).take(limit).getMany();
 
-    return [results, totalCount];
+    return [products, totalCount];
+  }
+
+  async findByCategory(
+    category: string,
+    params: PaginationParams,
+  ): Promise<[Product[], number]> {
+    const categoryParams = {
+      ...params,
+      filters: { ...params.filters, category },
+    };
+    return this.findAll(categoryParams);
+  }
+
+  async search(
+    query: string,
+    params: PaginationParams,
+  ): Promise<[Product[], number]> {
+    const searchParams = {
+      ...params,
+      search: query,
+    };
+    return this.findAll(searchParams);
+  }
+}
+```
+
+### Step 3: Complete Controller
+
+```typescript
+// product.controller.ts
+import { Controller, Get, Query, Param } from '@nestjs/common';
+import { ApiTags, ApiQuery, ApiOperation } from '@nestjs/swagger';
+import { AutoPaginate, Pagination, PaginationParams } from '../pagination';
+import { ProductService } from './product.service';
+
+@ApiTags('Products')
+@Controller('products')
+export class ProductController {
+  constructor(private readonly productService: ProductService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get all products with pagination' })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'pageSize', required: false, example: 10 })
+  @ApiQuery({ name: 'sortBy', required: false, example: 'name' })
+  @ApiQuery({ name: 'sortOrder', required: false, example: 'ASC' })
+  @ApiQuery({ name: 'search', required: false, example: 'laptop' })
+  @ApiQuery({ name: 'category', required: false, example: 'electronics' })
+  @AutoPaginate({
+    resource: 'products',
+    route: '/products',
+    totalItemsKey: 'total',
+    dynamicRoute: true,
+    preserveQueryParams: true,
+    includeLinks: true,
+  })
+  async findAll(
+    @Pagination({
+      defaultLimit: 10,
+      maxLimit: 100,
+      enableFilters: true,
+    })
+    params: PaginationParams,
+  ) {
+    const [products, total] = await this.productService.findAll(params);
+
+    return {
+      items: products,
+      total: total,
+    };
+  }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Search products' })
+  @AutoPaginate({
+    resource: 'products',
+    route: '/products/search',
+    totalItemsKey: 'total',
+  })
+  async search(
+    @Query('q') query: string,
+    @Pagination() params: PaginationParams,
+  ) {
+    const [products, total] = await this.productService.search(query, params);
+
+    return {
+      items: products,
+      total: total,
+    };
+  }
+
+  @Get('category/:category')
+  @ApiOperation({ summary: 'Get products by category' })
+  @AutoPaginate({
+    resource: 'products',
+    route: '/products/category',
+    totalItemsKey: 'total',
+  })
+  async findByCategory(
+    @Param('category') category: string,
+    @Pagination() params: PaginationParams,
+  ) {
+    const [products, total] = await this.productService.findByCategory(
+      category,
+      params,
+    );
+
+    return {
+      items: products,
+      total: total,
+    };
   }
 }
 ```
 
 ## Auto Pagination
 
-### Using AutoPaginate Decorator
+### Simple Auto Pagination
 
 ```typescript
-// articles.controller.ts
-import { AutoPaginate } from '../pagination';
-
-@Controller('articles')
-export class ArticlesController {
-  @Get('auto')
+// Simple controller that returns direct array
+@Controller('categories')
+export class CategoryController {
+  @Get()
   @AutoPaginate({
-    resource: 'articles',
-    route: '/articles/auto',
-    totalItemsKey: 'total',
+    resource: 'categories',
+    route: '/categories',
   })
-  async findWithAutoPagination(@Pagination() params: PaginationParams) {
-    const [articles, total] = await this.articleService.findAll(params);
+  async findAll(@Pagination() params: PaginationParams) {
+    const [categories, _] = await this.categoryService.findAll(params);
+    return categories; // Direct array return - interceptor handles pagination
+  }
+}
+```
 
-    // Return in format that interceptor can handle
+### Advanced Auto Pagination with Custom Options
+
+```typescript
+@Controller('orders')
+export class OrderController {
+  @Get()
+  @AutoPaginate({
+    resource: 'orders',
+    route: '/orders',
+    totalItemsKey: 'total',
+    dynamicRoute: true,
+    preserveQueryParams: true,
+    includeLinks: true,
+    options: {
+      transform: (order) => ({
+        id: order.id,
+        orderNumber: order.orderNumber,
+        customerName: order.customer?.name,
+        total: order.total,
+        status: order.status,
+        createdAt: order.createdAt,
+      }),
+      customLinks: {
+        export: '/orders/export',
+        analytics: '/orders/analytics',
+      },
+      addExtraMetaInfo: {
+        totalRevenue: 0, // Will be calculated in service
+        averageOrderValue: 0,
+      },
+    },
+  })
+  async findAll(@Pagination() params: PaginationParams) {
+    const [orders, total] = await this.orderService.findAll(params);
+    const stats = await this.orderService.getOrderStats();
+
     return {
-      items: articles,
+      items: orders,
       total: total,
+      totalRevenue: stats.totalRevenue,
+      averageOrderValue: stats.averageOrderValue,
     };
   }
-
-  @Get('simple-auto')
-  @AutoPaginate({
-    resource: 'articles',
-    route: '/articles/simple-auto',
-  })
-  async findSimpleAuto(@Pagination() params: PaginationParams) {
-    const [articles, _] = await this.articleService.findAll(params);
-    return articles; // Direct array return
-  }
 }
 ```
 
-## Filtering & Searching
+## Advanced Filtering
 
-### 1. Basic Filtering
-
-```typescript
-// URL: GET /articles?filter.status=PUBLISHED&filter.category=Technology
-
-// Controller
-@Get('filtered')
-async findFiltered(@Pagination() params: PaginationParams) {
-  // params.filters will contain: { status: 'PUBLISHED', category: 'Technology' }
-  return this.articleService.findFiltered(params);
-}
-
-// Service
-async findFiltered(params: PaginationParams): Promise<[Article[], number]> {
-  const { filters } = params;
-  const queryBuilder = this.articleRepository.createQueryBuilder('article');
-
-  if (filters?.status) {
-    queryBuilder.andWhere('article.status = :status', { status: filters.status });
-  }
-
-  if (filters?.category) {
-    queryBuilder.andWhere('article.category = :category', { category: filters.category });
-  }
-
-  return queryBuilder.getManyAndCount();
-}
-```
-
-### 2. Range Filtering
+### Range Filters
 
 ```typescript
-// URL: GET /articles?createdAt:gte=2023-01-01&createdAt:lte=2023-12-31&views:gt=1000
+// URL: GET /products?price:gte=100&price:lte=500&stock:gt=0&created_at:gte=2023-01-01
 
-// Service with range filters
-async findWithRangeFilters(params: PaginationParams): Promise<[Article[], number]> {
+// Service implementation
+async findWithRangeFilters(params: PaginationParams): Promise<[Product[], number]> {
   const { rangeFilters } = params;
-  const queryBuilder = this.articleRepository.createQueryBuilder('article');
+  const queryBuilder = this.productRepository.createQueryBuilder('product');
 
-  if (rangeFilters?.createdAt) {
-    if (rangeFilters.createdAt.gte) {
-      queryBuilder.andWhere('article.createdAt >= :startDate', {
-        startDate: rangeFilters.createdAt.gte
+  if (rangeFilters?.price) {
+    if (rangeFilters.price.gte) {
+      queryBuilder.andWhere('product.price >= :minPrice', {
+        minPrice: rangeFilters.price.gte
       });
     }
-    if (rangeFilters.createdAt.lte) {
-      queryBuilder.andWhere('article.createdAt <= :endDate', {
-        endDate: rangeFilters.createdAt.lte
+    if (rangeFilters.price.lte) {
+      queryBuilder.andWhere('product.price <= :maxPrice', {
+        maxPrice: rangeFilters.price.lte
       });
     }
   }
 
-  if (rangeFilters?.views?.gt) {
-    queryBuilder.andWhere('article.views > :minViews', {
-      minViews: rangeFilters.views.gt
+  if (rangeFilters?.stock?.gt) {
+    queryBuilder.andWhere('product.stock > :minStock', {
+      minStock: rangeFilters.stock.gt
+    });
+  }
+
+  if (rangeFilters?.created_at?.gte) {
+    queryBuilder.andWhere('product.created_at >= :startDate', {
+      startDate: rangeFilters.created_at.gte
     });
   }
 
@@ -283,363 +510,611 @@ async findWithRangeFilters(params: PaginationParams): Promise<[Article[], number
 }
 ```
 
-### 3. Advanced Search
+### Complex Filtering with Relations
 
 ```typescript
-// URL: GET /articles?search=nestjs&searchFields=title,content,tags
-
-@Get('search')
-async search(@Pagination() params: PaginationParams) {
-  return this.articleService.search(params);
-}
-
-// Service
-async search(params: PaginationParams): Promise<[Article[], number]> {
-  const { search, searchFields } = params;
-  const queryBuilder = this.articleRepository.createQueryBuilder('article');
-
-  if (search) {
-    const fields = searchFields || ['title', 'content'];
-    const searchConditions = fields.map(field =>
-      `article.${field} ILIKE :search`
-    ).join(' OR ');
-
-    queryBuilder.andWhere(`(${searchConditions})`, {
-      search: `%${search}%`
-    });
-  }
-
-  return queryBuilder
-    .orderBy('article.relevanceScore', 'DESC')
-    .getManyAndCount();
-}
-```
-
-## Sorting
-
-### Multiple Sort Fields
-
-```typescript
-// URL: GET /articles?sortBy=createdAt,title&sortOrder=DESC,ASC
-
-// Service
-async findWithMultipleSort(params: PaginationParams): Promise<[Article[], number]> {
-  const { sortBy, sortOrder } = params;
-  const queryBuilder = this.articleRepository.createQueryBuilder('article');
-
-  if (sortBy) {
-    const sortFields = Array.isArray(sortBy) ? sortBy : [sortBy];
-    const sortOrders = Array.isArray(sortOrder) ? sortOrder : [sortOrder || 'ASC'];
-
-    sortFields.forEach((field, index) => {
-      const order = sortOrders[index] || 'ASC';
-      if (index === 0) {
-        queryBuilder.orderBy(`article.${field}`, order as 'ASC' | 'DESC');
-      } else {
-        queryBuilder.addOrderBy(`article.${field}`, order as 'ASC' | 'DESC');
-      }
-    });
-  }
-
-  return queryBuilder.getManyAndCount();
-}
-```
-
-## Advanced Features
-
-### 1. Custom Links
-
-```typescript
-// Controller with custom pagination links
-@Get('with-custom-links')
-async findWithCustomLinks(@Pagination() params: PaginationParams) {
-  const [articles, totalCount] = await this.articleService.findAll(params);
-
-  return createPaginationResponse(
-    articles,
-    totalCount,
-    params,
-    {
-      route: '/articles',
-      customLinks: {
-        feed: '/articles/feed',
-        featured: (params) => `/articles/featured?page=${params.page}`,
-        rss: '/articles/rss',
-        export: (params) => `/articles/export?format=csv&page=${params.page}`,
-      },
-    }
-  );
-}
-```
-
-### 2. Meta Transformation
-
-```typescript
-// Add extra metadata
-@Get('with-stats')
-async findWithStats(@Pagination() params: PaginationParams) {
-  const [articles, totalCount] = await this.articleService.findAll(params);
-  const stats = await this.articleService.getStats();
-
-  return createPaginationResponse(
-    articles,
-    totalCount,
-    params,
-    {
-      route: '/articles',
-      addExtraMetaInfo: {
-        publishedCount: stats.published,
-        draftCount: stats.draft,
-        avgReadTime: stats.avgReadTime,
-      },
-      metaTransform: (meta) => ({
-        ...meta,
-        readTimeEstimate: `${Math.ceil(meta.totalItems * 2)} minutes`,
-      }),
-    }
-  );
-}
-```
-
-### 3. Data Transformation
-
-```typescript
-// Transform response data
-@Get('transformed')
-async findTransformed(@Pagination() params: PaginationParams) {
-  const [articles, totalCount] = await this.articleService.findAll(params);
-
-  return createPaginationResponse(
-    articles,
-    totalCount,
-    params,
-    {
-      route: '/articles',
-      transform: (article) => ({
-        id: article.id,
-        title: article.title,
-        slug: article.slug,
-        excerpt: article.content?.substring(0, 150) + '...',
-        publishedAt: article.publishedAt?.toISOString(),
-        author: {
-          id: article.author?.id,
-          name: article.author?.name,
-          avatar: article.author?.avatar,
-        },
-        stats: {
-          views: article.views,
-          likes: article.likes,
-          comments: article.comments?.length || 0,
-        },
-        tags: article.tags?.map(tag => tag.name) || [],
-      }),
-    }
-  );
-}
-```
-
-## TypeORM Integration
-
-### 1. Complex Queries with Relations
-
-```typescript
-// Service with relations and complex filtering
-async findWithRelations(params: PaginationParams): Promise<[Article[], number]> {
+// Service with relations and complex filters
+async findWithRelations(params: PaginationParams): Promise<[Product[], number]> {
   const { skip, limit, filters } = params;
 
-  const queryBuilder = this.articleRepository
-    .createQueryBuilder('article')
-    .leftJoinAndSelect('article.author', 'author')
-    .leftJoinAndSelect('article.tags', 'tags')
-    .leftJoinAndSelect('article.category', 'category')
-    .leftJoinAndSelect('article.comments', 'comments');
+  const queryBuilder = this.productRepository
+    .createQueryBuilder('product')
+    .leftJoinAndSelect('product.category', 'category')
+    .leftJoinAndSelect('product.supplier', 'supplier')
+    .leftJoinAndSelect('product.reviews', 'reviews')
+    .where('product.deleted = 0');
 
-  // Filter by author
-  if (filters?.authorId) {
-    queryBuilder.andWhere('author.id = :authorId', { authorId: filters.authorId });
+  // Filter by supplier
+  if (filters?.supplierId) {
+    queryBuilder.andWhere('supplier.id = :supplierId', {
+      supplierId: filters.supplierId
+    });
   }
 
-  // Filter by tags
-  if (filters?.tags) {
-    const tagIds = Array.isArray(filters.tags) ? filters.tags : [filters.tags];
-    queryBuilder.andWhere('tags.id IN (:...tagIds)', { tagIds });
+  // Filter by category
+  if (filters?.categoryName) {
+    queryBuilder.andWhere('category.name = :categoryName', {
+      categoryName: filters.categoryName
+    });
   }
 
-  // Filter by published status
-  if (filters?.published !== undefined) {
-    queryBuilder.andWhere('article.publishedAt IS NOT NULL');
+  // Filter by rating
+  if (filters?.minRating) {
+    queryBuilder.andWhere(
+      '(SELECT AVG(r.rating) FROM reviews r WHERE r.product_id = product.id) >= :minRating',
+      { minRating: filters.minRating }
+    );
   }
 
   // Get total count
   const totalCount = await queryBuilder.getCount();
 
   // Apply pagination
-  const articles = await queryBuilder
+  const products = await queryBuilder
     .skip(skip)
     .take(limit)
     .getMany();
 
-  return [articles, totalCount];
+  return [products, totalCount];
 }
 ```
 
-### 2. Raw Queries with Pagination
-
-```typescript
-// Service with raw SQL
-async findWithRawQuery(params: PaginationParams): Promise<[any[], number]> {
-  const { skip, limit, filters } = params;
-
-  // Count query
-  const countQuery = `
-    SELECT COUNT(*) as total
-    FROM articles a
-    INNER JOIN users u ON a.author_id = u.id
-    WHERE a.status = $1
-  `;
-
-  const countResult = await this.articleRepository.query(countQuery, ['PUBLISHED']);
-  const totalCount = parseInt(countResult[0].total);
-
-  // Data query
-  const dataQuery = `
-    SELECT
-      a.id,
-      a.title,
-      a.slug,
-      a.created_at,
-      u.name as author_name,
-      COUNT(c.id) as comment_count
-    FROM articles a
-    INNER JOIN users u ON a.author_id = u.id
-    LEFT JOIN comments c ON a.id = c.article_id
-    WHERE a.status = $1
-    GROUP BY a.id, u.name
-    ORDER BY a.created_at DESC
-    LIMIT $2 OFFSET $3
-  `;
-
-  const articles = await this.articleRepository.query(dataQuery, [
-    'PUBLISHED',
-    limit,
-    skip
-  ]);
-
-  return [articles, totalCount];
-}
-```
-
-## Validation & Security
-
-### 1. Using PaginationFilterPipe
+### Input Validation and Sanitization
 
 ```typescript
 // Controller with validation
-@Get('validated')
-async findValidated(
-  @Pagination()
-  @UsePipes(new PaginationFilterPipe({
-    allowedSortFields: ['id', 'title', 'createdAt', 'updatedAt'],
-    defaultSortField: 'createdAt',
-    defaultSortOrder: 'DESC',
-    allowedFilterFields: ['status', 'category', 'authorId'],
-    customFilterHandlers: {
-      status: (value) => value.toUpperCase(),
-      category: (value) => parseInt(value),
+@Controller('products')
+export class ProductController {
+  @Get('validated')
+  async findValidated(
+    @Pagination()
+    @UsePipes(
+      new PaginationFilterPipe({
+        allowedSortFields: ['id', 'name', 'price', 'created_at'],
+        defaultSortField: 'created_at',
+        defaultSortOrder: 'DESC',
+        allowedFilterFields: ['category', 'supplierId', 'inStock'],
+        customFilterHandlers: {
+          category: (value) => value.toLowerCase(),
+          price: (value) => parseFloat(value),
+        },
+        rangeFilterFields: ['price', 'stock', 'created_at'],
+      }),
+    )
+    params: PaginationParams,
+  ) {
+    return this.productService.findValidated(params);
+  }
+}
+```
+
+## Frontend Integration
+
+### React/Next.js Hook
+
+```typescript
+// hooks/usePagination.ts
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+interface PaginationState {
+  data: any[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+  links?: any;
+  loading: boolean;
+  error: string | null;
+}
+
+export function usePagination(apiEndpoint: string) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [state, setState] = useState<PaginationState>({
+    data: [],
+    meta: {
+      totalItems: 0,
+      itemCount: 0,
+      itemsPerPage: 10,
+      totalPages: 0,
+      currentPage: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
     },
-    rangeFilterFields: ['createdAt', 'views', 'likes'],
-  }))
-  params: PaginationParams
-) {
-  return this.articleService.findValidated(params);
-}
-```
+    loading: false,
+    error: null,
+  });
 
-### 2. Input Sanitization
+  const fetchData = useCallback(async () => {
+    try {
+      setState((prev) => ({ ...prev, loading: true, error: null }));
 
-```typescript
-// Custom sanitization pipe
-@Injectable()
-export class SanitizationPipe implements PipeTransform {
-  transform(params: PaginationParams): PaginationParams {
-    // Sanitize search input
-    if (params.search) {
-      params.search = params.search.replace(/[<>]/g, '');
+      const params = new URLSearchParams(searchParams.toString());
+      if (!params.get('page')) params.set('page', '1');
+      if (!params.get('pageSize')) params.set('pageSize', '10');
+
+      const response = await fetch(`${apiEndpoint}?${params.toString()}`);
+      const result = await response.json();
+
+      setState((prev) => ({
+        ...prev,
+        data: result.list || [],
+        meta: result.meta || prev.meta,
+        links: result.links,
+        loading: false,
+      }));
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        error: error.message,
+        loading: false,
+      }));
     }
+  }, [apiEndpoint, searchParams]);
 
-    // Validate sort fields
-    const allowedSortFields = ['id', 'title', 'createdAt'];
-    if (params.sortBy && !allowedSortFields.includes(params.sortBy as string)) {
-      params.sortBy = 'createdAt';
-    }
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-    // Limit pagination bounds
-    if (params.limit > 100) {
-      params.limit = 100;
-    }
+  const updateParams = useCallback(
+    (newParams: Record<string, any>) => {
+      const params = new URLSearchParams(searchParams.toString());
 
-    return params;
-  }
-}
-```
+      Object.entries(newParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.set(key, String(value));
+        } else {
+          params.delete(key);
+        }
+      });
 
-## Performance Optimization
+      router.push(`?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
 
-### 1. Cursor-Based Pagination
+  const setPage = useCallback(
+    (page: number) => {
+      updateParams({ page });
+    },
+    [updateParams],
+  );
 
-```typescript
-// For better performance with large datasets
-@Get('cursor')
-async findWithCursor(
-  @Query('cursor') cursor?: string,
-  @Query('limit') limit: number = 10
-) {
-  const queryBuilder = this.articleRepository
-    .createQueryBuilder('article')
-    .orderBy('article.id', 'DESC')
-    .limit(limit + 1); // Get one extra to check if there's more
+  const setPageSize = useCallback(
+    (pageSize: number) => {
+      updateParams({ page: 1, pageSize });
+    },
+    [updateParams],
+  );
 
-  if (cursor) {
-    queryBuilder.where('article.id < :cursor', { cursor });
-  }
+  const setFilters = useCallback(
+    (filters: Record<string, any>) => {
+      updateParams({ page: 1, ...filters });
+    },
+    [updateParams],
+  );
 
-  const articles = await queryBuilder.getMany();
-  const hasMore = articles.length > limit;
-
-  if (hasMore) {
-    articles.pop(); // Remove the extra item
-  }
-
-  const nextCursor = hasMore ? articles[articles.length - 1].id : null;
+  const setSorting = useCallback(
+    (sortBy: string, sortOrder: 'ASC' | 'DESC') => {
+      updateParams({ sortBy, sortOrder });
+    },
+    [updateParams],
+  );
 
   return {
-    data: articles,
-    nextCursor,
-    hasMore,
+    ...state,
+    setPage,
+    setPageSize,
+    setFilters,
+    setSorting,
+    refetch: fetchData,
   };
 }
 ```
 
-### 2. Caching
+### React Component Example
+
+```tsx
+// components/ProductTable.tsx
+import React from 'react';
+import { usePagination } from '../hooks/usePagination';
+
+export function ProductTable() {
+  const {
+    data,
+    meta,
+    loading,
+    error,
+    setPage,
+    setPageSize,
+    setFilters,
+    setSorting,
+  } = usePagination('/api/products');
+
+  const handleSearch = (searchTerm: string) => {
+    setFilters({ search: searchTerm });
+  };
+
+  const handleCategoryFilter = (category: string) => {
+    setFilters({ category });
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <div>
+      {/* Search and Filters */}
+      <div className="mb-4 flex gap-4">
+        <input
+          type="text"
+          placeholder="Search products..."
+          onChange={(e) => handleSearch(e.target.value)}
+          className="border rounded px-3 py-2"
+        />
+        <select
+          onChange={(e) => handleCategoryFilter(e.target.value)}
+          className="border rounded px-3 py-2"
+        >
+          <option value="">All Categories</option>
+          <option value="electronics">Electronics</option>
+          <option value="clothing">Clothing</option>
+          <option value="books">Books</option>
+        </select>
+      </div>
+
+      {/* Table */}
+      <table className="w-full border-collapse border">
+        <thead>
+          <tr>
+            <th
+              className="border p-2 cursor-pointer"
+              onClick={() => setSorting('name', 'ASC')}
+            >
+              Name
+            </th>
+            <th
+              className="border p-2 cursor-pointer"
+              onClick={() => setSorting('price', 'DESC')}
+            >
+              Price
+            </th>
+            <th className="border p-2">Category</th>
+            <th className="border p-2">Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((product) => (
+            <tr key={product.id}>
+              <td className="border p-2">{product.name}</td>
+              <td className="border p-2">${product.price}</td>
+              <td className="border p-2">{product.category}</td>
+              <td className="border p-2">{product.stock}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Pagination */}
+      <div className="mt-4 flex items-center justify-between">
+        <div>
+          Showing {meta.itemCount} of {meta.totalItems} items
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPage(meta.currentPage - 1)}
+            disabled={!meta.hasPreviousPage}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          <span className="px-3 py-1">
+            Page {meta.currentPage} of {meta.totalPages}
+          </span>
+
+          <button
+            onClick={() => setPage(meta.currentPage + 1)}
+            disabled={!meta.hasNextPage}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+
+        <select
+          value={meta.itemsPerPage}
+          onChange={(e) => setPageSize(Number(e.target.value))}
+          className="border rounded px-2 py-1"
+        >
+          <option value={5}>5 per page</option>
+          <option value={10}>10 per page</option>
+          <option value={25}>25 per page</option>
+          <option value={50}>50 per page</option>
+          <option value={100}>100 per page</option>
+        </select>
+      </div>
+    </div>
+  );
+}
+```
+
+## Complete CRUD Example
+
+### User Management System
 
 ```typescript
-// Service with caching
+// user.entity.ts
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ unique: true })
+  email: string;
+
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
+  @Column({ type: 'enum', enum: ['admin', 'user', 'moderator'] })
+  role: string;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({ nullable: true })
+  lastLoginAt: Date;
+
+  @Column({ default: 0 })
+  deleted: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}
+
+// user.service.ts
 @Injectable()
-export class ArticleService {
+export class UserService {
   constructor(
-    @InjectRepository(Article)
-    private articleRepository: Repository<Article>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
+
+  async findAll(params: PaginationParams): Promise<[User[], number]> {
+    const {
+      skip,
+      limit,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+      search,
+      filters,
+    } = params;
+
+    const queryBuilder = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.deleted = 0');
+
+    // Apply search
+    if (search) {
+      queryBuilder.andWhere(
+        '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    // Apply filters
+    if (filters) {
+      if (filters.role) {
+        queryBuilder.andWhere('user.role = :role', { role: filters.role });
+      }
+      if (filters.isActive !== undefined) {
+        queryBuilder.andWhere('user.isActive = :isActive', {
+          isActive: filters.isActive,
+        });
+      }
+      if (filters.dateRange) {
+        queryBuilder.andWhere(
+          'user.createdAt BETWEEN :startDate AND :endDate',
+          {
+            startDate: filters.dateRange.start,
+            endDate: filters.dateRange.end,
+          },
+        );
+      }
+    }
+
+    // Apply sorting
+    queryBuilder.orderBy(`user.${sortBy}`, sortOrder);
+
+    // Get total count
+    const totalCount = await queryBuilder.getCount();
+
+    // Apply pagination
+    const users = await queryBuilder.skip(skip).take(limit).getMany();
+
+    return [users, totalCount];
+  }
+
+  async getStats() {
+    const [activeUsers, totalUsers, newUsersThisMonth] = await Promise.all([
+      this.userRepository.count({ where: { isActive: true, deleted: 0 } }),
+      this.userRepository.count({ where: { deleted: 0 } }),
+      this.userRepository.count({
+        where: {
+          deleted: 0,
+          createdAt: MoreThan(
+            new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+          ),
+        },
+      }),
+    ]);
+
+    return { activeUsers, totalUsers, newUsersThisMonth };
+  }
+
+  async create(userData: Partial<User>): Promise<User> {
+    const user = this.userRepository.create(userData);
+    return this.userRepository.save(user);
+  }
+
+  async update(id: number, userData: Partial<User>): Promise<User> {
+    await this.userRepository.update(id, userData);
+    return this.userRepository.findOne({ where: { id } });
+  }
+
+  async remove(id: number): Promise<void> {
+    await this.userRepository.update(id, { deleted: 1 });
+  }
+}
+
+// user.controller.ts
+@Controller('users')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  @Get()
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @AccessRoles(['admin'])
+  @AutoPaginate({
+    resource: 'users',
+    route: '/users',
+    totalItemsKey: 'total',
+    options: {
+      transform: (user) => ({
+        id: user.id,
+        email: user.email,
+        fullName: `${user.firstName} ${user.lastName}`,
+        role: user.role,
+        isActive: user.isActive,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
+      }),
+      addExtraMetaInfo: {
+        activeUsers: 0,
+        newUsersThisMonth: 0,
+      },
+    },
+  })
+  async findAll(@Pagination() params: PaginationParams) {
+    const [users, total] = await this.userService.findAll(params);
+    const stats = await this.userService.getStats();
+
+    return {
+      items: users,
+      total: total,
+      activeUsers: stats.activeUsers,
+      newUsersThisMonth: stats.newUsersThisMonth,
+    };
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @AccessRoles(['admin'])
+  async create(@Body() createUserDto: CreateUserDto) {
+    return this.userService.create(createUserDto);
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @AccessRoles(['admin'])
+  async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(id, updateUserDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @AccessRoles(['admin'])
+  async remove(@Param('id') id: number) {
+    await this.userService.remove(id);
+    return { message: 'User deleted successfully' };
+  }
+}
+```
+
+## Best Practices
+
+### 1. Performance Optimization
+
+```typescript
+// Use indexes for commonly filtered/sorted fields
+@Entity('products')
+@Index(['category', 'deleted'])
+@Index(['price'])
+@Index(['created_at'])
+export class Product {
+  // ... entity definition
+}
+
+// Service with optimized queries
+@Injectable()
+export class ProductService {
+  async findAllOptimized(
+    params: PaginationParams,
+  ): Promise<[Product[], number]> {
+    // Use separate queries for count and data to optimize performance
+    const baseQuery = this.productRepository
+      .createQueryBuilder('product')
+      .where('product.deleted = 0');
+
+    // Apply filters to base query
+    this.applyFilters(baseQuery, params);
+
+    // Get count first (without joins if possible)
+    const totalCount = await baseQuery.getCount();
+
+    // Then get data with all joins and transformations
+    const dataQuery = baseQuery.clone();
+    this.applySorting(dataQuery, params);
+    this.applyPagination(dataQuery, params);
+
+    const products = await dataQuery.getMany();
+
+    return [products, totalCount];
+  }
+
+  private applyFilters(
+    queryBuilder: SelectQueryBuilder<Product>,
+    params: PaginationParams,
+  ) {
+    // Extract filter logic for reusability
+    // ... filter implementation
+  }
+}
+```
+
+### 2. Caching Strategy
+
+```typescript
+@Injectable()
+export class ProductService {
+  constructor(
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
     @Inject(CACHE_MANAGER)
     private cacheManager: Cache,
   ) {}
 
-  async findAllCached(params: PaginationParams): Promise<[Article[], number]> {
-    const cacheKey = `articles:${JSON.stringify(params)}`;
+  async findAllCached(params: PaginationParams): Promise<[Product[], number]> {
+    // Create cache key from parameters
+    const cacheKey = this.createCacheKey(params);
 
-    // Try to get from cache
+    // Try cache first
     const cached = await this.cacheManager.get(cacheKey);
     if (cached) {
-      return cached as [Article[], number];
+      return cached as [Product[], number];
     }
 
     // Get from database
@@ -650,170 +1125,199 @@ export class ArticleService {
 
     return result;
   }
+
+  private createCacheKey(params: PaginationParams): string {
+    return `products:${JSON.stringify(params)}`;
+  }
 }
 ```
 
-## Real-World Examples
-
-### 1. E-commerce Products
+### 3. Error Handling
 
 ```typescript
-// products.controller.ts
 @Controller('products')
-export class ProductsController {
+export class ProductController {
   @Get()
-  async findProducts(@Pagination() params: PaginationParams) {
-    const [products, totalCount] = await this.productService.findAll(params);
+  async findAll(@Pagination() params: PaginationParams) {
+    try {
+      const [products, total] = await this.productService.findAll(params);
 
-    return createPaginationResponse(products, totalCount, params, {
-      route: '/products',
-      transform: (product) => ({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        discountedPrice: product.calculateDiscountedPrice(),
-        imageUrl: product.images?.[0]?.url,
-        rating: product.averageRating,
-        inStock: product.stock > 0,
-      }),
-    });
-  }
-
-  @Get('search')
-  async searchProducts(
-    @Pagination() params: PaginationParams,
-    @Query('q') query: string,
-    @Query('category') category?: string,
-    @Query('minPrice') minPrice?: number,
-    @Query('maxPrice') maxPrice?: number,
-    @Query('inStock') inStock?: boolean,
-  ) {
-    const searchParams = {
-      ...params,
-      search: query,
-      filters: {
-        ...params.filters,
-        category,
-        inStock,
-      },
-      rangeFilters: {
-        price: {
-          gte: minPrice,
-          lte: maxPrice,
+      return {
+        success: true,
+        items: products,
+        total: total,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Failed to fetch products',
+          error: error.message,
         },
-      },
-    };
-
-    return this.productService.search(searchParams);
-  }
-}
-```
-
-### 2. User Management
-
-```typescript
-// users.controller.ts
-@Controller('users')
-export class UsersController {
-  @Get()
-  @UseGuards(JwtAuthGuard, RoleGuard)
-  @AccessRoles(['admin'])
-  async findUsers(@Pagination() params: PaginationParams) {
-    const [users, totalCount] = await this.userService.findAll(params);
-
-    return createPaginationResponse(users, totalCount, params, {
-      route: '/users',
-      transform: (user) => ({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        isActive: user.isActive,
-        lastLoginAt: user.lastLoginAt,
-        createdAt: user.createdAt,
-      }),
-      addExtraMetaInfo: {
-        activeUsers: await this.userService.countActive(),
-        newUsersThisMonth: await this.userService.countNewThisMonth(),
-      },
-    });
-  }
-}
-```
-
-### 3. Blog Posts with Categories
-
-```typescript
-// posts.controller.ts
-@Controller('posts')
-export class PostsController {
-  @Get()
-  async findPosts(@Pagination() params: PaginationParams) {
-    return this.postService.findAllWithPagination(params);
-  }
-
-  @Get('by-category/:categoryId')
-  async findByCategory(
-    @Param('categoryId') categoryId: string,
-    @Pagination() params: PaginationParams,
-  ) {
-    const categoryParams = {
-      ...params,
-      filters: { ...params.filters, categoryId },
-    };
-
-    return this.postService.findAllWithPagination(categoryParams);
-  }
-}
-
-// posts.service.ts
-@Injectable()
-export class PostService {
-  async findAllWithPagination(params: PaginationParams) {
-    const [posts, totalCount] = await this.findAll(params);
-    const categories = await this.categoryService.findAll();
-
-    return createPaginationResponse(posts, totalCount, params, {
-      route: '/posts',
-      addExtraMetaInfo: {
-        availableCategories: categories,
-        featuredPostsCount: await this.countFeatured(),
-      },
-      customLinks: {
-        featured: '/posts/featured',
-        trending: '/posts/trending',
-        recent: '/posts/recent',
-      },
-    });
-  }
-}
-```
-
-## API Responses
-
-### Standard Pagination Response
-
-```json
-{
-  "list": [
-    {
-      "id": "1",
-      "title": "Getting Started with NestJS",
-      "excerpt": "Learn how to build scalable Node.js applications...",
-      "publishedAt": "2023-10-01T10:00:00Z",
-      "author": {
-        "id": "123",
-        "name": "John Doe",
-        "avatar": "https://example.com/avatar.jpg"
-      },
-      "stats": {
-        "views": 1250,
-        "likes": 89,
-        "comments": 15
-      },
-      "tags": ["nestjs", "nodejs", "typescript"]
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
+  }
+}
+```
+
+### 4. API Documentation
+
+```typescript
+@Controller('products')
+@ApiTags('Products')
+export class ProductController {
+  @Get()
+  @ApiOperation({
+    summary: 'Get products with pagination',
+    description:
+      'Retrieve a paginated list of products with optional filtering and sorting',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    example: 1,
+    description: 'Page number',
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    example: 10,
+    description: 'Items per page',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    example: 'name',
+    description: 'Sort field',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    required: false,
+    example: 'ASC',
+    description: 'Sort order',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    example: 'laptop',
+    description: 'Search term',
+  })
+  @ApiQuery({
+    name: 'category',
+    required: false,
+    example: 'electronics',
+    description: 'Filter by category',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of products',
+    schema: {
+      type: 'object',
+      properties: {
+        list: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/Product' },
+        },
+        meta: { $ref: '#/components/schemas/PaginationMeta' },
+        links: { $ref: '#/components/schemas/PaginationLinks' },
+      },
+    },
+  })
+  async findAll(@Pagination() params: PaginationParams) {
+    // ... implementation
+  }
+}
+```
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### 1. "Cannot read property 'page' of undefined"
+
+**Problem**: Pagination decorator not working
+**Solution**:
+
+```typescript
+// Make sure to register the pagination module
+@Module({
+  imports: [
+    PaginationModule.register({
+      global: true,
+      enableInterceptor: true,
+    }),
   ],
+})
+export class AppModule {}
+```
+
+#### 2. "pageSize parameter not recognized"
+
+**Problem**: Frontend sending 'pageSize' but backend expecting 'limit'
+**Solution**:
+
+```typescript
+// Update pagination defaults
+export const DEFAULT_PAGINATION_OPTIONS = {
+  // ...
+  limitParam: 'pageSize', // Changed from 'limit'
+  reservedParams: ['page', 'pageSize', 'limit', 'sortBy', 'sortOrder'],
+};
+```
+
+#### 3. "Total count is wrong with filters"
+
+**Problem**: Count query doesn't include filters
+**Solution**:
+
+```typescript
+// Get count AFTER applying filters but BEFORE pagination
+const queryBuilder = this.repository.createQueryBuilder('entity');
+
+// Apply filters first
+this.applyFilters(queryBuilder, params);
+
+// Get count with filters applied
+const totalCount = await queryBuilder.getCount();
+
+// Then apply pagination
+const results = await queryBuilder.skip(skip).take(limit).getMany();
+```
+
+#### 4. "Performance issues with large datasets"
+
+**Problem**: Slow queries on large tables
+**Solutions**:
+
+- Add database indexes on filtered/sorted columns
+- Use cursor-based pagination for very large datasets
+- Implement caching
+- Consider using raw SQL for complex queries
+
+#### 5. "AutoPaginate decorator not working"
+
+**Problem**: Response not being transformed
+**Solution**:
+
+```typescript
+// Ensure interceptor is enabled and return correct format
+return {
+  items: data, // Must be 'items'
+  total: count, // Must be 'total'
+};
+```
+
+### Example URLs and Expected Responses
+
+#### Basic Pagination
+
+```
+GET /products?page=1&pageSize=10
+
+Response:
+{
+  "list": [...],
   "meta": {
     "totalItems": 150,
     "itemCount": 10,
@@ -821,41 +1325,31 @@ export class PostService {
     "totalPages": 15,
     "currentPage": 1,
     "hasNextPage": true,
-    "hasPreviousPage": false,
-    "readTimeEstimate": "300 minutes",
-    "publishedCount": 120,
-    "draftCount": 30,
-    "avgReadTime": 8.5
+    "hasPreviousPage": false
   },
   "links": {
-    "first": "/articles?page=1&limit=10",
-    "current": "/articles?page=1&limit=10",
-    "next": "/articles?page=2&limit=10",
-    "last": "/articles?page=15&limit=10",
-    "feed": "/articles/feed",
-    "featured": "/articles/featured?page=1",
-    "rss": "/articles/rss"
+    "current": "/products?page=1&pageSize=10",
+    "next": "/products?page=2&pageSize=10",
+    "last": "/products?page=15&pageSize=10"
   }
 }
 ```
 
-### Error Response
+#### With Filters and Sorting
 
-```json
+```
+GET /products?page=2&pageSize=20&sortBy=price&sortOrder=DESC&category=electronics&search=laptop
+
+Response includes all filters preserved in links:
 {
-  "success": false,
-  "message": "Invalid pagination parameters",
-  "errors": [
-    {
-      "field": "sortBy",
-      "message": "Sort field 'invalidField' is not allowed"
-    },
-    {
-      "field": "limit",
-      "message": "Limit cannot exceed 100"
-    }
-  ]
+  "list": [...],
+  "meta": {...},
+  "links": {
+    "current": "/products?page=2&pageSize=20&sortBy=price&sortOrder=DESC&category=electronics&search=laptop",
+    "next": "/products?page=3&pageSize=20&sortBy=price&sortOrder=DESC&category=electronics&search=laptop",
+    ...
+  }
 }
 ```
 
-This comprehensive guide covers all aspects of the pagination module, from basic setup to advanced real-world implementations. Use these examples as templates for your specific use cases.
+This comprehensive guide should help you implement pagination in any NestJS application with full frontend integration support.
