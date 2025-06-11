@@ -162,10 +162,9 @@ const QuickUI = ({
     title,
     formSchema,
     crudType = "modal",
-    initialPageSize = 5, // Default initial page size
     icon,
-    onRecordFilter, // Now required
     showFilter = true,
+    onRecordFilter,
     onDataChange,
     onRecordView,
     onRecordCreate,
@@ -233,16 +232,140 @@ const QuickUI = ({
     const [form] = Form.useForm();
     const filterFormRef = useRef(form);
 
-    // Initialize default metadata as a constant instead of useMemo
-    const defaultMetadata = {
-        totalItems: 0,
-        itemCount: 0,
-        itemsPerPage: initialPageSize,
-        totalPages: 0,
-        currentPage: 1,
-        hasNextPage: false,
-        hasPreviousPage: false,
-    };
+    // Get filters and pagination from searchParams - single source of truth
+    const getParamsFromUrl = useCallback(() => {
+        const urlFilters: Record<string, any> = {};
+        const pageParam = searchParams.get("page");
+        const pageSizeParam = searchParams.get("pageSize") || searchParams.get("limit");
+
+        // Extract filter parameters from URL
+        Array.from(searchParams.entries()).forEach(([key, value]) => {
+            if (!["page", "pageSize", "limit"].includes(key) && value) {
+                try {
+                    urlFilters[key] = JSON.parse(decodeURIComponent(value));
+                } catch {
+                    urlFilters[key] = decodeURIComponent(value);
+                }
+            }
+        });
+
+        const urlMetadata = {
+            totalItems: 0,
+            itemCount: 0,
+            itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : 5,
+            totalPages: 0,
+            currentPage: pageParam ? parseInt(pageParam) : 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+        };
+
+        return { urlFilters, urlMetadata };
+    }, [searchParams]);
+
+    // Always update URL and sync Redux (never read from Redux, only write to it)
+    const updateURL = useCallback(
+        (newFilters: Record<string, any>, newMetadata: any) => {
+            const params = new URLSearchParams();
+
+            // Add filter params
+            Object.entries(newFilters).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== "") {
+                    const encodedValue =
+                        typeof value === "object"
+                            ? encodeURIComponent(JSON.stringify(value))
+                            : encodeURIComponent(String(value));
+                    params.set(key, encodedValue);
+                }
+            });
+
+            // Always add pagination params for persistence
+            params.set("page", newMetadata.currentPage.toString());
+            params.set("pageSize", newMetadata.itemsPerPage.toString());
+
+            const newUrl = `${pathname}?${params.toString()}`;
+            const currentUrl = `${pathname}?${searchParams.toString()}`;
+
+            if (newUrl !== currentUrl) {
+                router.replace(newUrl, { scroll: false });
+            }
+
+            // Sync Redux state with URL params (write only)
+            dispatch(setFilters(newFilters));
+            dispatch(setMetadata(newMetadata));
+        },
+        [pathname, router, searchParams, dispatch],
+    );
+
+    // Single useEffect that triggers API call only when searchParams change
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadDataFromParams = async () => {
+            const { urlFilters, urlMetadata } = getParamsFromUrl();
+            const pageParam = searchParams.get("page");
+            const pageSizeParam = searchParams.get("pageSize");
+
+            // First time visit - set default params if not present
+            if (!pageParam || !pageSizeParam) {
+                // Set initial values in URL and Redux
+                updateURL(urlFilters, urlMetadata);
+                return; // Don't load data yet, let the URL update trigger the effect
+            }
+
+            // Validate page and pageSize are numbers
+            if (isNaN(Number(pageParam)) || isNaN(Number(pageSizeParam))) {
+                updateURL({}, { currentPage: 1, itemsPerPage: 5 });
+                return;
+            }
+
+            // Always sync Redux with URL params (never use Redux values for API calls)
+            dispatch(setFilters(urlFilters));
+            dispatch(setMetadata(urlMetadata));
+
+            // Set filter form values from URL params
+            if (filterFormRef.current && Object.keys(urlFilters).length > 0) {
+                filterFormRef.current.setFieldsValue(urlFilters);
+            }
+
+            // Load data based on current searchParams only
+            try {
+                dispatch(setLoading(true));
+                const result = await onRecordFilter([], {
+                    ...urlFilters,
+                    _pagination: {
+                        page: urlMetadata.currentPage,
+                        pageSize: urlMetadata.itemsPerPage,
+                    },
+                });
+
+                if (isMounted) {
+                    handleFilterResult(result);
+                }
+            } catch (error) {
+                if (isMounted) {
+                    console.error("Error loading data:", error);
+                    dispatch(setError("Failed to load data"));
+                }
+            } finally {
+                if (isMounted) {
+                    dispatch(setLoading(false));
+                }
+            }
+        };
+
+        loadDataFromParams();
+
+        // Setup CRUD type
+        if (crudType !== activeCrudType) {
+            dispatch(setActiveCrudType(crudType));
+        }
+
+        // Cleanup
+        return () => {
+            isMounted = false;
+            dispatch(resetState());
+        };
+    }, [searchParams.toString(), onRecordFilter, crudType, activeCrudType, dispatch]);
 
     // Simplified function to handle API results
     const handleFilterResult = useCallback(
@@ -279,145 +402,27 @@ const QuickUI = ({
         [dispatch],
     );
 
-    // Always update URL for data persistence
-    const updateURL = useCallback(
-        (newFilters: Record<string, any> = filters, newMetadata = metadata) => {
-            const params = new URLSearchParams();
+    // Simplified loadData function for CRUD operations - always use searchParams
+    const loadData = useCallback(async () => {
+        const { urlFilters, urlMetadata } = getParamsFromUrl();
 
-            // Add filter params
-            Object.entries(newFilters).forEach(([key, value]) => {
-                if (value !== undefined && value !== null && value !== "") {
-                    const encodedValue =
-                        typeof value === "object"
-                            ? encodeURIComponent(JSON.stringify(value))
-                            : encodeURIComponent(String(value));
-                    params.set(key, encodedValue);
-                }
+        try {
+            dispatch(setLoading(true));
+            const result = await onRecordFilter([], {
+                ...urlFilters,
+                _pagination: {
+                    page: urlMetadata.currentPage,
+                    pageSize: urlMetadata.itemsPerPage,
+                },
             });
-
-            // Always add pagination params for persistence
-            params.set("page", newMetadata.currentPage.toString());
-            params.set("pageSize", newMetadata.itemsPerPage.toString());
-
-            const newUrl = `${pathname}?${params.toString()}`;
-            const currentUrl = `${pathname}?${searchParams.toString()}`;
-
-            if (newUrl !== currentUrl) {
-                router.replace(newUrl, { scroll: false });
-            }
-        },
-        [filters, metadata, pathname, router, searchParams],
-    );
-
-    // Simplified data loading - always uses onRecordFilter
-    const loadData = useCallback(
-        async (currentFilters: any = filters, currentMetadata = metadata, updateUrl = true) => {
-            try {
-                dispatch(setLoading(true));
-
-                const result = await onRecordFilter([], {
-                    ...currentFilters,
-                    _pagination: {
-                        page: currentMetadata.currentPage,
-                        pageSize: currentMetadata.itemsPerPage,
-                    },
-                });
-
-                handleFilterResult(result);
-
-                if (updateUrl) {
-                    updateURL(currentFilters, currentMetadata);
-                }
-            } catch (error) {
-                console.error("Error loading data:", error);
-                dispatch(setError("Failed to load data"));
-            } finally {
-                dispatch(setLoading(false));
-            }
-        },
-        [onRecordFilter, dispatch, handleFilterResult, updateURL, filters, metadata],
-    );
-
-    // Combined initialization and data loading - single useEffect
-    useEffect(() => {
-        let isMounted = true;
-
-        // First-time initialization
-        const initialize = async () => {
-            const urlFilters: Record<string, any> = {};
-            const pageParam = searchParams.get("page");
-            const pageSizeParam = searchParams.get("pageSize") || searchParams.get("limit");
-
-            // Extract filter parameters from URL
-            Array.from(searchParams.entries()).forEach(([key, value]) => {
-                if (!["page", "pageSize", "limit"].includes(key) && value) {
-                    try {
-                        urlFilters[key] = JSON.parse(decodeURIComponent(value));
-                    } catch {
-                        urlFilters[key] = decodeURIComponent(value);
-                    }
-                }
-            });
-
-            // Set filters and metadata from URL
-            dispatch(setFilters(urlFilters));
-
-            const urlMetadata = {
-                ...defaultMetadata,
-                currentPage: pageParam ? parseInt(pageParam) : 1,
-                itemsPerPage: pageSizeParam ? parseInt(pageSizeParam) : defaultMetadata.itemsPerPage,
-            };
-            dispatch(setMetadata(urlMetadata));
-
-            // Set filter form values
-            if (filterFormRef.current && Object.keys(urlFilters).length > 0) {
-                filterFormRef.current.setFieldsValue(urlFilters);
-            }
-
-            // Set default pagination in URL if missing
-            if (!pageParam && !pageSizeParam && Object.keys(urlFilters).length === 0) {
-                updateURL({}, urlMetadata);
-            }
-
-            // Load initial data
-            try {
-                dispatch(setLoading(true));
-                const result = await onRecordFilter([], {
-                    ...urlFilters,
-                    _pagination: {
-                        page: urlMetadata.currentPage,
-                        pageSize: urlMetadata.itemsPerPage,
-                    },
-                });
-
-                if (isMounted) {
-                    handleFilterResult(result);
-                }
-            } catch (error) {
-                if (isMounted) {
-                    console.error("Error loading data:", error);
-                    dispatch(setError("Failed to load data"));
-                }
-            } finally {
-                if (isMounted) {
-                    dispatch(setLoading(false));
-                }
-            }
-        };
-
-        initialize();
-
-        // Setup CRUD type (moved from separate useEffect)
-        if (crudType !== activeCrudType) {
-            dispatch(setActiveCrudType(crudType));
+            handleFilterResult(result);
+        } catch (error) {
+            console.error("Error loading data:", error);
+            dispatch(setError("Failed to load data"));
+        } finally {
+            dispatch(setLoading(false));
         }
-
-        // Cleanup
-        return () => {
-            isMounted = false;
-            dispatch(resetState());
-        };
-    }, [searchParams.toString(), onRecordFilter, dispatch, crudType, activeCrudType]);
+    }, [getParamsFromUrl, onRecordFilter, dispatch, handleFilterResult]);
 
     // Only keep these two essential useEffects
     useEffect(() => {
@@ -520,7 +525,7 @@ const QuickUI = ({
         };
     }, [processedFilterFields]);
 
-    // Enhanced filter handling with pagination reset
+    // Enhanced filter handling - only update URL and Redux, let useEffect handle API call
     const handleFilterSubmit = useCallback(
         async (values: any) => {
             const newFilters: Record<string, any> = {};
@@ -530,39 +535,46 @@ const QuickUI = ({
                 }
             });
 
+            // Get current pagination from URL (not Redux)
+            const { urlMetadata } = getParamsFromUrl();
+
             // Reset to first page when applying filters
             const resetMetadata = {
-                ...metadata,
+                ...urlMetadata,
                 currentPage: 1,
             };
 
-            dispatch(setFilters(newFilters));
-            dispatch(setMetadata(resetMetadata));
-            await loadData(newFilters, resetMetadata);
+            // Update URL and Redux
+            updateURL(newFilters, resetMetadata);
         },
-        [metadata, loadData, dispatch],
+        [getParamsFromUrl, updateURL],
     );
 
-    // Enhanced clear filters with URL update
+    // Enhanced clear filters - only update URL and Redux, let useEffect handle API call
     const handleClearFilters = useCallback(async () => {
         if (filterFormRef.current) {
             filterFormRef.current.resetFields();
         }
 
+        // Get current pagination from URL (not Redux)
+        const { urlMetadata } = getParamsFromUrl();
+
         // Reset to first page when clearing filters
         const resetMetadata = {
-            ...metadata,
+            ...urlMetadata,
             currentPage: 1,
         };
 
-        dispatch(setFilters({}));
-        dispatch(setMetadata(resetMetadata));
-        await loadData({}, resetMetadata);
-    }, [metadata, loadData, dispatch]);
+        // Update URL and Redux
+        updateURL({}, resetMetadata);
+    }, [getParamsFromUrl, updateURL]);
 
-    // Enhanced table change handler with proper filtering logic
+    // Enhanced table change handler - only update URL and Redux, let useEffect handle API call
     const handleTableChange = useCallback(
         async (paginationInfo: any, filtersInfo: any, sorter: any) => {
+            // Get current URL params (not Redux)
+            const { urlFilters, urlMetadata } = getParamsFromUrl();
+
             // Handle table filters (column filters)
             const tableFilters: Record<string, any> = {};
             Object.entries(filtersInfo || {}).forEach(([key, value]) => {
@@ -571,53 +583,46 @@ const QuickUI = ({
                 }
             });
 
-            // Merge with existing filters
+            // Merge with existing filters from URL
             const mergedFilters = {
-                ...filters,
+                ...urlFilters,
                 ...tableFilters,
             };
 
             // Update metadata with pagination info
             const updatedMetadata = {
-                ...metadata,
-                currentPage: paginationInfo.current || metadata.currentPage,
-                itemsPerPage: paginationInfo.pageSize || metadata.itemsPerPage,
+                ...urlMetadata,
+                currentPage: paginationInfo.current || urlMetadata.currentPage,
+                itemsPerPage: paginationInfo.pageSize || urlMetadata.itemsPerPage,
             };
-
-            if (Object.keys(tableFilters).length > 0) {
-                dispatch(setFilters(mergedFilters));
-            }
-
-            dispatch(setMetadata(updatedMetadata));
 
             // Handle sorting
             if (sorter && sorter.field) {
-                const sortFilters = {
-                    ...mergedFilters,
-                    _sort: sorter.field,
-                    _order: sorter.order === "ascend" ? "asc" : "desc",
-                };
-                await loadData(sortFilters, updatedMetadata);
-            } else {
-                await loadData(mergedFilters, updatedMetadata);
+                mergedFilters._sort = sorter.field;
+                mergedFilters._order = sorter.order === "ascend" ? "asc" : "desc";
             }
+
+            // Update URL and Redux
+            updateURL(mergedFilters, updatedMetadata);
         },
-        [filters, metadata, dispatch, loadData],
+        [getParamsFromUrl, updateURL],
     );
 
-    // Enhanced page size change handler
+    // Enhanced page size change handler - update URL directly
     const handleShowSizeChange = useCallback(
         async (current: number, size: number) => {
+            // Get current filters from URL (not Redux)
+            const { urlFilters } = getParamsFromUrl();
+
             const updatedMetadata = {
-                ...metadata,
                 currentPage: current,
                 itemsPerPage: size,
             };
 
-            dispatch(setMetadata(updatedMetadata));
-            await loadData(filters, updatedMetadata);
+            // Update URL and Redux
+            updateURL(urlFilters, updatedMetadata);
         },
-        [filters, metadata, loadData, dispatch],
+        [getParamsFromUrl, updateURL],
     );
 
     // Enhanced row selection - remove URL persistence if syncUrlParams is disabled
@@ -710,8 +715,8 @@ const QuickUI = ({
                 await onRecordDelete(record);
             }
 
-            // Use loadData directly instead of revalidateData
-            await loadData(filters, metadata);
+            // Use loadData without parameters
+            await loadData();
 
             message.success(successMessages.delete);
         } catch (error) {
@@ -737,8 +742,8 @@ const QuickUI = ({
                         result = await onRecordUpdate(updatedRecord);
                     }
 
-                    // Use loadData directly instead of revalidateData
-                    await loadData(filters, metadata);
+                    // Use loadData without parameters
+                    await loadData();
 
                     afterFormSubmit?.(processedValues, result);
                     message.success(successMessages.update);
@@ -754,8 +759,8 @@ const QuickUI = ({
                         result = await onRecordCreate(newRecord);
                     }
 
-                    // Use loadData directly instead of revalidateData
-                    await loadData(filters, metadata);
+                    // Use loadData without parameters
+                    await loadData();
 
                     afterFormSubmit?.(processedValues, result);
                     message.success(successMessages.create);
@@ -775,10 +780,7 @@ const QuickUI = ({
             afterFormSubmit,
             successMessages.update,
             successMessages.create,
-            dispatch,
             loadData,
-            filters,
-            metadata,
         ],
     );
 
@@ -1069,38 +1071,53 @@ const QuickUI = ({
         );
     };
 
-    // Enhanced table rendering - simplified since we always use server-side filtering
-    const renderTable = () => (
-        <Table
-            columns={generatedColumns}
-            dataSource={dataList}
-            rowKey="id"
-            rowSelection={
-                rowSelection
-                    ? {
-                          selectedRowKeys,
-                          onChange: handleRowSelection,
-                          preserveSelectedRowKeys: true,
-                      }
-                    : undefined
-            }
-            locale={{ emptyText }}
-            loading={loading}
-            pagination={{
-                current: metadata.currentPage,
-                pageSize: metadata.itemsPerPage,
-                total: metadata.totalItems,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} items`,
-                onChange: handleShowSizeChange,
-                onShowSizeChange: handleShowSizeChange,
-            }}
-            onChange={handleTableChange}
-            scroll={{ x: "max-content" }}
-            {...tableProps}
-        />
-    );
+    // Enhanced table rendering - always use searchParams for pagination display
+    const renderTable = () => {
+        // Always get current values from searchParams for display
+        const currentPage = parseInt(searchParams.get("page") || "1");
+        const pageSize = parseInt(searchParams.get("pageSize") || "5");
+
+        return (
+            <Table
+                size="small"
+                columns={generatedColumns}
+                dataSource={dataList}
+                rowKey="id"
+                rowSelection={
+                    rowSelection
+                        ? {
+                              selectedRowKeys,
+                              onChange: handleRowSelection,
+                              preserveSelectedRowKeys: true,
+                          }
+                        : undefined
+                }
+                locale={{ emptyText }}
+                loading={loading}
+                pagination={{
+                    current: currentPage,
+                    pageSize: pageSize,
+                    total: metadata.totalItems,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                    pageSizeOptions: ["5", "10", "20", "50", "100"],
+                    hideOnSinglePage: metadata.totalItems <= pageSize,
+                    totalBoundaryShowSizeChanger: true,
+                    showLessItems: true,
+                    showTitle: true,
+                    showPrevNextJumpers: true,
+                    responsive: true,
+                    size: "small",
+                    showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} items`,
+                    onChange: handleShowSizeChange,
+                    onShowSizeChange: handleShowSizeChange,
+                }}
+                onChange={handleTableChange}
+                scroll={{ x: "max-content" }}
+                {...tableProps}
+            />
+        );
+    };
 
     // Main content renderer
     const renderContent = () => {

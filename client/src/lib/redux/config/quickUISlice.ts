@@ -40,7 +40,7 @@ const initialState: QuickUIState = {
         meta: {
             totalItems: 0,
             itemCount: 0,
-            itemsPerPage: 0,
+            itemsPerPage: 5,
             totalPages: 0,
             currentPage: 0,
             hasNextPage: false,
