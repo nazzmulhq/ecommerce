@@ -125,7 +125,7 @@ export async function updatePermission(permissionId: number, permissionData: any
     }
 }
 
-export async function deletePermission(permissionId: number) {
+export async function deletePermission(permissionId: string) {
     try {
         const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions/${permissionId}`;
         const token = await getCookie("token");

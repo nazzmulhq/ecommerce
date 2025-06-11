@@ -922,7 +922,7 @@ const QuickUI = ({
                                     okText="Yes"
                                     cancelText="No"
                                 >
-                                    <Button type="primary" danger icon={<DeleteOutlined />} size="small" />
+                                    <Button type="default" danger icon={<DeleteOutlined />} size="small" />
                                 </Popconfirm>
                             </Tooltip>
                         )}

@@ -2,7 +2,11 @@
 import QuickUI from "@components/common/AppCRUDOperation";
 import { FormSchema } from "@components/common/AppForm/form.type";
 import { getCookie } from "@lib/actions";
-import { createPermission, fetchPermissions } from "@lib/actions/modules/permission/permissionActions";
+import {
+    createPermission,
+    deletePermission,
+    fetchPermissions,
+} from "@lib/actions/modules/permission/permissionActions";
 
 // Define a type for permission records matching your API structure
 interface Permission {
@@ -154,21 +158,9 @@ const PermissionPage = () => {
 
     const handleDelete = async (record: Permission): Promise<Permission> => {
         try {
-            const url = `${process.env.NEXT_PUBLIC_API_URL}/permissions/${record.id}`;
-            const token = await getCookie("token");
+            const res = await deletePermission(record.id);
 
-            const response = await fetch(url, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error("Delete failed");
-            }
-
-            return record;
+            return res.data;
         } catch (error) {
             console.error("Error deleting permission:", error);
             throw new Error("Failed to delete permission. Please try again.");
