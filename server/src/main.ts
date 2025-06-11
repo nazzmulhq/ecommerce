@@ -78,11 +78,11 @@ async function bootstrap() {
     for (const path of possibleViewPaths) {
         try {
             // Log attempted paths for debugging
-            console.log(`Checking for views directory at: ${path}`);
+            // console.log(`Checking for views directory at: ${path}`);
             const { existsSync } = require('fs');
             if (existsSync(path)) {
                 viewsPath = path;
-                console.log(`Using views directory: ${viewsPath}`);
+                // console.log(`Using views directory: ${viewsPath}`);
                 break;
             }
         } catch (error) {

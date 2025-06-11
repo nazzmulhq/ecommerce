@@ -121,7 +121,7 @@ export class PermissionController {
         @Body() updatePermissionDto: UpdatePermissionDto,
     ) {
         try {
-            updatePermissionDto.updateBy = req.user.id || 0;
+            updatePermissionDto.updated_by = req.user.id || 0;
             await this.permissionService.update(
                 +id,
                 updatePermissionDto,

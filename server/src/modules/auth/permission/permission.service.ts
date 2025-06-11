@@ -25,8 +25,8 @@ export class PermissionService {
         if (existingPermission) {
             throw new Error('Permission already exists');
         }
-        createPermissionDto.createBy = id;
-        createPermissionDto.createdAt = new Date();
+        createPermissionDto.created_by = id;
+        createPermissionDto.created_at = new Date();
 
         const permission =
             this.permissionRepository.create(createPermissionDto);
@@ -77,7 +77,7 @@ export class PermissionService {
         return await this.permissionRepository.findOne({
             where: {
                 id,
-                status: 1,
+                deleted: 0,
             },
         });
     }
@@ -90,20 +90,24 @@ export class PermissionService {
         const existingPermission = await this.permissionRepository.findOne({
             where: {
                 id,
-                status: 1,
+                deleted: 0,
             },
         });
         if (!existingPermission) {
             throw new Error('Permission not found');
         }
 
-        updateData.updated_by = userId;
+        // Use update method directly instead of merge + save
+        await this.permissionRepository.update(id, {
+            ...updateData,
+            updated_by: userId,
+            updated_at: new Date(),
+        });
 
-        const permission = this.permissionRepository.merge(
-            existingPermission,
-            updateData,
-        );
-        return this.permissionRepository.save(permission);
+        // Return the updated record
+        return await this.permissionRepository.findOne({
+            where: { id },
+        });
     }
 
     async remove(id: number, userId: number): Promise<void> {
@@ -112,20 +116,16 @@ export class PermissionService {
                 id,
             },
         });
+
         if (!existingPermission) {
             throw new Error('Permission not found');
         }
-        const updateData = {
-            status: 0,
-            updatedAt: new Date(),
-            updateBy: userId,
-        };
 
-        const permission = this.permissionRepository.merge(
-            existingPermission,
-            updateData,
-        );
-
-        this.permissionRepository.save(permission);
+        // Use update method directly instead of merge + update
+        await this.permissionRepository.update(id, {
+            deleted: 1,
+            deleted_at: new Date(),
+            deleted_by: userId,
+        });
     }
 }
