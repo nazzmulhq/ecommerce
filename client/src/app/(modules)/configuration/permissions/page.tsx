@@ -9,8 +9,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export interface IPage {
-    params?: { [key: string]: string | string[] };
-    searchParams?: Promise<{ [key: string]: string | string[] }>;
 }
 
 const Page: FC<IPage> = async () => {

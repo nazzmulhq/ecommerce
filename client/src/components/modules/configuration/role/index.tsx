@@ -113,11 +113,10 @@ const Role = () => {
             formSchema={permissionFormSchema}
             crudType="modal"
             icon="AiOutlineTeam"
-            initialData={permissions}
             onRecordCreate={handleCreate}
             onRecordUpdate={handleUpdate}
             onRecordDelete={handleDelete}
-            onFilter={filterData}
+            onRecordFilter={filterData}
             showToggleCrudType={false}
             // statistics={[
             //     { key: "total", label: "Total Permissions", value: permissions.length, color: "#1890ff" },

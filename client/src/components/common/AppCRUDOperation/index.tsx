@@ -24,7 +24,6 @@ import {
     setViewingRecord,
 } from "@lib/redux/config/quickUISlice"; // Adjust import path as needed
 import { AppDispatch, RootState } from "@lib/redux/store"; // Adjust import path as needed
-import { TIconName } from "@src/types/iconName";
 import {
     App,
     Button,
@@ -40,8 +39,6 @@ import {
     Row,
     Space,
     Table,
-    TableColumnType,
-    TableProps,
     Tag,
     Tooltip,
     Typography,
@@ -49,114 +46,14 @@ import {
 } from "antd";
 import { ColumnType } from "antd/lib/table";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AppForm from "../AppForm";
 import { FormSchema } from "../AppForm/form.type";
 import AppIcons from "../AppIcons";
+import QuickUILoadingSkeleton from "./QuickUILoadingSkeleton";
+import { CrudType, LoadingStates, Permission, QuickUIProps } from "./types";
 const { Title, Text } = Typography;
-
-// Permission types and route config
-export type Permission = string | string[];
-export interface PermissionConfig {
-    view?: Permission;
-    create?: Permission;
-    edit?: Permission;
-    delete?: Permission;
-    filter?: Permission;
-    export?: Permission;
-    [key: string]: Permission | undefined;
-}
-export type PermissionChecker = (permission: Permission) => boolean;
-export type CrudType = "modal" | "drawer" | "page" | "route";
-export interface RouteConfig {
-    basePath: string;
-    createPath?: string;
-    editPath?: string;
-    viewPath?: string;
-    listPath?: string;
-    paramName?: string;
-    queryParams?: Record<string, string>;
-}
-
-// Statistics item type
-export type StatItem = {
-    key: string;
-    label: string;
-    value: number | string;
-    color?: string;
-    icon?: ReactNode;
-};
-
-// CRUD props combining AppForm and DynamicCrud capabilities
-export interface QuickUIProps {
-    // Basic configuration
-    title: string;
-    formSchema: FormSchema;
-    crudType?: CrudType;
-    icon?: TIconName;
-
-    // Action handlers - onRecordFilter is now required
-    onDataChange?: (data: any[]) => void;
-    onRecordView?: (record: any) => void;
-    onRecordCreate?: (record: any) => Promise<any> | void;
-    onRecordUpdate?: (record: any) => Promise<any> | void;
-    onRecordDelete?: (record: any) => Promise<any> | void;
-    onRecordFilter: (data: any[], filter: Record<string, any>) => Promise<any>; // Required prop
-
-    // UI customization
-    tableColumns?: TableColumnType<any>[];
-    tableProps?: TableProps<any>;
-    formProps?: any;
-    actions?: {
-        view?: boolean;
-        edit?: boolean;
-        delete?: boolean;
-        extraActions?: (record: any, permissions?: { [key: string]: boolean }) => ReactNode[];
-    };
-
-    // Filtering and searching
-    showFilter?: boolean;
-    searchFields?: string[];
-    filterFields?: any[];
-
-    // Messages and confirmations
-    confirmTexts?: {
-        delete?: string;
-        create?: string;
-        update?: string;
-    };
-    successMessages?: {
-        create?: string;
-        update?: string;
-        delete?: string;
-    };
-
-    // Additional features
-    statistics?: StatItem[] | ((data: any[]) => StatItem[]);
-    rowSelection?: boolean;
-    batchActions?: (selectedRowKeys: any[], selectedRows: any[], permissions?: { [key: string]: boolean }) => ReactNode;
-    showToggleCrudType?: boolean;
-
-    // Advanced form configuration
-    validateOnMount?: boolean;
-    preserveFormData?: boolean;
-    beforeFormSubmit?: (values: any) => any | Promise<any>;
-    afterFormSubmit?: (values: any, result: any) => void;
-    renderExtraFormActions?: (
-        form: any,
-        editingRecord: any | null,
-        permissions?: { [key: string]: boolean },
-    ) => ReactNode;
-
-    // Permissions
-    permissions?: PermissionConfig;
-    checkPermission?: PermissionChecker;
-    routeConfig?: RouteConfig;
-    currentAction?: string;
-    currentRecordId?: string;
-    onNavigate?: (path: string, params?: Record<string, any>) => void;
-}
 
 const QuickUI = ({
     title,
@@ -174,7 +71,6 @@ const QuickUI = ({
     tableProps = {},
     formProps = {},
     actions = { view: true, edit: true, delete: true },
-    searchFields = [],
     filterFields = [],
     confirmTexts = {
         delete: "Are you sure you want to delete this record?",
@@ -202,6 +98,13 @@ const QuickUI = ({
     currentRecordId,
     onNavigate,
 }: QuickUIProps) => {
+    // Component-level loading states
+    const [loadingStates, setLoadingStates] = useState<LoadingStates>({
+        initialLoad: true,
+        dataLoad: true,
+        componentReady: false,
+        stylesReady: false,
+    });
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const pathname = usePathname();
@@ -297,6 +200,8 @@ const QuickUI = ({
 
     // Single useEffect that triggers API call only when searchParams change
     useEffect(() => {
+        if (!loadingStates.componentReady) return;
+
         let isMounted = true;
 
         const loadDataFromParams = async () => {
@@ -328,6 +233,7 @@ const QuickUI = ({
 
             // Load data based on current searchParams only
             try {
+                setLoadingStates(prev => ({ ...prev, dataLoad: true }));
                 dispatch(setLoading(true));
                 const result = await onRecordFilter([], {
                     ...urlFilters,
@@ -339,11 +245,21 @@ const QuickUI = ({
 
                 if (isMounted) {
                     handleFilterResult(result);
+                    setLoadingStates(prev => ({
+                        ...prev,
+                        dataLoad: false,
+                        initialLoad: false,
+                    }));
                 }
             } catch (error) {
                 if (isMounted) {
                     console.error("Error loading data:", error);
                     dispatch(setError("Failed to load data"));
+                    setLoadingStates(prev => ({
+                        ...prev,
+                        dataLoad: false,
+                        initialLoad: false,
+                    }));
                 }
             } finally {
                 if (isMounted) {
@@ -364,7 +280,7 @@ const QuickUI = ({
             isMounted = false;
             dispatch(resetState());
         };
-    }, [searchParams.toString(), onRecordFilter, crudType, activeCrudType, dispatch]);
+    }, [loadingStates.componentReady, searchParams.toString(), onRecordFilter, crudType, activeCrudType, dispatch]);
 
     // Simplified function to handle API results
     const handleFilterResult = useCallback(
@@ -436,6 +352,37 @@ const QuickUI = ({
             dispatch(setError(null));
         }
     }, [error, dispatch]);
+
+    // CSS-in-JS styles ready detection
+    useEffect(() => {
+        const checkStylesReady = () => {
+            const antdElement = document.querySelector(".ant-btn, .ant-card, .ant-table");
+            if (antdElement) {
+                const computedStyles = window.getComputedStyle(antdElement);
+                const hasAntStyles =
+                    computedStyles.getPropertyValue("--ant-primary-color") ||
+                    computedStyles.backgroundColor !== "rgba(0, 0, 0, 0)" ||
+                    computedStyles.border !== "none";
+
+                if (hasAntStyles) {
+                    setLoadingStates(prev => ({ ...prev, stylesReady: true }));
+                    return;
+                }
+            }
+
+            setTimeout(checkStylesReady, 50);
+        };
+
+        const styleCheckTimeout = setTimeout(checkStylesReady, 100);
+        return () => clearTimeout(styleCheckTimeout);
+    }, []);
+
+    // Component ready state
+    useEffect(() => {
+        if (loadingStates.stylesReady && formSchema) {
+            setLoadingStates(prev => ({ ...prev, componentReady: true }));
+        }
+    }, [loadingStates.stylesReady, formSchema]);
 
     // Permission helper
     const hasPermission = useCallback(
@@ -1091,7 +1038,7 @@ const QuickUI = ({
                           }
                         : undefined
                 }
-                loading={loading}
+                loading={loading || loadingStates.dataLoad}
                 pagination={{
                     size: "default",
                     current: currentPage,
@@ -1418,6 +1365,11 @@ const QuickUI = ({
             </Card>
         );
     };
+
+    // Show loading skeleton during initial load
+    if (loadingStates.initialLoad || !loadingStates.componentReady) {
+        return <QuickUILoadingSkeleton title={title} />;
+    }
 
     return (
         <App>

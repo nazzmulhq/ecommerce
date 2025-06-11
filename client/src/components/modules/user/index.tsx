@@ -81,7 +81,6 @@ const UserCRUD = () => {
             title="User Management"
             formSchema={userSchema}
             crudType="route"
-            initialData={users}
             // Route configuration
             routeConfig={{
                 basePath: "/configuration/users",
@@ -124,6 +123,26 @@ const UserCRUD = () => {
                 const updatedUser = await response.json();
                 // setUsers(prev => prev.map(u => u.id === userData.id ? updatedUser : u));
                 return updatedUser;
+            }}
+            onRecordFilter={async (data, filter) => {
+                console.log("Filtering data:", { data, filter });
+                return data.filter(user => {
+                    return Object.keys(filter).every(key => {
+                        if (key === "firstName" && filter.firstName) {
+                            return user.firstName.toLowerCase().includes(filter.firstName.toLowerCase());
+                        }
+                        if (key === "lastName" && filter.lastName) {
+                            return user.lastName.toLowerCase().includes(filter.lastName.toLowerCase());
+                        }
+                        if (key === "email" && filter.email) {
+                            return user.email.toLowerCase().includes(filter.email.toLowerCase());
+                        }
+                        if (key === "role" && filter.role) {
+                            return user.role === filter.role;
+                        }
+                        return true;
+                    });
+                });
             }}
         />
     );
