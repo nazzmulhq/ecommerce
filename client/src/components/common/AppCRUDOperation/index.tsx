@@ -1078,7 +1078,7 @@ const QuickUI = ({
 
         return (
             <Table
-                size="small"
+                size="middle"
                 columns={generatedColumns}
                 dataSource={dataList}
                 rowKey="id"
@@ -1093,19 +1093,19 @@ const QuickUI = ({
                 }
                 loading={loading}
                 pagination={{
+                    size: "default",
                     current: currentPage,
                     pageSize: pageSize,
                     total: metadata.totalItems,
                     showSizeChanger: true,
                     showQuickJumper: true,
+                    hideOnSinglePage: false,
                     pageSizeOptions: ["5", "10", "20", "50", "100"],
-                    hideOnSinglePage: false, // Always show pagination
                     totalBoundaryShowSizeChanger: 2,
                     showLessItems: true,
                     showTitle: true,
                     showPrevNextJumpers: true,
                     responsive: true,
-                    size: "small",
                     showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} of ${total} items`,
                     onChange: handleShowSizeChange,
                     onShowSizeChange: handleShowSizeChange,
