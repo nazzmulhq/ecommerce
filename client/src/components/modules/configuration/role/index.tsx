@@ -46,6 +46,7 @@ const permissionFormSchema: FormSchema = {
             label: "Permission Name",
             type: "smart_select",
             url: "/permissions",
+            tags: ["permission"],
             valueField: "id",
             labelField: "name",
             placeholder: "Enter permission name",

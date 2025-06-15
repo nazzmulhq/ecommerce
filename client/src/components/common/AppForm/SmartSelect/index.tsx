@@ -1,4 +1,4 @@
-import { Select, Spin } from "antd";
+import { Flex, Select, Spin } from "antd";
 import React, { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { fetchSelectOptions, fetchSelectOptionsByIds } from "./action";
 
@@ -35,6 +35,7 @@ interface SmartSelectProps {
     style?: React.CSSProperties;
     className?: string;
     size?: "small" | "middle" | "large";
+    tags?: string[];
     [key: string]: any;
 }
 
@@ -48,6 +49,7 @@ const SmartSelect: React.FC<SmartSelectProps> = ({
     labelField = "name",
     debounceMs = 300,
     pageSize = 50,
+    tags = [],
     ...props
 }) => {
     const [options, setOptions] = useState<SelectOption[]>([]);
@@ -110,6 +112,7 @@ const SmartSelect: React.FC<SmartSelectProps> = ({
                         valueField,
                         labelField,
                         pageSize,
+                        tags,
                     });
 
                     if (controller.signal.aborted) return;
@@ -178,6 +181,7 @@ const SmartSelect: React.FC<SmartSelectProps> = ({
                     optionIds: missingValues,
                     valueField,
                     labelField,
+                    tags,
                 });
 
                 setOptions(prev => {
@@ -251,15 +255,6 @@ const SmartSelect: React.FC<SmartSelectProps> = ({
         }
     };
 
-    // Get display options with recent items highlighted
-    const displayOptions = options.map(option => {
-        const isRecent = recentOptions.some(r => r.value === option.value);
-        return {
-            ...option,
-            label: isRecent ? `${option.label} (Recent)` : option.label,
-        };
-    });
-
     // Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -278,14 +273,22 @@ const SmartSelect: React.FC<SmartSelectProps> = ({
             onSearch={handleSearch}
             onChange={handleChange}
             loading={loading || isPending}
-            notFoundContent={loading || isPending ? <Spin size="small" /> : "No data"}
+            notFoundContent={
+                true ? (
+                    <Flex justify="center">
+                        <Spin size="small" />
+                    </Flex>
+                ) : (
+                    "No data"
+                )
+            }
             filterOption={false}
             searchValue={searchValue}
             style={{ width: "100%" }}
             allowClear
             {...props}
         >
-            {displayOptions.map(option => (
+            {options.map(option => (
                 <Select.Option key={option.value} value={option.value} data={option.data}>
                     {option.label}
                 </Select.Option>

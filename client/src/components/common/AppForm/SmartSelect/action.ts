@@ -15,6 +15,7 @@ interface FetchOptionsParams {
     valueField?: string;
     labelField?: string;
     pageSize?: number;
+    tags?: string[];
 }
 
 export async function fetchSelectOptions({
@@ -24,6 +25,7 @@ export async function fetchSelectOptions({
     valueField = "id",
     labelField = "name",
     pageSize = 50,
+    tags = [],
 }: FetchOptionsParams): Promise<SelectOption[]> {
     try {
         // Get auth token
@@ -46,7 +48,7 @@ export async function fetchSelectOptions({
                 "Content-Type": "application/json",
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
-            next: { tags: ["permissions"] }, // Cache for 1 minute
+            next: { tags }, // Cache for 1 minute
         });
 
         if (!response.ok) {
@@ -76,11 +78,13 @@ export async function fetchSelectOptionById({
     optionId,
     valueField = "id",
     labelField = "name",
+    tags = [],
 }: {
     url: string;
     optionId: any;
     valueField?: string;
     labelField?: string;
+    tags?: string[];
 }): Promise<SelectOption | null> {
     try {
         if (!url || optionId === undefined || optionId === null) return null;
@@ -93,7 +97,7 @@ export async function fetchSelectOptionById({
                 "Content-Type": "application/json",
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
-            next: { tags: ["permissions"] }, // Cache for 5 minutes
+            next: { tags }, // Cache for 5 minutes
         });
 
         if (response.ok) {
@@ -127,17 +131,21 @@ export async function fetchSelectOptionsByIds({
     optionIds,
     valueField = "id",
     labelField = "name",
+    tags = [],
 }: {
     url: string;
     optionIds: any[];
     valueField?: string;
     labelField?: string;
+    tags?: string[];
 }): Promise<SelectOption[]> {
     try {
         if (!url || !optionIds.length) return [];
 
         // Fetch all options in parallel
-        const fetchPromises = optionIds.map(id => fetchSelectOptionById({ url, optionId: id, valueField, labelField }));
+        const fetchPromises = optionIds.map(id =>
+            fetchSelectOptionById({ url, optionId: id, valueField, labelField, tags }),
+        );
 
         const results = await Promise.allSettled(fetchPromises);
 
