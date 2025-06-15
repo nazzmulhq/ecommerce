@@ -96,7 +96,7 @@ const Role = () => {
             data,
             filter,
         });
-        return data.filter(item => {
+        return initialPermissions.filter(item => {
             return Object.keys(filter).every(key => {
                 if (key === "name" && filter.name) {
                     return item.name.toLowerCase().includes(filter.name.toLowerCase());
@@ -139,7 +139,6 @@ const Role = () => {
                 size: "middle",
                 pagination: { pageSize: 5 },
             }}
-            rowSelection
             batchActions={(selectedRowKeys: string[], selectedRows: Permission[]) => {
                 return (
                     <Space size="small">
@@ -175,6 +174,9 @@ const Role = () => {
                         </Button>
                     </Space>
                 );
+            }}
+            rowSelection={{
+                type: "radio",
             }}
         />
     );

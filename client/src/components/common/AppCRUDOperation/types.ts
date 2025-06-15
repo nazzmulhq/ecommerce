@@ -1,5 +1,6 @@
 import { TIconName } from "@src/types/iconName";
 import { TableColumnType, TableProps } from "antd";
+import { TableRowSelection } from "antd/es/table/interface";
 import { ReactNode } from "react";
 import { FormSchema } from "../AppForm/form.type";
 
@@ -42,7 +43,11 @@ export type StatItem = {
     icon?: ReactNode;
 };
 
-// CRUD props combining AppForm and DynamicCrud capabilities
+// Row selection configuration
+export interface RowSelectionConfig extends Omit<TableRowSelection<any>, "selectedRowKeys" | "onChange"> {
+    type?: "checkbox" | "radio";
+}
+
 export interface QuickUIProps {
     // Basic configuration
     title: string;
@@ -87,7 +92,7 @@ export interface QuickUIProps {
 
     // Additional features
     statistics?: StatItem[] | ((data: any[]) => StatItem[]);
-    rowSelection?: boolean;
+    rowSelection?: boolean | RowSelectionConfig;
     batchActions?: (selectedRowKeys: any[], selectedRows: any[], permissions?: { [key: string]: boolean }) => ReactNode;
     showToggleCrudType?: boolean;
 

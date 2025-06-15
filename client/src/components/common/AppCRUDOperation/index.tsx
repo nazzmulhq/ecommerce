@@ -43,6 +43,7 @@ import {
     Tooltip,
     Typography,
 } from "antd";
+import { TableRowSelection } from "antd/es/table/interface";
 import { ColumnType } from "antd/lib/table";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1025,21 +1026,41 @@ const QuickUI = ({
         const currentPage = parseInt(searchParams.get("page") || "1");
         const pageSize = parseInt(searchParams.get("pageSize") || "5");
 
+        // Enhanced row selection configuration
+        const getRowSelectionConfig = (): TableRowSelection<any> | undefined => {
+            if (!rowSelection) return undefined;
+
+            const baseConfig: TableRowSelection<any> = {
+                selectedRowKeys,
+                onChange: handleRowSelection,
+                preserveSelectedRowKeys: true,
+            };
+
+            // Handle different selection types
+            if (typeof rowSelection === "object") {
+                const { type = "checkbox", ...otherProps } = rowSelection;
+
+                return {
+                    ...baseConfig,
+                    type: type as "checkbox" | "radio", // Explicit type assertion
+                    ...otherProps,
+                } as TableRowSelection<any>;
+            }
+
+            // Default to checkbox if rowSelection is just boolean true
+            return {
+                ...baseConfig,
+                type: "checkbox" as const,
+            };
+        };
+
         return (
             <Table
                 size="middle"
                 columns={generatedColumns}
                 dataSource={dataList}
                 rowKey="id"
-                rowSelection={
-                    rowSelection
-                        ? {
-                              selectedRowKeys,
-                              onChange: handleRowSelection,
-                              preserveSelectedRowKeys: true,
-                          }
-                        : undefined
-                }
+                rowSelection={getRowSelectionConfig()}
                 loading={loading || loadingStates.dataLoad}
                 pagination={{
                     size: "default",

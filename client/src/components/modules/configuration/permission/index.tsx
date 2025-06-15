@@ -248,6 +248,12 @@ const PermissionPage = () => {
                     // Optional: Handle post-submission actions
                     console.log("Form submitted successfully:", { values, result });
                 }}
+                rowSelection={{
+                    type: "checkbox",
+                    onSelect: (record, selected) => {
+                        console.log("Selected:", record, selected);
+                    },
+                }}
             />
         </div>
     );
