@@ -42,7 +42,6 @@ import {
     Tag,
     Tooltip,
     Typography,
-    message,
 } from "antd";
 import { ColumnType } from "antd/lib/table";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -129,6 +128,9 @@ const QuickUI = ({
     // Extract list and metadata from the nested structure
     const dataList = data.list;
     const metadata = data.meta;
+
+    // Form instance
+    const { message } = App.useApp();
 
     // Form instance
     const [form] = Form.useForm();

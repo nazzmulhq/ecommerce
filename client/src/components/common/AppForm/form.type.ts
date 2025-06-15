@@ -3,6 +3,7 @@ import type { ColProps } from "antd/es/col";
 import type { FormInstance, FormListFieldData, FormListOperation } from "antd/es/form";
 import type { DefaultOptionType } from "antd/es/select";
 import React from "react";
+import { SmartSelectProps } from "./SmartSelect";
 
 // Enhanced Field Types
 export const FIELD_TYPES = {
@@ -19,6 +20,7 @@ export const FIELD_TYPES = {
     AUTO_COMPLETE: "auto_complete",
     CASCADER: "cascader",
     TREE_SELECT: "tree_select",
+    SMART_SELECT: "smart_select",
 
     // Choices
     RADIO: "radio",
@@ -238,7 +240,7 @@ export interface NestedFormConfig {
     prefix?: string;
 }
 
-export interface FieldConfig {
+export interface FieldConfig extends SmartSelectProps {
     name: string;
     type: (typeof FIELD_TYPES)[keyof typeof FIELD_TYPES];
     label?: string;

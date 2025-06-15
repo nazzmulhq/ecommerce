@@ -46,6 +46,7 @@ import {
 import type { UploadChangeParam, UploadFile } from "antd/es/upload/interface";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppFormProps, DependencyCondition, FieldConfig, Option, ValidationRule } from "./form.type";
+import SmartSelect from "./SmartSelect";
 
 const { TextArea, Password, Search } = Input;
 const { Title, Text } = Typography;
@@ -463,6 +464,8 @@ const AppForm: React.FC<AppFormProps> = ({
                 return <Cascader {...commonProps} options={fieldState.options || field.options} />;
             case "tree_select":
                 return <TreeSelect {...commonProps} treeData={fieldState.options || field.options} />;
+            case "smart_select":
+                return <SmartSelect {...commonProps} url={field.url || ""} />;
             case "date_picker":
                 return <DatePicker {...commonProps} style={{ width: "100%" }} />;
             case "date_picker_range":

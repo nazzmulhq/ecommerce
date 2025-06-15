@@ -44,8 +44,10 @@ const permissionFormSchema: FormSchema = {
         {
             name: "name",
             label: "Permission Name",
-            type: "input",
-            required: true,
+            type: "smart_select",
+            url: "/permissions",
+            valueField: "id",
+            labelField: "name",
             placeholder: "Enter permission name",
             grid: { xs: 24, sm: 24, md: 24, lg: 24, xl: 24, xxl: 24 },
             filterable: true,
